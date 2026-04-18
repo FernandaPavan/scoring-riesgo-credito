@@ -1,18 +1,18 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
 import joblib
 import plotly.graph_objects as go
 import os
 import sys
+import time
 
 # ============================================
-# PATH (STREAMLIT CLOUD)
+# PATH
 # ============================================
-BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_PATH)
 
-# (remova se não estiver usando)
-# from src.features import criar_faixas
+from src.features import criar_faixas
 
 # ============================================
 # CONFIG
@@ -25,27 +25,57 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
 
-.seccion{
-    text-align:center;
-    color:#2563eb;
-    font-size:22px;
-    font-weight:700;
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] .stSlider,
+section[data-testid="stSidebar"] .stSelectbox,
+section[data-testid="stSidebar"] .stNumberInput {
+    font-size: 14px !important;
 }
 
-.score{
+.sidebar-title {
     text-align:center;
-    font-size:90px;
-    font-weight:900;
     color:#2563eb;
+    font-size:20px;
+    font-weight:600;
+    margin-top:-5px;
+    margin-bottom:10px;
 }
 
-div.stButton > button{
-    height:42px;
-    background:#2563eb;
+section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div {
+    gap: 0.15rem !important;
+}
+
+section[data-testid="stSidebar"] .stSlider {
+    margin-top: -6px;
+    margin-bottom: -12px;
+}
+
+section[data-testid="stSidebar"] div[data-baseweb="select"] {
+    margin-top: -6px;
+    margin-bottom: -10px;
+}
+
+div.stButton > button {
+    height:38px;
+    margin-top: 5px;
+    background-color:#2563eb;
     color:white;
+    font-weight:600;
     border-radius:8px;
     border:none;
+}
+
+.seccion {
+    text-align:center;
+    color:#2563eb;
+    font-size:20px;
     font-weight:600;
+}
+
+.score {
+    text-align:center;
+    font-size:60px;
+    font-weight:700;
 }
 
 </style>
@@ -55,20 +85,22 @@ div.stButton > button{
 # MODELO
 # ============================================
 model_path = os.path.join(BASE_PATH, "models", "modelo.pkl")
-
-@st.cache_resource
-def load_model(path):
-    return joblib.load(path)
-
-model = load_model(model_path)
+model = joblib.load(model_path)
 
 # ============================================
 # HEADER
 # ============================================
 st.markdown("""
-<h1 style='text-align:center;color:#2563eb;font-size:32px;font-weight:700'>
+<h1 style='
+    text-align:center; 
+    color:#2563eb; 
+    font-size:32px; 
+    font-weight:700;
+    margin-top:-10px;
+'>
 Evaluación de Riesgo y Score de Crédito
 </h1>
+
 <br><br>
 """, unsafe_allow_html=True)
 
@@ -77,28 +109,66 @@ Evaluación de Riesgo y Score de Crédito
 # ============================================
 with st.sidebar:
 
-    st.markdown("### Datos del Cliente")
+    st.markdown("<div class='sidebar-title'>Datos del Cliente</div>", unsafe_allow_html=True)
 
-    edad = st.slider("Edad",18,75,30)
-    valor = st.slider("Monto del Crédito",250,20000,5000,step=250)
-    duracion = st.slider("Duración (meses)",4,72,24)
+    edad = st.slider("Edad", 18, 75, 30)
+    valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
+    duracion = st.slider("Duración (meses)", 4, 72, 24)
 
-    genero = st.selectbox("Género",["male","female"])
-    trabajo = st.selectbox("Ocupación",[0,1,2,3])
-    habitacion = st.selectbox("Vivienda",["own","rent","free"])
-    cuenta_ahorro = st.selectbox("Cuenta Ahorro",["little","moderate","rich"])
-    cuenta_corriente = st.selectbox("Cuenta Corriente",["little","moderate","rich"])
-    finalidad = st.selectbox("Finalidad",[
-        "car","furniture/equipment","radio/TV",
-        "business","education","repairs","vacation/others"
-    ])
+    genero_map = {"Masculino": "male", "Femenino": "female"}
+    genero = genero_map[st.selectbox("Género", list(genero_map.keys()))]
+
+    trabajo_map = {
+        "Desempleado": 0,
+        "Básico": 1,
+        "Calificado": 2,
+        "Especialista": 3
+    }
+    trabajo = trabajo_map[st.selectbox("Ocupación", list(trabajo_map.keys()))]
+
+    habitacion_map = {
+        "Propia": "own",
+        "Alquilada": "rent",
+        "Gratuita": "free"
+    }
+    habitacion = habitacion_map[st.selectbox("Vivienda", list(habitacion_map.keys()))]
+
+    cuenta_opciones = {
+        "Bajo": "little",
+        "Medio": "moderate",
+        "Alto": "rich"
+    }
+
+    cuenta_ahorro = cuenta_opciones[
+        st.selectbox("Saldo en Cuenta de Ahorro", list(cuenta_opciones.keys()))
+    ]
+
+    cuenta_corriente = cuenta_opciones[
+        st.selectbox("Saldo en Cuenta Corriente", list(cuenta_opciones.keys()))
+    ]
+
+    finalidade_map = {
+        "Auto": "car",
+        "Muebles/Equipamiento": "furniture/equipment",
+        "Electrónicos": "radio/TV",
+        "Negocios": "business",
+        "Educación": "education",
+        "Reparaciones": "repairs",
+        "Otros": "vacation/others"
+    }
+
+    finalidad = finalidade_map[
+        st.selectbox("Finalidad del Crédito", list(finalidade_map.keys()))
+    ]
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     btn = st.button("Calcular", use_container_width=True)
 
 # ============================================
 # LAYOUT
 # ============================================
-col2, col3 = st.columns([1,1])
+col2, col3 = st.columns([1, 1])
 
 # ============================================
 # EXECUÇÃO
@@ -121,7 +191,7 @@ if btn:
     score = int(850 - (prob * 550))
 
     # ============================================
-    # POLÍTICA
+    # NOVA POLÍTICA DE CRÉDITO
     # ============================================
     if score >= 750:
         limite = 18000
@@ -142,7 +212,7 @@ if btn:
         limite *= 0.90
 
     # ============================================
-    # DECISÃO
+    # NOVA DECISÃO
     # ============================================
     if score < 550:
         status = "✖ RECHAZADO"
@@ -161,60 +231,35 @@ if btn:
         cor = "#dc2626"
 
     # ============================================
-    # COLUNA 2 (RESULTADO)
+    # COLUNA RESULTADO
     # ============================================
     with col2:
 
         st.markdown("<div class='seccion'>Resultado del Análisis</div>", unsafe_allow_html=True)
 
-        # SCORE
+        st.markdown(f"<div class='score'>{score}</div>", unsafe_allow_html=True)
+
         st.markdown(f"""
-        <div class='score'>
-        {score}
-        </div>
+        <p style='text-align:center; font-size:18px;'>Probabilidad de Riesgo</p>
+        <p style='text-align:center; font-size:28px; font-weight:bold;'>{prob:.2%}</p>
         """, unsafe_allow_html=True)
 
-        # PROBABILIDADE
+        # NOVO LIMITE
         st.markdown(f"""
-        <p style='text-align:center;font-size:24px;font-weight:600'>
-        Probabilidad de Riesgo
-        </p>
-
-        <p style='text-align:center;font-size:36px;font-weight:900;'>
-        {prob:.2%}
-        </p>
+        <p style='text-align:center; font-size:18px;'>Límite Aprobado</p>
+        <p style='text-align:center; font-size:28px; font-weight:bold;'>${limite:,.0f}</p>
         """, unsafe_allow_html=True)
 
-        # LIMITE
         st.markdown(f"""
-        <p style='text-align:center;font-size:24px;font-weight:600'>
-        Límite Aprobado
-        </p>
-
-        <p style='text-align:center;font-size:36px;font-weight:900;'>
-        ${limite:,.0f}
-        </p>
-        """, unsafe_allow_html=True)
-
-        # STATUS (AGORA FUNCIONA 100%)
-        st.markdown(f"""
-        <div style="text-align:center;margin-top:30px;">
-
-        <span style="
-        color:{cor} !important;
-        font-size:42px !important;
-        font-weight:900 !important;
-        ">
-
-        {status.upper()}
-
-        </span>
-
+        <div style="text-align:center; margin-top:20px;">
+            <span style="color:{cor}; font-size:28px; font-weight:700;">
+                {status}
+            </span>
         </div>
         """, unsafe_allow_html=True)
 
     # ============================================
-    # COLUNA 3 (GAUGE)
+    # COLUNA GAUGE
     # ============================================
     with col3:
 
@@ -223,14 +268,22 @@ if btn:
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=prob * 100,
+            number={'font': {'size': 28}},
             gauge={
                 'axis': {'range': [0, 100]},
+                'bar': {'color': "#111"},
                 'steps': [
                     {'range': [0, 40], 'color': "#16a34a"},
                     {'range': [40, 70], 'color': "#facc15"},
                     {'range': [70, 100], 'color': "#dc2626"}
-                ]
+                ],
             }
         ))
+
+        fig.update_layout(
+            height=380,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
 
         st.plotly_chart(fig, use_container_width=True)
