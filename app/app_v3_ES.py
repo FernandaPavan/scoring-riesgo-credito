@@ -6,9 +6,9 @@ import os
 import sys
 
 # ============================================
-# PATH
+# PATH (AJUSTADO PARA STREAMLIT CLOUD)
 # ============================================
-BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(BASE_PATH)
 
 from src.features import criar_faixas
@@ -40,32 +40,39 @@ section[data-testid="stSidebar"] .stSelectbox {
 .seccion{
     text-align:center;
     color:#2563eb;
-    font-size:20px;
-    font-weight:600;
+    font-size:22px;
+    font-weight:700;
 }
 
 .score{
     text-align:center;
-    font-size:60px;
-    font-weight:700;
+    font-size:80px;
+    font-weight:800;
+    color:#2563eb;
 }
 
 div.stButton > button{
-    height:38px;
+    height:40px;
     background:#2563eb;
     color:white;
     border-radius:8px;
     border:none;
+    font-weight:600;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================
-# MODELO
+# MODELO (CACHE PARA PERFORMANCE)
 # ============================================
 model_path = os.path.join(BASE_PATH, "models", "modelo.pkl")
-model = joblib.load(model_path)
+
+@st.cache_resource
+def load_model(path):
+    return joblib.load(path)
+
+model = load_model(model_path)
 
 # ============================================
 # HEADER
@@ -125,17 +132,11 @@ with st.sidebar:
     }
 
     cuenta_ahorro=cuenta_opciones[
-        st.selectbox(
-            "Saldo en Cuenta de Ahorro",
-            list(cuenta_opciones.keys())
-        )
+        st.selectbox("Saldo en Cuenta de Ahorro",list(cuenta_opciones.keys()))
     ]
 
     cuenta_corriente=cuenta_opciones[
-        st.selectbox(
-            "Saldo en Cuenta Corriente",
-            list(cuenta_opciones.keys())
-        )
+        st.selectbox("Saldo en Cuenta Corriente",list(cuenta_opciones.keys()))
     ]
 
     finalidade_map={
@@ -149,10 +150,7 @@ with st.sidebar:
     }
 
     finalidad=finalidade_map[
-        st.selectbox(
-            "Finalidad del Crédito",
-            list(finalidade_map.keys())
-        )
+        st.selectbox("Finalidad del Crédito",list(finalidade_map.keys()))
     ]
 
     btn=st.button("Calcular",use_container_width=True)
@@ -168,7 +166,6 @@ col2,col3=st.columns([1,1])
 if btn:
 
     entrada=pd.DataFrame({
-
         "Genero":[genero],
         "Trabalho":[trabajo],
         "Habitacao":[habitacion],
@@ -178,153 +175,126 @@ if btn:
         "Idade":[edad],
         "Duracao":[duracion],
         "Valor_credito":[valor]
-
     })
 
-    # Probabilidade e Score
     prob=model.predict_proba(entrada)[0][1]
 
-    score=int(
-        850-(prob*550)
-    )
+    score=int(850-(prob*550))
 
     # ============================================
     # POLÍTICA DE CRÉDITO
     # ============================================
-
     if score >= 750:
         limite=18000
-
     elif score >=700:
         limite=10000
-
     elif score >=650:
         limite=4000
-
     elif score >=600:
         limite=2500
-
     elif score >=550:
         limite=250
-
     else:
         limite=0
 
-    # Ajuste por prazo
-
     if duracion > 48:
         limite*=0.80
-
     elif duracion >36:
         limite*=0.90
 
     # ============================================
     # DECISÃO
     # ============================================
-
-    if score <550:
-        status="✖ RECHAZADO"
-        cor="#dc2626"
+    if score < 550:
+        status = "✖ RECHAZADO"
+        cor = "#dc2626"
 
     elif valor <= limite:
-        status="✔ APROBADO"
-        cor="#16a34a"
+        status = "✔ APROBADO"
+        cor = "#16a34a"
 
-    elif valor <= limite*1.20:
-        status="⚠ EN ANÁLISIS"
-        cor="#facc15"
+    elif valor <= limite * 1.20:
+        status = "⚠ EN ANÁLISIS"
+        cor = "#facc15"
 
     else:
-        status="✖ RECHAZADO"
-        cor="#dc2626"
+        status = "✖ RECHAZADO"
+        cor = "#dc2626"
 
     # ============================================
     # COLUNA RESULTADO
     # ============================================
-
     with col2:
 
-        st.markdown(
-            "<div class='seccion'>Resultado del Análisis</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("<div class='seccion'>Resultado del Análisis</div>", unsafe_allow_html=True)
 
-        st.markdown(
-            f"<div class='score'>{score}</div>",
-            unsafe_allow_html=True
-        )
-
+        # SCORE AZUL GRANDE
         st.markdown(f"""
-        <p style='text-align:center;font-size:18px'>
+        <div class='score'>
+        {score}
+        </div>
+        """, unsafe_allow_html=True)
+
+        # PROBABILIDADE
+        st.markdown(f"""
+        <p style='text-align:center;font-size:22px;font-weight:600'>
         Probabilidad de Riesgo
         </p>
 
-        <p style='text-align:center;font-size:28px;font-weight:bold;'>
+        <p style='text-align:center;font-size:34px;font-weight:800;'>
         {prob:.2%}
         </p>
         """,unsafe_allow_html=True)
 
+        # LIMITE
         st.markdown(f"""
-        <p style='text-align:center;font-size:18px'>
+        <p style='text-align:center;font-size:22px;font-weight:600'>
         Límite Aprobado
         </p>
 
-        <p style='text-align:center;font-size:28px;font-weight:bold;'>
+        <p style='text-align:center;font-size:34px;font-weight:800;'>
         ${limite:,.0f}
         </p>
         """,unsafe_allow_html=True)
 
+        # STATUS FINAL
         st.markdown(f"""
-        <div style="text-align:center;margin-top:20px;">
+        <div style="text-align:center;margin-top:30px;">
 
         <span style="
         color:{cor};
-        font-size:28px;
-        font-weight:700;
+        font-size:36px;
+        font-weight:900;
+        letter-spacing:1px;
         ">
 
-        {status}
+        {status.upper()}
 
         </span>
 
         </div>
-        """,unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
     # ============================================
     # COLUNA GAUGE
     # ============================================
-
     with col3:
 
-        st.markdown(
-            "<div class='seccion'>Indicador de Riesgo</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("<div class='seccion'>Indicador de Riesgo</div>", unsafe_allow_html=True)
 
         fig=go.Figure(go.Indicator(
-
             mode="gauge+number",
-
             value=prob*100,
-
             number={'font':{'size':28}},
-
             gauge={
-
                 'axis':{'range':[0,100]},
-
                 'bar':{'color':"#111"},
-
                 'steps':[
-
                     {'range':[0,40],'color':"#16a34a"},
                     {'range':[40,70],'color':"#facc15"},
                     {'range':[70,100],'color':"#dc2626"}
-
                 ]
-
             }
-
         ))
 
         fig.update_layout(
@@ -333,7 +303,4 @@ if btn:
             plot_bgcolor='rgba(0,0,0,0)'
         )
 
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
+        st.plotly_chart(fig, use_container_width=True)
