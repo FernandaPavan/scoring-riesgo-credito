@@ -1,260 +1,189 @@
+# ==================================================
+# 1. IMPORTS
+# ==================================================
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
-import plotly.graph_objects as go
-import plotly.figure_factory as ff
 import os
-import sys
-import json
+import plotly.graph_objects as go
+import scorecardpy as sc
 
-# ============================================
+# ==================================================
+# PATH
+# ==================================================
+BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_PATH, "models")
+
+model = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
+bins = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
+
+# ==================================================
 # CONFIG
-# ============================================
+# ==================================================
 st.set_page_config(layout="wide")
 
-# ============================================
-# PATH (FUNCIONA LOCAL + CLOUD)
-# ============================================
-try:
-    BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-except:
-    BASE_PATH = os.getcwd()
-
-sys.path.append(BASE_PATH)
-
-# ============================================
-# IMPORT FEATURE
-# ============================================
-from src.features import criar_faixas
-
-# ============================================
-# CARREGAR MODELO
-# ============================================
-model_path = os.path.join(BASE_PATH, "models", "modelo.pkl")
-model = joblib.load(model_path)
-
-# ============================================
-# HEADER
-# ============================================
 st.markdown("""
 <h1 style='text-align:center;color:#2563eb'>
-Evaluación de Riesgo y Score de Crédito
+Scoring de Crédito
 </h1>
+<br><br>
 """, unsafe_allow_html=True)
 
-# ============================================
-# ABAS
-# ============================================
-tab1, tab2 = st.tabs(["📊 Simulador de Crédito", "📈 Métricas del Modelo"])
+# ==================================================
+# SIDEBAR - DATOS DEL CLIENTE
+# ==================================================
+with st.sidebar:
 
-# ============================================
-# ABA 1 - SIMULADOR
-# ============================================
-with tab1:
+    st.markdown("<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Datos del Cliente</div>", unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
+    edad = st.slider("Edad", 18, 75, 30)
+    valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
+    duracao = st.slider("Duración (meses)", 4, 72, 24)
 
-    # =========================
-    # COLUNA 1 - INPUTS
-    # =========================
-    with col1:
+    genero_map = {"Masculino": "male", "Femenino": "female"}
+    genero = genero_map[st.selectbox("Género", list(genero_map.keys()))]
 
-        st.subheader("Datos del Cliente")
+    trabalho = st.selectbox("Ocupación", [0, 1, 2, 3])
 
-        edad = st.slider("Edad", 18, 75, 30)
-        valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
-        duracion = st.slider("Duración (meses)", 4, 72, 24)
+    habitacao_map = {"Propia": "own", "Alquilada": "rent", "Gratuita": "free"}
+    habitacao = habitacao_map[st.selectbox("Vivienda", list(habitacao_map.keys()))]
 
-        genero = st.selectbox("Género", ["male","female"])
-        trabajo = st.selectbox("Ocupación", [0,1,2,3])
-        habitacion = st.selectbox("Vivienda", ["own","rent","free"])
+    conta_map = {"Bajo": "little", "Medio": "moderate", "Alto": "rich"}
 
-        cuenta_ahorro = st.selectbox("Cuenta Ahorro", ["little","moderate","rich"])
-        cuenta_corriente = st.selectbox("Cuenta Corriente", ["little","moderate","rich"])
+    conta_poup = conta_map[st.selectbox("Cuenta de Ahorro", list(conta_map.keys()))]
+    conta_corr = conta_map[st.selectbox("Cuenta Corriente", list(conta_map.keys()))]
 
-        finalidad = st.selectbox("Finalidad", [
-            "car","furniture/equipment","radio/TV",
-            "business","education","vacation/others"
-        ])
+    finalidade_map = {
+        "Auto": "car",
+        "Muebles": "furniture/equipment",
+        "TV": "radio/TV",
+        "Negocios": "business",
+        "Educación": "education",
+        "Reparaciones": "repairs",
+        "Otros": "vacation/others"
+    }
 
-        btn = st.button("Calcular")
+    finalidade = finalidade_map[st.selectbox("Finalidad", list(finalidade_map.keys()))]
 
-    if not btn:
-        st.info("👈 Completa los datos y haz clic en Calcular")
+    btn = st.button("Calcular", use_container_width=True)
 
-    # =========================
-    # EXECUÇÃO
-    # =========================
-    if btn:
+# ==================================================
+# LAYOUT
+# ==================================================
+col2, col3 = st.columns([1,1])
 
-        entrada = pd.DataFrame({
-            "Genero":[genero],
-            "Trabalho":[trabajo],
-            "Habitacao":[habitacion],
-            "Conta_poupanca":[cuenta_ahorro],
-            "Conta_corrente":[cuenta_corriente],
-            "Finalidade":[finalidad],
-            "Idade":[edad],
-            "Duracao":[duracion],
-            "Valor_credito":[valor]
-        })
+# ==================================================
+# EXECUÇÃO
+# ==================================================
+if btn:
 
-        prob = model.predict_proba(entrada)[0][1]
-        score = int(850 - (prob * 550))
+    # ==========================================
+    # INPUT RAW
+    # ==========================================
+    entrada = pd.DataFrame([{
+        "Genero": genero,
+        "Trabalho": trabalho,
+        "Habitacao": habitacao,
+        "Conta_poupanca": conta_poup,
+        "Conta_corrente": conta_corr,
+        "Finalidade": finalidade,
+        "Idade": idade,
+        "Duracao": duracao,
+        "Valor_credito": valor
+    }])
 
-        # =========================
-        # POLÍTICA DE CRÉDITO
-        # =========================
-        if score >= 750:
-            limite = 18000
-        elif score >= 700:
-            limite = 10000
-        elif score >= 650:
-            limite = 4000
-        elif score >= 600:
-            limite = 2500
-        elif score >= 550:
-            limite = 250
-        else:
-            limite = 0
+    # ==========================================
+    # WOE TRANSFORM (OBRIGATÓRIO)
+    # ==========================================
+    entrada_woe = sc.woebin_ply(entrada, bins)
 
-        if duracion > 48:
-            limite *= 0.80
-        elif duracion > 36:
-            limite *= 0.90
+    # alinhar colunas com treino
+    entrada_woe = entrada_woe.reindex(columns=model.feature_names_in_, fill_value=0)
 
-        # =========================
-        # DECISÃO
-        # =========================
-        if score < 550:
-            status = "✖ RECHAZADO"
-            cor = "#dc2626"
+    # ==========================================
+    # PREDIÇÃO
+    # ==========================================
+    prob = model.predict_proba(entrada_woe)[0][1]
+    score = int(850 - prob * 550)
 
-        elif valor <= limite:
-            status = "✔ APROBADO"
-            cor = "#16a34a"
+    # ==========================================
+    # POLÍTICA DE CRÉDITO
+    # ==========================================
+    if score >= 750:
+        limite = 18000
+    elif score >= 700:
+        limite = 10000
+    elif score >= 650:
+        limite = 4000
+    elif score >= 600:
+        limite = 2500
+    elif score >= 550:
+        limite = 250
+    else:
+        limite = 0
 
-        elif valor <= limite * 1.20:
-            status = "⚠ EN ANÁLISIS"
-            cor = "#facc15"
+    if duracao > 48:
+        limite *= 0.80
+    elif duracao > 36:
+        limite *= 0.90
 
-        else:
-            status = "✖ RECHAZADO"
-            cor = "#dc2626"
+    if score < 550:
+        status = "✖ RECHAZADO"
+        cor = "#dc2626"
 
-        # =========================
-        # COLUNA 2 - RESULTADO
-        # =========================
-        with col2:
+    elif valor <= limite:
+        status = "✔ APROBADO"
+        cor = "#16a34a"
 
-            st.subheader("Resultado")
+    elif valor <= limite * 1.2:
+        status = "⚠ EN ANÁLISIS"
+        cor = "#facc15"
 
-            # SCORE
-            st.markdown(f"<h1 style='color:#2563eb;text-align:center'>{score}</h1>", unsafe_allow_html=True)
+    else:
+        status = "✖ RECHAZADO"
+        cor = "#dc2626"
 
-            st.write(f"**Probabilidad de Riesgo:** {prob:.2%}")
-            st.write(f"**Límite Aprobado:** ${limite:,.0f}")
+    # ==================================================
+    # COLUNA 2 - RESULTADO
+    # ==================================================
+    with col2:
 
-            # STATUS
-            st.markdown(
-                f"<h2 style='text-align:center;color:{cor};font-weight:800'>{status}</h2>",
-                unsafe_allow_html=True
-            )
+        st.markdown("<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Resultado</div>", unsafe_allow_html=True)
 
-            # =========================
-            # EXPLICAÇÃO ESTILO BANCO
-            # =========================
-            if score >= 750:
-                nivel = "ALTO"
-                exp_score = "perfil de bajo riesgo"
-            elif score >= 650:
-                nivel = "MEDIO"
-                exp_score = "riesgo moderado"
-            else:
-                nivel = "BAJO"
-                exp_score = "alto riesgo de incumplimiento"
+        st.markdown(f"## Score: {score}")
+        st.markdown(f"Probabilidad: {prob:.2%}")
+        st.markdown(f"Límite aprobado: R$ {limite:,.0f}")
 
-            if valor <= limite:
-                exp_valor = "dentro del límite aprobado"
-            elif valor <= limite * 1.2:
-                exp_valor = "ligeramente por encima del límite"
-            else:
-                exp_valor = "por encima del límite permitido"
+        st.markdown(
+            f"<h2 style='color:{cor};text-align:center'>{status}</h2>",
+            unsafe_allow_html=True
+        )
 
-            if duracion <= 36:
-                exp_prazo = "plazo adecuado"
-            elif duracion <= 48:
-                exp_prazo = "plazo moderado"
-            else:
-                exp_prazo = "plazo alto aumenta el riesgo"
+    # ==================================================
+    # COLUNA 3 - INDICADOR DE RIESGO
+    # ==================================================
+    with col3:
 
-            st.markdown("""
-            ### 📌 Motivo de la Decisión
-            """)
+        st.markdown("<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Indicador de Riesgo</div>", unsafe_allow_html=True)
 
-            st.markdown(f"""
-            • **Score {nivel}** → {exp_score}  
-            • El crédito solicitado está **{exp_valor}**  
-            • El plazo es considerado **{exp_prazo}**
-            """)
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=prob * 100,
+            gauge={
+                "axis": {"range": [0, 100]},
+                "steps": [
+                    {"range": [0, 40], "color": "#16a34a"},
+                    {"range": [40, 70], "color": "#facc15"},
+                    {"range": [70, 100], "color": "#dc2626"}
+                ]
+            }
+        ))
 
-        # =========================
-        # COLUNA 3 - GAUGE
-        # =========================
-        with col3:
-
-            st.subheader("Indicador de Riesgo")
-
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=prob * 100,
-                gauge={
-                    'axis': {'range':[0,100]},
-                    'steps':[
-                        {'range':[0,40],'color':"#16a34a"},
-                        {'range':[40,70],'color':"#facc15"},
-                        {'range':[70,100],'color':"#dc2626"}
-                    ]
-                }
-            ))
-
-            st.plotly_chart(fig, use_container_width=True)
-
-# ============================================
-# ABA 2 - MÉTRICAS
-# ============================================
-with tab2:
-
-    st.subheader("Desempeño del Modelo")
-
-    metrics_path = os.path.join(BASE_PATH, "models", "metricas.json")
-
-    try:
-        with open(metrics_path) as f:
-            m = json.load(f)
-    except:
-        st.warning("⚠ Métricas no encontradas. Rode el pipeline primero.")
-        st.stop()
-
-    colA, colB = st.columns(2)
-
-    with colA:
-        st.metric("AUC", f"{m.get('roc_auc',0):.3f}")
-        st.metric("Gini", f"{m.get('gini',0):.3f}")
-
-    with colB:
-        st.metric("KS", f"{m.get('ks',0):.3f}")
-        st.metric("Accuracy", f"{m.get('accuracy',0):.3f}")
-
-    # MATRIZ DE CONFUSIÓN
-    if "confusion_matrix" in m:
-
-        fig = ff.create_annotated_heatmap(
-            z=m["confusion_matrix"],
-            x=["Previsto Bueno","Previsto Riesgo"],
-            y=["Real Bueno","Real Riesgo"]
+        fig.update_layout(
+            height=400,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)"
         )
 
         st.plotly_chart(fig, use_container_width=True)
-
-    st.warning("Modelo entrenado con datos didácticos.")
