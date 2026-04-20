@@ -1,0 +1,10 @@
+feature,importance
+Faixa_Duracao_woe,0.17351925080866137
+Faixa_Credito_woe,0.1631927442994537
+Finalidade_woe,0.13320792627545294
+Conta_poupanca_woe,0.1203954055123343
+Habitacao_woe,0.0950821426794251
+Conta_corrente_woe,0.09406404485727114
+Faixa_Etaria_woe,0.08823975472343698
+Trabalho_woe,0.0799022500635678
+Genero_woe,0.052396480780396805
