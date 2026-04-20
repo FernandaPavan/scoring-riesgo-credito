@@ -22,12 +22,10 @@ MODEL_PATH = os.path.join(BASE_PATH, "models")
 modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
 bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
 
-# ============================================
-# ============================================
 st.markdown("""
 <style>
 
-/* SUBTÍTULOS INTERNOS */
+/* TÍTULOS INTERNOS */
 .seccion {
     text-align: center;
     color: #2563eb;
@@ -42,24 +40,24 @@ st.markdown("""
     font-weight: 700;
 }
 
-/* ABAS - CINZA CLARO */
+/* TÍTULOS DAS ABAS */
 button[data-baseweb="tab"] {
     font-size: 22px !important;
     font-weight: 700 !important;
-    color: #9ca3af !important;
+    color: #2563eb !important;
 }
 
-/* TEXTO INTERNO DAS ABAS */
+/* TEXTO DA ABA */
 button[data-baseweb="tab"] p {
     font-size: 22px !important;
     font-weight: 700 !important;
-    color: #9ca3af !important;
+    color: #2563eb !important;
 }
 
-/* ABA SELECIONADA */
+/* ABA ATIVA */
 button[data-baseweb="tab"][aria-selected="true"] {
-    color: #9ca3af !important;
-    border-bottom: 3px solid #9ca3af !important;
+    color: #2563eb !important;
+    border-bottom: 3px solid #2563eb !important;
 }
 
 </style>
