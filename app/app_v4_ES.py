@@ -53,7 +53,7 @@ st.markdown("""
 button[data-baseweb="tab"] {
     font-size: 22px !important;
     font-weight: 700 !important;
-    color: #2563eb !important;
+    color: #9ca3af !important;
 }
 
 /* TEXTO INTERNO DA ABA */
