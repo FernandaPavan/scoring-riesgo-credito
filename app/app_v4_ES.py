@@ -224,7 +224,7 @@ with tab1:
             </p>
             """, unsafe_allow_html=True)
 
-            st.markdown("<br><br>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
 
             st.markdown(f"""
             <p style='text-align:center; font-size:18px;'>
