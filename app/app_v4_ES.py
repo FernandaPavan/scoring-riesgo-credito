@@ -24,6 +24,7 @@ bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
 
 # ============================================
 # ============================================
+# ============================================
 # CONFIG
 # ============================================
 st.set_page_config(layout="wide")
@@ -49,23 +50,24 @@ st.markdown("""
     font-weight:700;
 }
 
-/* AUMENTAR FONTE DAS ABAS */
+/* ABAS - CINZA MÉDIO */
 button[data-baseweb="tab"] {
-    font-size: 22px !important;
+    font-size: 26px !important;
     font-weight: 700 !important;
-    color: #2563eb !important;
+    color: #6b7280 !important;
 }
 
-/* TEXTO INTERNO DA ABA */
+/* TEXTO INTERNO */
 button[data-baseweb="tab"] p {
-    font-size: 22px !important;
+    font-size: 26px !important;
     font-weight: 700 !important;
+    color: #6b7280 !important;
 }
 
 /* ABA SELECIONADA */
 button[data-baseweb="tab"][aria-selected="true"] {
-    color: #2563eb !important;
-    border-bottom: 3px solid #2563eb !important;
+    color: #6b7280 !important;
+    border-bottom: 3px solid #6b7280 !important;
 }
 
 </style>
