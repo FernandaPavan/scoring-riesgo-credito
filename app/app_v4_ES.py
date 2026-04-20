@@ -267,17 +267,25 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2 - MÉTRICAS REAIS
+# TAB 2 - DESEMPEÑO DEL MODELO
 # ============================================
 with tab2:
 
-    st.markdown("""
-    <h2 style='text-align:center; color:#2563eb;'>
-        Métricas del Modelo
-    </h2>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <h2 style='text-align:center; color:#2563eb; font-size:22px;'>
+            Métricas del Modelo
+        </h2>
+        """,
+        unsafe_allow_html=True
+    )
 
-    # métricas reais do json
+    # carregar métricas reais do modelo
+    import json
+
+    with open(os.path.join(MODEL_PATH, "metricas.json"), "r") as f:
+        metricas_json = json.load(f)
+
     metricas = pd.DataFrame({
         "Métrica": [
             "Accuracy",
@@ -289,35 +297,149 @@ with tab2:
             "KS"
         ],
         "Valor": [
-            round(metricas_modelo["accuracy"], 6),
-            round(metricas_modelo["precision"], 6),
-            round(metricas_modelo["recall"], 6),
-            round(metricas_modelo["f1_score"], 6),
-            round(metricas_modelo["auc"], 6),
-            round(metricas_modelo["gini"], 6),
-            round(metricas_modelo["ks"], 6)
+            round(metricas_json["accuracy"], 6),
+            round(metricas_json["precision"], 6),
+            round(metricas_json["recall"], 6),
+            round(metricas_json["f1_score"], 6),
+            round(metricas_json["auc"], 6),
+            round(metricas_json["gini"], 6),
+            round(metricas_json["ks"], 6)
         ]
     })
 
-    cm = metricas_modelo["confusion_matrix"]
+    # matriz de confusão real
+    cm = [
+        [
+            metricas_json["confusion_matrix"]["TN"],
+            metricas_json["confusion_matrix"]["FP"]
+        ],
+        [
+            metricas_json["confusion_matrix"]["FN"],
+            metricas_json["confusion_matrix"]["TP"]
+        ]
+    ]
 
+    cm_df = pd.DataFrame(
+        cm,
+        index=["Real 0", "Real 1"],
+        columns=["Pred 0", "Pred 1"]
+    )
+
+    # coluna central
     _, col_centro, _ = st.columns([1, 2, 1])
 
     with col_centro:
 
-        st.table(metricas)
+        # ============================================
+        # TABELA MÉTRICAS
+        # ============================================
+        tabela_metricas_html = f"""
+        <table style="
+            margin-left:auto;
+            margin-right:auto;
+            width:70%;
+            border-collapse:collapse;
+            font-size:18px;
+            color:#6b7280;
+        ">
+            <thead>
+                <tr>
+                    <th style="
+                        padding:10px;
+                        border:1px solid #ddd;
+                        color:#6b7280;
+                        text-align:center;
+                        font-weight:700;
+                    ">
+                        Métrica
+                    </th>
+                    <th style="
+                        padding:10px;
+                        border:1px solid #ddd;
+                        color:#6b7280;
+                        text-align:center;
+                        font-weight:700;
+                    ">
+                        Valor
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="text-align:center;">Accuracy</td><td style="text-align:center;">{metricas.iloc[0,1]}</td></tr>
+                <tr><td style="text-align:center;">Precisión</td><td style="text-align:center;">{metricas.iloc[1,1]}</td></tr>
+                <tr><td style="text-align:center;">Recall</td><td style="text-align:center;">{metricas.iloc[2,1]}</td></tr>
+                <tr><td style="text-align:center;">F1-Score</td><td style="text-align:center;">{metricas.iloc[3,1]}</td></tr>
+                <tr><td style="text-align:center;">AUC</td><td style="text-align:center;">{metricas.iloc[4,1]}</td></tr>
+                <tr><td style="text-align:center;">GINI</td><td style="text-align:center;">{metricas.iloc[5,1]}</td></tr>
+                <tr><td style="text-align:center;">KS</td><td style="text-align:center;">{metricas.iloc[6,1]}</td></tr>
+            </tbody>
+        </table>
+        """
+
+        st.markdown(tabela_metricas_html, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        st.markdown("""
-        <h3 style='text-align:center; color:#2563eb;'>
-            Matriz de Confusión
-        </h3>
-        """, unsafe_allow_html=True)
+        # ============================================
+        # MATRIZ DE CONFUSÃO
+        # ============================================
+        st.markdown(
+            """
+            <h3 style='text-align:center; color:#2563eb; font-size:22px;'>
+                Matriz de Confusión
+            </h3>
+            """,
+            unsafe_allow_html=True
+        )
 
-        cm_df = pd.DataFrame({
-            "Pred 0": [cm["TN"], cm["FN"]],
-            "Pred 1": [cm["FP"], cm["TP"]]
-        }, index=["Real 0", "Real 1"])
+        tabela_cm_html = f"""
+        <table style="
+            margin-left:auto;
+            margin-right:auto;
+            width:50%;
+            border-collapse:collapse;
+            font-size:18px;
+            color:#6b7280;
+        ">
+            <thead>
+                <tr>
+                    <th style="
+                        padding:10px;
+                        border:1px solid #ddd;
+                        text-align:center;
+                        color:#6b7280;
+                    "></th>
+                    <th style="
+                        padding:10px;
+                        border:1px solid #ddd;
+                        text-align:center;
+                        color:#6b7280;
+                    ">
+                        Pred 0
+                    </th>
+                    <th style="
+                        padding:10px;
+                        border:1px solid #ddd;
+                        text-align:center;
+                        color:#6b7280;
+                    ">
+                        Pred 1
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align:center;"><b>Real 0</b></td>
+                    <td style="text-align:center;">{cm_df.iloc[0,0]}</td>
+                    <td style="text-align:center;">{cm_df.iloc[0,1]}</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;"><b>Real 1</b></td>
+                    <td style="text-align:center;">{cm_df.iloc[1,0]}</td>
+                    <td style="text-align:center;">{cm_df.iloc[1,1]}</td>
+                </tr>
+            </tbody>
+        </table>
+        """
 
-        st.table(cm_df)
+        st.markdown(tabela_cm_html, unsafe_allow_html=True)
