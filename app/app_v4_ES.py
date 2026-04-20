@@ -4,7 +4,14 @@ import joblib
 import plotly.graph_objects as go
 import os
 import scorecardpy as sc
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import (
+    confusion_matrix,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score
+)
 
 # ============================================
 # PATH
@@ -21,6 +28,26 @@ bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
 st.set_page_config(layout="wide")
 
 # ============================================
+# CSS (IMPORTANTE PARA APARECER O STATUS)
+# ============================================
+st.markdown("""
+<style>
+.seccion {
+    text-align:center;
+    color:#2563eb;
+    font-size:20px;
+    font-weight:600;
+}
+
+.score {
+    text-align:center;
+    font-size:60px;
+    font-weight:700;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ============================================
 # HEADER
 # ============================================
 st.markdown("""
@@ -33,7 +60,10 @@ Evaluación de Riesgo y Score de Crédito
 # ============================================
 # TABS
 # ============================================
-tab1, tab2 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo"])
+tab1, tab2 = st.tabs([
+    "Simulación de Crédito",
+    "Desempeño del Modelo"
+])
 
 # ============================================
 # TAB 1 - SIMULACIÓN
@@ -41,13 +71,20 @@ tab1, tab2 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo"])
 with tab1:
 
     with st.sidebar:
-        st.markdown("<div style='text-align:center;color:#2563eb;font-size:20px;font-weight:600;'>Datos del Cliente</div>", unsafe_allow_html=True)
+
+        st.markdown(
+            "<div style='text-align:center;color:#2563eb;font-size:20px;font-weight:600;'>Datos del Cliente</div>",
+            unsafe_allow_html=True
+        )
 
         edad = st.slider("Edad", 18, 75, 30)
         valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
         duracion = st.slider("Duración (meses)", 4, 72, 24)
 
-        genero_map = {"Masculino": "male", "Femenino": "female"}
+        genero_map = {
+            "Masculino": "male",
+            "Femenino": "female"
+        }
         genero = genero_map[st.selectbox("Género", list(genero_map.keys()))]
 
         trabajo_map = {
@@ -70,8 +107,14 @@ with tab1:
             "Medio": "moderate",
             "Alto": "rich"
         }
-        cuenta_ahorro = conta_map[st.selectbox("Cuenta de Ahorro", list(conta_map.keys()))]
-        cuenta_corriente = conta_map[st.selectbox("Cuenta Corriente", list(conta_map.keys()))]
+
+        cuenta_ahorro = conta_map[
+            st.selectbox("Cuenta de Ahorro", list(conta_map.keys()))
+        ]
+
+        cuenta_corriente = conta_map[
+            st.selectbox("Cuenta Corriente", list(conta_map.keys()))
+        ]
 
         finalidade_map = {
             "Auto": "car",
@@ -82,8 +125,12 @@ with tab1:
             "Reparaciones": "repairs",
             "Otros": "vacation/others"
         }
+
         finalidad = finalidade_map[
-            st.selectbox("Finalidad del Crédito", list(finalidade_map.keys()))
+            st.selectbox(
+                "Finalidad del Crédito",
+                list(finalidade_map.keys())
+            )
         ]
 
         btn = st.button("Calcular", use_container_width=True)
@@ -91,6 +138,7 @@ with tab1:
     col2, col3 = st.columns([1, 1])
 
     if btn:
+
         entrada = pd.DataFrame({
             "Genero": [genero],
             "Trabalho": [trabajo],
@@ -104,36 +152,136 @@ with tab1:
         })
 
         entrada_woe = sc.woebin_ply(entrada, bins_woe)
-        entrada_woe = entrada_woe.reindex(columns=modelo.feature_names_in_, fill_value=0)
+        entrada_woe = entrada_woe.reindex(
+            columns=modelo.feature_names_in_,
+            fill_value=0
+        )
 
         prob = modelo.predict_proba(entrada_woe)[0][1]
         score = int(850 - (prob * 550))
 
-        with col2:
-            st.subheader("Resultado")
-            st.metric("Score", score)
-            st.metric("Probabilidad de Riesgo", f"{prob:.2%}")
+        # ============================================
+        # POLÍTICA DE CRÉDITO
+        # ============================================
+        if score >= 750:
+            limite = 18000
+        elif score >= 700:
+            limite = 10000
+        elif score >= 650:
+            limite = 4000
+        elif score >= 600:
+            limite = 2500
+        elif score >= 550:
+            limite = 250
+        else:
+            limite = 0
 
+        if duracion > 48:
+            limite *= 0.80
+        elif duracion > 36:
+            limite *= 0.90
+
+        # ============================================
+        # DECISÃO
+        # ============================================
+        if score < 550:
+            status = "✖ RECHAZADO"
+            cor = "#dc2626"
+
+        elif valor <= limite:
+            status = "✔ APROBADO"
+            cor = "#16a34a"
+
+        elif valor <= limite * 1.20:
+            status = "⚠ EN ANÁLISIS"
+            cor = "#facc15"
+
+        else:
+            status = "✖ RECHAZADO"
+            cor = "#dc2626"
+
+        # ============================================
+        # RESULTADO
+        # ============================================
+        with col2:
+
+            st.markdown(
+                "<div class='seccion'>Resultado del Análisis</div>",
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                f"<div class='score'>{score}</div>",
+                unsafe_allow_html=True
+            )
+
+            st.markdown(f"""
+            <p style='text-align:center; font-size:18px;'>
+                Probabilidad de Riesgo
+            </p>
+            <p style='text-align:center; font-size:28px; font-weight:bold;'>
+                {prob:.2%}
+            </p>
+            """, unsafe_allow_html=True)
+
+            st.markdown("<br><br>", unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <p style='text-align:center; font-size:18px;'>
+                Límite Aprobado
+            </p>
+            <p style='text-align:center; font-size:28px; font-weight:bold;'>
+                ${limite:,.0f}
+            </p>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div style="text-align:center; margin-top:20px;">
+                <span style="
+                    color:{cor};
+                    font-size:30px;
+                    font-weight:700;
+                ">
+                    {status}
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ============================================
+        # INDICADOR
+        # ============================================
         with col3:
-            st.subheader("Indicador de Riesgo")
+
+            st.markdown(
+                "<div class='seccion'>Indicador de Riesgo</div>",
+                unsafe_allow_html=True
+            )
+
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob * 100,
+                number={'font': {'size': 28}},
                 gauge={
                     'axis': {'range': [0, 100]},
+                    'bar': {'color': "#111"},
                     'steps': [
                         {'range': [0, 40], 'color': "#16a34a"},
                         {'range': [40, 70], 'color': "#facc15"},
                         {'range': [70, 100], 'color': "#dc2626"}
-                    ]
+                    ],
                 }
             ))
-            fig.update_layout(height=380)
+
+            fig.update_layout(
+                height=380,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            )
+
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# ============================================
-# TAB 2 - DESEMPEÑO DEL MODELO
+# TAB 2 - MÉTRICAS
 # ============================================
 with tab2:
 
@@ -142,7 +290,6 @@ with tab2:
         unsafe_allow_html=True
     )
 
-    # EXEMPLO - substitua pelos dados reais do seu conjunto de teste
     y_real = [0, 1, 0, 1, 1, 0, 1, 0]
     y_pred = [0, 1, 0, 1, 0, 0, 1, 1]
     y_prob = [0.10, 0.85, 0.20, 0.90, 0.45, 0.30, 0.88, 0.60]
@@ -166,28 +313,14 @@ with tab2:
         columns=["Pred 0", "Pred 1"]
     )
 
-    # coluna central
-    col_esq, col_centro, col_dir = st.columns([1, 2, 1])
+    _, col_centro, _ = st.columns([1, 2, 1])
 
     with col_centro:
-
-        st.table(
-            metricas.style.set_properties(
-                **{
-                    'text-align': 'center'
-                }
-            )
-        )
+        st.table(metricas)
 
         st.markdown(
             "<h3 style='text-align:center; margin-top:20px;'>Matriz de Confusión</h3>",
             unsafe_allow_html=True
         )
 
-        st.table(
-            cm_df.style.set_properties(
-                **{
-                    'text-align': 'center'
-                }
-            )
-        )
+        st.table(cm_df)
