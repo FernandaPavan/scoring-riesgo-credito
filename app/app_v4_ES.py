@@ -35,26 +35,47 @@ Scoring de Crédito
 # ==================================================
 with st.sidebar:
 
-    st.markdown("<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Datos del Cliente</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Datos del Cliente</div>",
+        unsafe_allow_html=True
+    )
 
     edad = st.slider("Edad", 18, 75, 30)
-    valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
+    valor = st.slider("Monto del crédito", 250, 20000, 5000, step=250)
     duracao = st.slider("Duración (meses)", 4, 72, 24)
 
     genero_map = {"Masculino": "male", "Femenino": "female"}
     genero = genero_map[st.selectbox("Género", list(genero_map.keys()))]
 
-    trabalho = st.selectbox("Ocupación", [0, 1, 2, 3])
+    # =========================
+    # TRABAJO (CORRIGIDO)
+    # =========================
+    trabajo_map = {
+        "Desempleado": 0,
+        "Básico": 1,
+        "Calificado": 2,
+        "Especialista": 3
+    }
 
-    habitacao_map = {"Propia": "own", "Alquilada": "rent", "Gratuita": "free"}
+    trabajo = trabajo_map[st.selectbox("Ocupación", list(trabajo_map.keys()))]
+
+    habitacao_map = {
+        "Propia": "own",
+        "Alquilada": "rent",
+        "Gratuita": "free"
+    }
     habitacao = habitacao_map[st.selectbox("Vivienda", list(habitacao_map.keys()))]
 
-    conta_map = {"Bajo": "little", "Medio": "moderate", "Alto": "rich"}
+    conta_map = {
+        "Bajo": "little",
+        "Medio": "moderate",
+        "Alto": "rich"
+    }
 
-    conta_poup = conta_map[st.selectbox("Cuenta de Ahorro", list(conta_map.keys()))]
-    conta_corr = conta_map[st.selectbox("Cuenta Corriente", list(conta_map.keys()))]
+    conta_poup = conta_map[st.selectbox("Cuenta de ahorro", list(conta_map.keys()))]
+    conta_corr = conta_map[st.selectbox("Cuenta corriente", list(conta_map.keys()))]
 
-    finalidade_map = {
+    finalidad_map = {
         "Auto": "car",
         "Muebles": "furniture/equipment",
         "TV": "radio/TV",
@@ -64,14 +85,14 @@ with st.sidebar:
         "Otros": "vacation/others"
     }
 
-    finalidade = finalidade_map[st.selectbox("Finalidad", list(finalidade_map.keys()))]
+    finalidad = finalidad_map[st.selectbox("Finalidad", list(finalidade_map.keys()))]
 
     btn = st.button("Calcular", use_container_width=True)
 
 # ==================================================
 # LAYOUT
 # ==================================================
-col2, col3 = st.columns([1,1])
+col2, col3 = st.columns([1, 1])
 
 # ==================================================
 # EXECUÇÃO
@@ -79,7 +100,7 @@ col2, col3 = st.columns([1,1])
 if btn:
 
     # ==========================================
-    # INPUT RAW
+    # INPUT RAW (NÃO MEXER NAS COLUNAS DO MODELO)
     # ==========================================
     entrada = pd.DataFrame([{
         "Genero": genero,
@@ -88,18 +109,20 @@ if btn:
         "Conta_poupanca": conta_poup,
         "Conta_corrente": conta_corr,
         "Finalidade": finalidade,
-        "Idade": idade,
+        "Idade": edad,
         "Duracao": duracao,
         "Valor_credito": valor
     }])
 
     # ==========================================
-    # WOE TRANSFORM (OBRIGATÓRIO)
+    # WOE TRANSFORM
     # ==========================================
     entrada_woe = sc.woebin_ply(entrada, bins)
 
-    # alinhar colunas com treino
-    entrada_woe = entrada_woe.reindex(columns=model.feature_names_in_, fill_value=0)
+    entrada_woe = entrada_woe.reindex(
+        columns=model.feature_names_in_,
+        fill_value=0
+    )
 
     # ==========================================
     # PREDIÇÃO
@@ -149,7 +172,10 @@ if btn:
     # ==================================================
     with col2:
 
-        st.markdown("<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Resultado</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Resultado</div>",
+            unsafe_allow_html=True
+        )
 
         st.markdown(f"## Score: {score}")
         st.markdown(f"Probabilidad: {prob:.2%}")
@@ -161,11 +187,14 @@ if btn:
         )
 
     # ==================================================
-    # COLUNA 3 - INDICADOR DE RIESGO
+    # COLUNA 3 - RISCO
     # ==================================================
     with col3:
 
-        st.markdown("<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Indicador de Riesgo</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='text-align:center;font-size:20px;font-weight:600;color:#2563eb'>Indicador de Riesgo</div>",
+            unsafe_allow_html=True
+        )
 
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
