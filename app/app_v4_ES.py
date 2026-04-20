@@ -35,7 +35,7 @@ st.markdown("""
 .seccion {
     text-align:center;
     color:#2563eb;
-    font-size:20px;
+    font-size:22px;
     font-weight:600;
 }
 
