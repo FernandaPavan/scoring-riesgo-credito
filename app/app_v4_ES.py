@@ -23,15 +23,18 @@ modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
 bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
 
 # ============================================
+# ============================================
 # CONFIG
 # ============================================
 st.set_page_config(layout="wide")
 
 # ============================================
-# CSS (IMPORTANTE PARA APARECER O STATUS)
+# CSS
 # ============================================
 st.markdown("""
 <style>
+
+/* TÍTULOS DAS SEÇÕES */
 .seccion {
     text-align:center;
     color:#2563eb;
@@ -39,11 +42,32 @@ st.markdown("""
     font-weight:600;
 }
 
+/* SCORE */
 .score {
     text-align:center;
     font-size:60px;
     font-weight:700;
 }
+
+/* AUMENTAR FONTE DAS ABAS */
+button[data-baseweb="tab"] {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #2563eb !important;
+}
+
+/* TEXTO INTERNO DA ABA */
+button[data-baseweb="tab"] p {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+}
+
+/* ABA SELECIONADA */
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #2563eb !important;
+    border-bottom: 3px solid #2563eb !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -73,7 +97,7 @@ with tab1:
     with st.sidebar:
 
         st.markdown(
-            "<div style='text-align:center;color:#2563eb;font-size:20px;font-weight:600;'>Datos del Cliente</div>",
+            "<div style='text-align:center;color:#2563eb;font-size:22px;font-weight:600;'>Datos del Cliente</div>",
             unsafe_allow_html=True
         )
 
