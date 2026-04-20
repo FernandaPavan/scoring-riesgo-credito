@@ -282,20 +282,26 @@ with tab1:
 
 # ============================================
 # ============================================
-# TAB 2 - MÉTRICAS
+# ============================================
+# TAB 2 - DESEMPEÑO DEL MODELO
 # ============================================
 with tab2:
 
-    st.markdown("""
-    <h2 style='text-align:center; color:#2563eb;'>
-        Métricas del Modelo
-    </h2>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        """
+        <h2 style='text-align:center; color:#2563eb;'>
+            Métricas del Modelo
+        </h2>
+        """,
+        unsafe_allow_html=True
+    )
 
+    # Dados exemplo
     y_real = [0, 1, 0, 1, 1, 0, 1, 0]
     y_pred = [0, 1, 0, 1, 0, 0, 1, 1]
     y_prob = [0.10, 0.85, 0.20, 0.90, 0.45, 0.30, 0.88, 0.60]
 
+    # Métricas
     metricas = pd.DataFrame({
         "Métrica": ["Accuracy", "Precisión", "Recall", "F1-Score", "AUC"],
         "Valor": [
@@ -307,6 +313,7 @@ with tab2:
         ]
     })
 
+    # Matriz de confusão
     cm = confusion_matrix(y_real, y_pred)
 
     cm_df = pd.DataFrame(
@@ -315,82 +322,87 @@ with tab2:
         columns=["Pred 0", "Pred 1"]
     )
 
-    # centraliza na página
+    # coluna central
     _, col_centro, _ = st.columns([1, 2, 1])
 
     with col_centro:
 
-    st.markdown("""
-    <h3 style='text-align:center; color:#2563eb;'>
-        Métricas de Performance
-    </h3>
-    """, unsafe_allow_html=True)
+        st.markdown(
+            """
+            <h3 style='text-align:center; color:#2563eb;'>
+                Métricas de Performance
+            </h3>
+            """,
+            unsafe_allow_html=True
+        )
 
-    # tabela HTML centralizada
-    tabela_metricas_html = f"""
-    <table style="
-        margin-left:auto;
-        margin-right:auto;
-        width:70%;
-        border-collapse:collapse;
-        text-align:center;
-        font-size:18px;
-    ">
-        <thead>
-            <tr>
-                <th style="padding:10px; border:1px solid #ddd;">Métrica</th>
-                <th style="padding:10px; border:1px solid #ddd;">Valor</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td>Accuracy</td><td>{metricas.iloc[0,1]}</td></tr>
-            <tr><td>Precisión</td><td>{metricas.iloc[1,1]}</td></tr>
-            <tr><td>Recall</td><td>{metricas.iloc[2,1]}</td></tr>
-            <tr><td>F1-Score</td><td>{metricas.iloc[3,1]}</td></tr>
-            <tr><td>AUC</td><td>{metricas.iloc[4,1]}</td></tr>
-        </tbody>
-    </table>
-    """
+        tabela_metricas_html = f"""
+        <table style="
+            margin-left:auto;
+            margin-right:auto;
+            width:70%;
+            border-collapse:collapse;
+            text-align:center;
+            font-size:18px;
+        ">
+            <thead>
+                <tr>
+                    <th style="padding:10px; border:1px solid #ddd;">Métrica</th>
+                    <th style="padding:10px; border:1px solid #ddd;">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Accuracy</td><td>{metricas.iloc[0,1]}</td></tr>
+                <tr><td>Precisión</td><td>{metricas.iloc[1,1]}</td></tr>
+                <tr><td>Recall</td><td>{metricas.iloc[2,1]}</td></tr>
+                <tr><td>F1-Score</td><td>{metricas.iloc[3,1]}</td></tr>
+                <tr><td>AUC</td><td>{metricas.iloc[4,1]}</td></tr>
+            </tbody>
+        </table>
+        """
 
-    st.markdown(tabela_metricas_html, unsafe_allow_html=True)
+        st.markdown(tabela_metricas_html, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-    st.markdown("""
-    <h3 style='text-align:center; color:#2563eb;'>
-        Matriz de Confusión
-    </h3>
-    """, unsafe_allow_html=True)
+        st.markdown(
+            """
+            <h3 style='text-align:center; color:#2563eb;'>
+                Matriz de Confusión
+            </h3>
+            """,
+            unsafe_allow_html=True
+        )
 
-    tabela_cm_html = f"""
-    <table style="
-        margin-left:auto;
-        margin-right:auto;
-        width:50%;
-        border-collapse:collapse;
-        text-align:center;
-        font-size:18px;
-    ">
-        <thead>
-            <tr>
-                <th style="padding:10px; border:1px solid #ddd;"></th>
-                <th style="padding:10px; border:1px solid #ddd;">Pred 0</th>
-                <th style="padding:10px; border:1px solid #ddd;">Pred 1</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><b>Real 0</b></td>
-                <td>{cm_df.iloc[0,0]}</td>
-                <td>{cm_df.iloc[0,1]}</td>
-            </tr>
-            <tr>
-                <td><b>Real 1</b></td>
-                <td>{cm_df.iloc[1,0]}</td>
-                <td>{cm_df.iloc[1,1]}</td>
-            </tr>
-        </tbody>
-    </table>
-    """
+        tabela_cm_html = f"""
+        <table style="
+            margin-left:auto;
+            margin-right:auto;
+            width:50%;
+            border-collapse:collapse;
+            text-align:center;
+            font-size:18px;
+        ">
+            <thead>
+                <tr>
+                    <th style="padding:10px; border:1px solid #ddd;"></th>
+                    <th style="padding:10px; border:1px solid #ddd;">Pred 0</th>
+                    <th style="padding:10px; border:1px solid #ddd;">Pred 1</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>Real 0</b></td>
+                    <td>{cm_df.iloc[0,0]}</td>
+                    <td>{cm_df.iloc[0,1]}</td>
+                </tr>
+                <tr>
+                    <td><b>Real 1</b></td>
+                    <td>{cm_df.iloc[1,0]}</td>
+                    <td>{cm_df.iloc[1,1]}</td>
+                </tr>
+            </tbody>
+        </table>
+        """
 
-    st.markdown(tabela_cm_html, unsafe_allow_html=True)
+        st.markdown(tabela_cm_html, unsafe_allow_html=True)
