@@ -281,14 +281,16 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
+# ============================================
 # TAB 2 - MÉTRICAS
 # ============================================
 with tab2:
 
-    st.markdown(
-        "<h2 style='text-align:center;'>Métricas del Modelo</h2>",
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <h2 style='text-align:center; color:#2563eb;'>
+        Métricas del Modelo
+    </h2>
+    """, unsafe_allow_html=True)
 
     y_real = [0, 1, 0, 1, 1, 0, 1, 0]
     y_pred = [0, 1, 0, 1, 0, 0, 1, 1]
@@ -313,14 +315,48 @@ with tab2:
         columns=["Pred 0", "Pred 1"]
     )
 
+    # centraliza na página
     _, col_centro, _ = st.columns([1, 2, 1])
 
     with col_centro:
-        st.table(metricas)
 
-        st.markdown(
-            "<h3 style='text-align:center; margin-top:20px;'>Matriz de Confusión</h3>",
-            unsafe_allow_html=True
+        st.markdown("""
+        <h3 style='text-align:center;'>
+            Métricas de Performance
+        </h3>
+        """, unsafe_allow_html=True)
+
+        metricas_style = metricas.style.set_properties(**{
+            'text-align': 'center'
+        }).set_table_styles([
+            {'selector': 'th',
+             'props': [('text-align', 'center'),
+                       ('font-weight', 'bold')]}
+        ])
+
+        st.dataframe(
+            metricas_style,
+            use_container_width=True,
+            hide_index=True
         )
 
-        st.table(cm_df)
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown("""
+        <h3 style='text-align:center; color:#2563eb;'>
+            Matriz de Confusión
+        </h3>
+        """, unsafe_allow_html=True)
+
+        cm_style = cm_df.style.set_properties(**{
+            'text-align': 'center'
+        }).set_table_styles([
+            {'selector': 'th',
+             'props': [('text-align', 'center'),
+                       ('font-weight', 'bold')]}
+        ])
+
+        st.dataframe(
+            cm_style,
+            use_container_width=True
+        )
