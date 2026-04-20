@@ -3,15 +3,8 @@ import pandas as pd
 import joblib
 import plotly.graph_objects as go
 import os
+import json
 import scorecardpy as sc
-from sklearn.metrics import (
-    confusion_matrix,
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score
-)
 
 # ============================================
 # PATH
@@ -22,13 +15,17 @@ MODEL_PATH = os.path.join(BASE_PATH, "models")
 modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
 bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
 
+# carregar métricas reais
+with open(os.path.join(MODEL_PATH, "metricas.json"), "r") as f:
+    metricas_modelo = json.load(f)
+
 # ============================================
 # CONFIG
 # ============================================
 st.set_page_config(layout="wide")
 
 # ============================================
-# CSS (IMPORTANTE PARA APARECER O STATUS)
+# CSS
 # ============================================
 st.markdown("""
 <style>
@@ -160,9 +157,7 @@ with tab1:
         prob = modelo.predict_proba(entrada_woe)[0][1]
         score = int(850 - (prob * 550))
 
-        # ============================================
-        # POLÍTICA DE CRÉDITO
-        # ============================================
+        # política
         if score >= 750:
             limite = 18000
         elif score >= 700:
@@ -181,36 +176,29 @@ with tab1:
         elif duracion > 36:
             limite *= 0.90
 
-        # ============================================
-        # DECISÃO
-        # ============================================
+        # decisão
         if score < 550:
             status = "✖ RECHAZADO"
             cor = "#dc2626"
-
         elif valor <= limite:
             status = "✔ APROBADO"
             cor = "#16a34a"
-
         elif valor <= limite * 1.20:
             status = "⚠ EN ANÁLISIS"
             cor = "#facc15"
-
         else:
             status = "✖ RECHAZADO"
             cor = "#dc2626"
 
-        # ============================================
-        # RESULTADO
-        # ============================================
+        # resultado
         with col2:
 
             st.markdown(
                 "<div class='seccion'>Resultado del Análisis</div>",
                 unsafe_allow_html=True
             )
-            
-            st.markdown("<br>", unsafe_allow_html=True) 
+
+            st.markdown("<br>", unsafe_allow_html=True)
 
             st.markdown(
                 f"<div class='score'>{score}</div>",
@@ -225,8 +213,6 @@ with tab1:
                 {prob:.2%}
             </p>
             """, unsafe_allow_html=True)
-
-            #st.markdown("<br>", unsafe_allow_html=True)
 
             st.markdown(f"""
             <p style='text-align:center; font-size:18px;'>
@@ -249,9 +235,7 @@ with tab1:
             </div>
             """, unsafe_allow_html=True)
 
-        # ============================================
-        # INDICADOR
-        # ============================================
+        # gauge
         with col3:
 
             st.markdown(
@@ -283,120 +267,57 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# ============================================
-# ============================================
-# TAB 2 - DESEMPEÑO DEL MODELO
+# TAB 2 - MÉTRICAS REAIS
 # ============================================
 with tab2:
 
-    st.markdown(
-        """
-        <h2 style='text-align:center; color:#2563eb;'>
-            Métricas del Modelo
-        </h2>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <h2 style='text-align:center; color:#2563eb;'>
+        Métricas del Modelo
+    </h2>
+    """, unsafe_allow_html=True)
 
-    # Dados exemplo
-    y_real = [0, 1, 0, 1, 1, 0, 1, 0]
-    y_pred = [0, 1, 0, 1, 0, 0, 1, 1]
-    y_prob = [0.10, 0.85, 0.20, 0.90, 0.45, 0.30, 0.88, 0.60]
-
-    # Métricas
+    # métricas reais do json
     metricas = pd.DataFrame({
-        "Métrica": ["Accuracy", "Precisión", "Recall", "F1-Score", "AUC"],
+        "Métrica": [
+            "Accuracy",
+            "Precisión",
+            "Recall",
+            "F1-Score",
+            "AUC",
+            "GINI",
+            "KS"
+        ],
         "Valor": [
-            round(accuracy_score(y_real, y_pred), 6),
-            round(precision_score(y_real, y_pred), 6),
-            round(recall_score(y_real, y_pred), 6),
-            round(f1_score(y_real, y_pred), 6),
-            round(roc_auc_score(y_real, y_prob), 6)
+            round(metricas_modelo["accuracy"], 6),
+            round(metricas_modelo["precision"], 6),
+            round(metricas_modelo["recall"], 6),
+            round(metricas_modelo["f1_score"], 6),
+            round(metricas_modelo["auc"], 6),
+            round(metricas_modelo["gini"], 6),
+            round(metricas_modelo["ks"], 6)
         ]
     })
 
-    # Matriz de confusão
-    cm = confusion_matrix(y_real, y_pred)
+    cm = metricas_modelo["confusion_matrix"]
 
-    cm_df = pd.DataFrame(
-        cm,
-        index=["Real 0", "Real 1"],
-        columns=["Pred 0", "Pred 1"]
-    )
-
-    # coluna central
     _, col_centro, _ = st.columns([1, 2, 1])
 
     with col_centro:
 
-    
-        tabela_metricas_html = f"""
-        <table style="
-            margin-left:auto;
-            margin-right:auto;
-            width:70%;
-            border-collapse:collapse;
-            text-align:center;
-            font-size:18px;
-        ">
-            <thead>
-                <tr>
-                    <th style="padding:10px; border:1px solid #ddd;">Métrica</th>
-                    <th style="padding:10px; border:1px solid #ddd;">Valor</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>Accuracy</td><td>{metricas.iloc[0,1]}</td></tr>
-                <tr><td>Precisión</td><td>{metricas.iloc[1,1]}</td></tr>
-                <tr><td>Recall</td><td>{metricas.iloc[2,1]}</td></tr>
-                <tr><td>F1-Score</td><td>{metricas.iloc[3,1]}</td></tr>
-                <tr><td>AUC</td><td>{metricas.iloc[4,1]}</td></tr>
-            </tbody>
-        </table>
-        """
-
-        st.markdown(tabela_metricas_html, unsafe_allow_html=True)
+        st.table(metricas)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        st.markdown(
-            """
-            <h3 style='text-align:center; color:#2563eb;'>
-                Matriz de Confusión
-            </h3>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown("""
+        <h3 style='text-align:center; color:#2563eb;'>
+            Matriz de Confusión
+        </h3>
+        """, unsafe_allow_html=True)
 
-        tabela_cm_html = f"""
-        <table style="
-            margin-left:auto;
-            margin-right:auto;
-            width:50%;
-            border-collapse:collapse;
-            text-align:center;
-            font-size:18px;
-        ">
-            <thead>
-                <tr>
-                    <th style="padding:10px; border:1px solid #ddd;"></th>
-                    <th style="padding:10px; border:1px solid #ddd;">Pred 0</th>
-                    <th style="padding:10px; border:1px solid #ddd;">Pred 1</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><b>Real 0</b></td>
-                    <td>{cm_df.iloc[0,0]}</td>
-                    <td>{cm_df.iloc[0,1]}</td>
-                </tr>
-                <tr>
-                    <td><b>Real 1</b></td>
-                    <td>{cm_df.iloc[1,0]}</td>
-                    <td>{cm_df.iloc[1,1]}</td>
-                </tr>
-            </tbody>
-        </table>
-        """
+        cm_df = pd.DataFrame({
+            "Pred 0": [cm["TN"], cm["FN"]],
+            "Pred 1": [cm["FP"], cm["TP"]]
+        }, index=["Real 0", "Real 1"])
 
-        st.markdown(tabela_cm_html, unsafe_allow_html=True)
+        st.table(cm_df)
