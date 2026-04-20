@@ -132,10 +132,15 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
+# ============================================
 # TAB 2 - DESEMPEÑO DEL MODELO
 # ============================================
 with tab2:
-    st.subheader("Métricas del Modelo")
+
+    st.markdown(
+        "<h2 style='text-align:center;'>Métricas del Modelo</h2>",
+        unsafe_allow_html=True
+    )
 
     # EXEMPLO - substitua pelos dados reais do seu conjunto de teste
     y_real = [0, 1, 0, 1, 1, 0, 1, 0]
@@ -143,7 +148,7 @@ with tab2:
     y_prob = [0.10, 0.85, 0.20, 0.90, 0.45, 0.30, 0.88, 0.60]
 
     metricas = pd.DataFrame({
-        "Métrica": ["Accuracy", "Precision", "Recall", "F1-Score", "AUC"],
+        "Métrica": ["Accuracy", "Precisión", "Recall", "F1-Score", "AUC"],
         "Valor": [
             round(accuracy_score(y_real, y_pred), 4),
             round(precision_score(y_real, y_pred), 4),
@@ -153,14 +158,36 @@ with tab2:
         ]
     })
 
-    st.table(metricas)
-
-    st.subheader("Matriz de Confusión")
     cm = confusion_matrix(y_real, y_pred)
+
     cm_df = pd.DataFrame(
         cm,
         index=["Real 0", "Real 1"],
         columns=["Pred 0", "Pred 1"]
     )
 
-    st.table(cm_df)
+    # coluna central
+    col_esq, col_centro, col_dir = st.columns([1, 2, 1])
+
+    with col_centro:
+
+        st.table(
+            metricas.style.set_properties(
+                **{
+                    'text-align': 'center'
+                }
+            )
+        )
+
+        st.markdown(
+            "<h3 style='text-align:center; margin-top:20px;'>Matriz de Confusión</h3>",
+            unsafe_allow_html=True
+        )
+
+        st.table(
+            cm_df.style.set_properties(
+                **{
+                    'text-align': 'center'
+                }
+            )
+        )
