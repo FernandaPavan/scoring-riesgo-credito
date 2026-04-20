@@ -51,14 +51,14 @@ st.markdown("""
 
 /* AUMENTAR FONTE DAS ABAS */
 button[data-baseweb="tab"] {
-    font-size: 26px !important;
+    font-size: 22px !important;
     font-weight: 700 !important;
     color: #2563eb !important;
 }
 
 /* TEXTO INTERNO DA ABA */
 button[data-baseweb="tab"] p {
-    font-size: 26px !important;
+    font-size: 22px !important;
     font-weight: 700 !important;
 }
 
