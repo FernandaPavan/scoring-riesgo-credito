@@ -22,44 +22,28 @@ MODEL_PATH = os.path.join(BASE_PATH, "models")
 modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
 bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
 
+# ============================================
+# CONFIG
+# ============================================
+st.set_page_config(layout="wide")
+
+# ============================================
+# CSS (IMPORTANTE PARA APARECER O STATUS)
+# ============================================
 st.markdown("""
 <style>
-
-/* TÍTULOS INTERNOS */
 .seccion {
-    text-align: center;
-    color: #2563eb;
-    font-size: 22px;
-    font-weight: 600;
+    text-align:center;
+    color:#2563eb;
+    font-size:20px;
+    font-weight:600;
 }
 
-/* SCORE */
 .score {
-    text-align: center;
-    font-size: 60px;
-    font-weight: 700;
+    text-align:center;
+    font-size:60px;
+    font-weight:700;
 }
-
-/* TÍTULOS DAS ABAS */
-button[data-baseweb="tab"] {
-    font-size: 22px !important;
-    font-weight: 700 !important;
-    color: #2563eb !important;
-}
-
-/* TEXTO DA ABA */
-button[data-baseweb="tab"] p {
-    font-size: 22px !important;
-    font-weight: 700 !important;
-    color: #2563eb !important;
-}
-
-/* ABA ATIVA */
-button[data-baseweb="tab"][aria-selected="true"] {
-    color: #2563eb !important;
-    border-bottom: 3px solid #2563eb !important;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -89,7 +73,7 @@ with tab1:
     with st.sidebar:
 
         st.markdown(
-            "<div style='text-align:center;color:#2563eb;font-size:22px;font-weight:600;'>Datos del Cliente</div>",
+            "<div style='text-align:center;color:#2563eb;font-size:20px;font-weight:600;'>Datos del Cliente</div>",
             unsafe_allow_html=True
         )
 
@@ -242,7 +226,7 @@ with tab1:
             </p>
             """, unsafe_allow_html=True)
 
-            #st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
 
             st.markdown(f"""
             <p style='text-align:center; font-size:18px;'>
