@@ -24,47 +24,48 @@ bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
 
 # ============================================
 # ============================================
+# CONFIG
+# ============================================
+st.set_page_config(layout="wide")
+
+# ============================================
+# CSS
+# ============================================
 st.markdown("""
 <style>
 
-/* =========================================
-   TÍTULOS DAS ABAS (cinza claro)
-========================================= */
+/* TÍTULOS DAS SEÇÕES */
+.seccion {
+    text-align:center;
+    color:#9ca3af;
+    font-size:22px;
+    font-weight:600;
+}
+
+/* SCORE */
+.score {
+    text-align:center;
+    font-size:60px;
+    font-weight:700;
+}
+
+/* AUMENTAR FONTE DAS ABAS */
 button[data-baseweb="tab"] {
     font-size: 22px !important;
     font-weight: 700 !important;
-    color: #9ca3af !important;
+    color: #2563eb !important;
 }
 
+/* TEXTO INTERNO DA ABA */
 button[data-baseweb="tab"] p {
     font-size: 22px !important;
     font-weight: 700 !important;
-    color: #9ca3af !important;
 }
 
 /* ABA SELECIONADA */
 button[data-baseweb="tab"][aria-selected="true"] {
-    color: #9ca3af !important;
-    border-bottom: 3px solid #9ca3af !important;
-}
-
-/* =========================================
-   SUBTÍTULOS INTERNOS (azul)
-========================================= */
-.seccion {
-    text-align: center;
-    color: #2563eb;
-    font-size: 22px;
-    font-weight: 600;
-}
-
-/* =========================================
-   SCORE
-========================================= */
-.score {
-    text-align: center;
-    font-size: 60px;
-    font-weight: 700;
+    color: #2563eb !important;
+    border-bottom: 3px solid #2563eb !important;
 }
 
 </style>
