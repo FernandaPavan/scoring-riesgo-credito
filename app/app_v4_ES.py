@@ -320,43 +320,77 @@ with tab2:
 
     with col_centro:
 
-        st.markdown("""
-        <h3 style='text-align:center;'>
-            Métricas de Performance
-        </h3>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <h3 style='text-align:center; color:#2563eb;'>
+        Métricas de Performance
+    </h3>
+    """, unsafe_allow_html=True)
 
-        metricas_style = metricas.style.set_properties(**{
-            'text-align': 'center'
-        }).set_table_styles([
-            {'selector': 'th',
-             'props': [('text-align', 'center'),
-                       ('font-weight', 'bold')]}
-        ])
+    # tabela HTML centralizada
+    tabela_metricas_html = f"""
+    <table style="
+        margin-left:auto;
+        margin-right:auto;
+        width:70%;
+        border-collapse:collapse;
+        text-align:center;
+        font-size:18px;
+    ">
+        <thead>
+            <tr>
+                <th style="padding:10px; border:1px solid #ddd;">Métrica</th>
+                <th style="padding:10px; border:1px solid #ddd;">Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Accuracy</td><td>{metricas.iloc[0,1]}</td></tr>
+            <tr><td>Precisión</td><td>{metricas.iloc[1,1]}</td></tr>
+            <tr><td>Recall</td><td>{metricas.iloc[2,1]}</td></tr>
+            <tr><td>F1-Score</td><td>{metricas.iloc[3,1]}</td></tr>
+            <tr><td>AUC</td><td>{metricas.iloc[4,1]}</td></tr>
+        </tbody>
+    </table>
+    """
 
-        st.dataframe(
-            metricas_style,
-            use_container_width=True,
-            hide_index=True
-        )
+    st.markdown(tabela_metricas_html, unsafe_allow_html=True)
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
 
-        st.markdown("""
-        <h3 style='text-align:center; color:#2563eb;'>
-            Matriz de Confusión
-        </h3>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <h3 style='text-align:center; color:#2563eb;'>
+        Matriz de Confusión
+    </h3>
+    """, unsafe_allow_html=True)
 
-        cm_style = cm_df.style.set_properties(**{
-            'text-align': 'center'
-        }).set_table_styles([
-            {'selector': 'th',
-             'props': [('text-align', 'center'),
-                       ('font-weight', 'bold')]}
-        ])
+    tabela_cm_html = f"""
+    <table style="
+        margin-left:auto;
+        margin-right:auto;
+        width:50%;
+        border-collapse:collapse;
+        text-align:center;
+        font-size:18px;
+    ">
+        <thead>
+            <tr>
+                <th style="padding:10px; border:1px solid #ddd;"></th>
+                <th style="padding:10px; border:1px solid #ddd;">Pred 0</th>
+                <th style="padding:10px; border:1px solid #ddd;">Pred 1</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><b>Real 0</b></td>
+                <td>{cm_df.iloc[0,0]}</td>
+                <td>{cm_df.iloc[0,1]}</td>
+            </tr>
+            <tr>
+                <td><b>Real 1</b></td>
+                <td>{cm_df.iloc[1,0]}</td>
+                <td>{cm_df.iloc[1,1]}</td>
+            </tr>
+        </tbody>
+    </table>
+    """
 
-        st.dataframe(
-            cm_style,
-            use_container_width=True
-        )
+    st.markdown(tabela_cm_html, unsafe_allow_html=True)
