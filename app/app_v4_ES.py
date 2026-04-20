@@ -305,11 +305,11 @@ with tab2:
     metricas = pd.DataFrame({
         "Métrica": ["Accuracy", "Precisión", "Recall", "F1-Score", "AUC"],
         "Valor": [
-            round(accuracy_score(y_real, y_pred), 4),
-            round(precision_score(y_real, y_pred), 4),
-            round(recall_score(y_real, y_pred), 4),
-            round(f1_score(y_real, y_pred), 4),
-            round(roc_auc_score(y_real, y_prob), 4)
+            round(accuracy_score(y_real, y_pred), 6),
+            round(precision_score(y_real, y_pred), 6),
+            round(recall_score(y_real, y_pred), 6),
+            round(f1_score(y_real, y_pred), 6),
+            round(roc_auc_score(y_real, y_prob), 6)
         ]
     })
 
