@@ -327,15 +327,7 @@ with tab2:
 
     with col_centro:
 
-        st.markdown(
-            """
-            <h3 style='text-align:center; color:#2563eb;'>
-                Métricas de Performance
-            </h3>
-            """,
-            unsafe_allow_html=True
-        )
-
+    
         tabela_metricas_html = f"""
         <table style="
             margin-left:auto;
