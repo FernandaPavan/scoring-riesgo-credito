@@ -52,6 +52,18 @@ text-align:center;
 font-size:60px;
 font-weight:700;
 }
+
+div.stButton > button {
+    background-color: #2563eb;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    height: 45px;
+    width: 100%;
+}
+div.stButton > button:hover {
+    background-color: #1d4ed8;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -167,39 +179,24 @@ with tab1:
 
         limite=int(limite)
 
-        # DECISÃO + MOTIVO
+        # DECISÃO
         if score < 460:
-            status="RECHAZADO"
-            icon="✖"
-            cor="#dc2626"
+            status="RECHAZADO"; icon="✖"; cor="#dc2626"
             motivo="Score por debajo del nivel mínimo de riesgo permitido."
-
         elif score < 520:
-            status="EN ANÁLISIS"
-            icon="⚠"
-            cor="#facc15"
+            status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"
             motivo="Cliente en zona de riesgo intermedio. Requiere evaluación manual."
-
         else:
             if valor <= limite:
-                status="APROBADO"
-                icon="✔"
-                cor="#16a34a"
+                status="APROBADO"; icon="✔"; cor="#16a34a"
                 motivo="Monto dentro del límite aprobado según score."
-
             elif valor <= limite * 1.20:
-                status="EN ANÁLISIS"
-                icon="⚠"
-                cor="#facc15"
+                status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"
                 motivo="Monto levemente superior al límite. Requiere revisión."
-
             else:
-                status="RECHAZADO"
-                icon="✖"
-                cor="#dc2626"
+                status="RECHAZADO"; icon="✖"; cor="#dc2626"
                 motivo="Monto solicitado excede el límite permitido."
 
-        # RESULTADO
         with col2:
 
             st.markdown("<div class='seccion'>Resultado del Análisis</div>",unsafe_allow_html=True)
@@ -208,23 +205,28 @@ with tab1:
             st.markdown(f"<div class='score'>{score}</div>",unsafe_allow_html=True)
 
             st.markdown(f"""
-            <p style='text-align:center;
-            font-size:22px;
-            font-weight:700;
-            color:#2563eb;'>
+            <p style='text-align:center;font-size:22px;font-weight:700;color:#2563eb;'>
             {segmento}
             </p>
             """,unsafe_allow_html=True)
 
             st.markdown(f"""
-            <p style='text-align:center;'>Probabilidad de Riesgo</p>
-            <p style='text-align:center;font-size:28px;font-weight:bold;'>{prob:.2%}</p>
-            """,unsafe_allow_html=True)
+            <p style='text-align:center;font-size:20px;font-weight:600;'>
+            Probabilidad de Riesgo
+            </p>
+            <p style='text-align:center;font-size:32px;font-weight:700;'>
+            {prob:.2%}
+            </p>
+            """, unsafe_allow_html=True)
 
             st.markdown(f"""
-            <p style='text-align:center;'>Límite Aprobado</p>
-            <p style='text-align:center;font-size:28px;font-weight:bold;'>${limite:,.0f}</p>
-            """,unsafe_allow_html=True)
+            <p style='text-align:center;font-size:20px;font-weight:600;'>
+            Límite Aprobado
+            </p>
+            <p style='text-align:center;font-size:32px;font-weight:700;'>
+            ${limite:,.0f}
+            </p>
+            """, unsafe_allow_html=True)
 
             st.markdown(f"""
             <div style='text-align:center;margin-top:30px;'>
@@ -236,12 +238,11 @@ with tab1:
 
             st.markdown(f"""
             <br>
-            <p style='text-align:center;font-size:17px;color:#374151;max-width:400px;margin:auto;'>
+            <p style='text-align:center;font-size:20px;font-weight:500;color:#374151;max-width:450px;margin:auto;'>
             {motivo}
             </p>
             """,unsafe_allow_html=True)
 
-        # GAUGE
         with col3:
 
             st.markdown("<div class='seccion'>Indicador de Riesgo</div>",unsafe_allow_html=True)
@@ -273,19 +274,19 @@ with tab2:
     """, unsafe_allow_html=True)
 
     metricas_df = pd.DataFrame({
-        "Métrica":["Accuracy","Precisión","Recall","F1","AUC","GINI","KS"],
+        "Métrica":["Accuracy","Precisión","Recall","F1-Score","AUC","GINI","KS"],
         "Valor":[
-            metricas_modelo["accuracy"],
-            metricas_modelo["precision"],
-            metricas_modelo["recall"],
-            metricas_modelo["f1_score"],
-            metricas_modelo["auc"],
-            metricas_modelo["gini"],
-            metricas_modelo["ks"]
+            round(metricas_modelo["accuracy"],4),
+            round(metricas_modelo["precision"],4),
+            round(metricas_modelo["recall"],4),
+            round(metricas_modelo["f1_score"],4),
+            round(metricas_modelo["auc"],4),
+            round(metricas_modelo["gini"],4),
+            round(metricas_modelo["ks"],4)
         ]
     })
 
-    st.markdown(metricas_df.to_html(index=False, justify="center"), unsafe_allow_html=True)
+    st.markdown(f"<div style='display:flex;justify-content:center;'>{metricas_df.to_html(index=False)}</div>", unsafe_allow_html=True)
 
     if "confusion_matrix" in metricas_modelo:
 
@@ -297,4 +298,4 @@ with tab2:
             index=["Real: 0","Real: 1"]
         )
 
-        st.dataframe(cm_df, width=400)
+        st.markdown(f"<div style='display:flex;justify-content:center;'>{cm_df.to_html()}</div>", unsafe_allow_html=True)
