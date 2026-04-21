@@ -129,11 +129,23 @@ with tab1:
             st.plotly_chart(fig,use_container_width=True)
 
 # ============================================
-# TAB 2: MÉTRICAS (LAYOUT ORIGINAL CENTRALIZADO)
+# ============================================
+# TAB 2: MÉTRICAS (COM CORES NA MATRIZ)
 # ============================================
 with tab2:
     st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
-    metricas_df = pd.DataFrame({"Métrica":["Accuracy","Precisión","Recall","AUC","GINI","KS"],"Valor":[round(metricas_modelo["accuracy"],4), round(metricas_modelo["precision"],4), round(metricas_modelo["recall"],4), round(metricas_modelo["auc"],4), round(metricas_modelo["gini"],4), round(metricas_modelo["ks"],4)]})
+    
+    metricas_df = pd.DataFrame({
+        "Métrica":["Accuracy","Precisión","Recall","AUC","GINI","KS"],
+        "Valor":[
+            round(metricas_modelo["accuracy"],4), 
+            round(metricas_modelo["precision"],4), 
+            round(metricas_modelo["recall"],4), 
+            round(metricas_modelo["auc"],4), 
+            round(metricas_modelo["gini"],4), 
+            round(metricas_modelo["ks"],4)
+        ]
+    })
     
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:20px;'>
@@ -144,13 +156,26 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
+    # MATRIZ DE CONFUSÃO COM CORES NOS ACERTOS/ERROS
     cm = metricas_modelo["confusion_matrix"]
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:30px;'>
     <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;border:1px solid #ddd;'>
-        <tr style='background-color:#2563eb;color:white;'><th>Real \ Pred</th><th>Bom (0)</th><th>Ruim (1)</th></tr>
-        <tr><td><b>Real: Bom (0)</b></td><td>{cm['TN']}</td><td>{cm['FP']}</td></tr>
-        <tr><td><b>Real: Ruim (1)</b></td><td>{cm['FN']}</td><td>{cm['TP']}</td></tr>
+        <tr style='background-color:#2563eb;color:white;'>
+            <th>Real \ Pred</th>
+            <th style='padding:12px;'>Pred: Bom (0)</th>
+            <th style='padding:12px;'>Pred: Ruim (1)</th>
+        </tr>
+        <tr>
+            <td style='padding:10px;'><b>Real: Bom (0)</b></td>
+            <td style='color:#16a34a; font-weight:700;'>{cm['TN']} (TN)</td>
+            <td style='color:#dc2626; font-weight:700;'>{cm['FP']} (FP)</td>
+        </tr>
+        <tr>
+            <td style='padding:10px;'><b>Real: Ruim (1)</b></td>
+            <td style='color:#dc2626; font-weight:700;'>{cm['FN']} (FN)</td>
+            <td style='color:#16a34a; font-weight:700;'>{cm['TP']} (TP)</td>
+        </tr>
     </table>
     </div>
     """, unsafe_allow_html=True)
