@@ -101,7 +101,7 @@ with tab1:
         genero=genero_map[st.selectbox("Género",list(genero_map.keys()))]
 
         trabajo_map={"Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3}
-        trabajo=trabajo_map[st.selectbox("Ocupación",list(trabajo_map.keys()))]
+        trabalho=trabajo_map[st.selectbox("Ocupación",list(trabajo_map.keys()))]
 
         habitacion_map={"Propia":"own","Alquilada":"rent","Gratuita":"free"}
         habitacion=habitacion_map[st.selectbox("Vivienda",list(habitacion_map.keys()))]
@@ -126,7 +126,7 @@ with tab1:
 
         entrada=pd.DataFrame({
             "Genero":[genero],
-            "Trabalho":[trabajo],
+            "Trabalho":[trabalho],
             "Habitacao":[habitacion],
             "Conta_poupanca":[cuenta_ahorro],
             "Conta_corrente":[cuenta_corriente],
@@ -152,25 +152,19 @@ with tab1:
 
         score=int(offset+factor*np.log(odds))
 
-        # POLÍTICA
+        # SEGMENTAÇÃO
         if score >= 700:
-            segmento="SUPER PRIME"
-            limite=18000
+            segmento="SUPER PRIME"; limite=18000
         elif score >= 650:
-            segmento="PRIME"
-            limite=10000
+            segmento="PRIME"; limite=10000
         elif score >= 600:
-            segmento="STANDARD"
-            limite=5000
+            segmento="STANDARD"; limite=5000
         elif score >= 520:
-            segmento="NEAR PRIME"
-            limite=2500
+            segmento="NEAR PRIME"; limite=2500
         elif score >= 460:
-            segmento="REVIEW"
-            limite=1000
+            segmento="REVIEW"; limite=1000
         else:
-            segmento="SUBPRIME"
-            limite=0
+            segmento="SUBPRIME"; limite=0
 
         if duracion>48:
             limite*=0.85
@@ -211,21 +205,13 @@ with tab1:
             """,unsafe_allow_html=True)
 
             st.markdown(f"""
-            <p style='text-align:center;font-size:20px;font-weight:600;'>
-            Probabilidad de Riesgo
-            </p>
-            <p style='text-align:center;font-size:32px;font-weight:700;'>
-            {prob:.2%}
-            </p>
+            <p style='text-align:center;font-size:20px;font-weight:600;'>Probabilidad de Riesgo</p>
+            <p style='text-align:center;font-size:32px;font-weight:700;'>{prob:.2%}</p>
             """, unsafe_allow_html=True)
 
             st.markdown(f"""
-            <p style='text-align:center;font-size:20px;font-weight:600;'>
-            Límite Aprobado
-            </p>
-            <p style='text-align:center;font-size:32px;font-weight:700;'>
-            ${limite:,.0f}
-            </p>
+            <p style='text-align:center;font-size:20px;font-weight:600;'>Límite Aprobado</p>
+            <p style='text-align:center;font-size:32px;font-weight:700;'>${limite:,.0f}</p>
             """, unsafe_allow_html=True)
 
             st.markdown(f"""
@@ -267,18 +253,8 @@ with tab1:
 # ============================================
 with tab2:
 
-    # ============================================
-    # TÍTULO
-    # ============================================
-    st.markdown("""
-    <h2 style='text-align:center;color:#2563eb;font-size:26px;'>
-    Métricas del Modelo
-    </h2>
-    """, unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
 
-    # ============================================
-    # MÉTRICAS
-    # ============================================
     metricas_df = pd.DataFrame({
         "Métrica":["Accuracy","Precisión","Recall","F1-Score","AUC","GINI","KS"],
         "Valor":[
@@ -292,81 +268,55 @@ with tab2:
         ]
     })
 
-    st.markdown("""
-    <h3 style='text-align:center;color:#2563eb;font-size:22px;'>
-    Indicadores de Desempeño
-    </h3>
-    """, unsafe_allow_html=True)
-
-    # TABELA GRANDE CENTRALIZADA
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:20px;'>
 
-    <table style='
-        width:600px;
-        font-size:18px;
-        text-align:center;
-        border-collapse:collapse;'>
-
+    <table style='width:600px;font-size:18px;text-align:center;border-collapse:collapse;'>
         <tr style='background-color:#2563eb;color:white;'>
             <th style='padding:12px;'>Métrica</th>
             <th style='padding:12px;'>Valor</th>
         </tr>
-
         {''.join([
             f"<tr><td style='padding:10px;border-bottom:1px solid #ddd;'>{m}</td><td style='padding:10px;border-bottom:1px solid #ddd;'>{v}</td></tr>"
             for m, v in zip(metricas_df["Métrica"], metricas_df["Valor"])
         ])}
-
     </table>
 
     </div>
     """, unsafe_allow_html=True)
 
-    # ============================================
-    # MATRIZ DE CONFUSÃO
-    # ============================================
     if "confusion_matrix" in metricas_modelo:
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        st.markdown("""
-        <h3 style='text-align:center;color:#2563eb;font-size:22px;'>
-        Matriz de Confusión
-        </h3>
-        """, unsafe_allow_html=True)
 
         cm = metricas_modelo["confusion_matrix"]
 
-        tn, fp = cm[0]
-        fn, tp = cm[1]
+        tn = cm.get("TN",0)
+        fp = cm.get("FP",0)
+        fn = cm.get("FN",0)
+        tp = cm.get("TP",0)
 
-        # TABELA MAIOR E CENTRALIZADA
+        st.markdown("<h3 style='text-align:center;color:#2563eb;font-size:22px;'>Matriz de Confusión</h3>",unsafe_allow_html=True)
+
         st.markdown(f"""
         <div style='display:flex;justify-content:center;margin-top:20px;'>
 
-        <table style='
-            width:500px;
-            font-size:18px;
-            text-align:center;
-            border-collapse:collapse;'>
+        <table style='width:550px;font-size:18px;text-align:center;border-collapse:collapse;'>
 
             <tr style='background-color:#2563eb;color:white;'>
                 <th></th>
-                <th style='padding:12px;'>Pred: 0</th>
-                <th style='padding:12px;'>Pred: 1</th>
+                <th>Pred: Bom (0)</th>
+                <th>Pred: Ruim (1)</th>
             </tr>
 
             <tr>
-                <td style='padding:12px;font-weight:bold;'>Real: 0</td>
-                <td style='padding:12px;border:1px solid #ddd;'>{tn}</td>
-                <td style='padding:12px;border:1px solid #ddd;'>{fp}</td>
+                <td><b>Real: Bom (0)</b></td>
+                <td>{tn}</td>
+                <td>{fp}</td>
             </tr>
 
             <tr>
-                <td style='padding:12px;font-weight:bold;'>Real: 1</td>
-                <td style='padding:12px;border:1px solid #ddd;'>{fn}</td>
-                <td style='padding:12px;border:1px solid #ddd;'>{tp}</td>
+                <td><b>Real: Ruim (1)</b></td>
+                <td>{fn}</td>
+                <td>{tp}</td>
             </tr>
 
         </table>
