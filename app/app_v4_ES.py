@@ -11,18 +11,18 @@ import scorecardpy as sc
 # PATH
 # ============================================
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_PATH, "models")
+MODEL_PATH = os.path.join(BASE_PATH,"models")
 
 # ============================================
 # LOAD
 # ============================================
-modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
-bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
+modelo = joblib.load(os.path.join(MODEL_PATH,"modelo.pkl"))
+bins_woe = joblib.load(os.path.join(MODEL_PATH,"woe_bins.pkl"))
 
-with open(os.path.join(MODEL_PATH, "metricas.json"), "r") as f:
+with open(os.path.join(MODEL_PATH,"metricas.json"),"r") as f:
     metricas_modelo = json.load(f)
 
-with open(os.path.join(MODEL_PATH, "score_params.json"), "r") as f:
+with open(os.path.join(MODEL_PATH,"score_params.json"),"r") as f:
     score_params = json.load(f)
 
 # ============================================
@@ -74,7 +74,7 @@ tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", 
 # ============================================
 with tab1:
     with st.sidebar:
-        st.markdown("<div style='text-align:center;color:#2563eb;font-size:20px;font-weight:600;'>Datos del Cliente</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;color:#2563eb;font-size:20px;font-weight:600;'>Datos del Cliente</div>",unsafe_allow_html=True)
         edad = st.slider("Edad", 18, 75, 30)
         valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
         duracion = st.slider("Duración (meses)", 4, 72, 24)
@@ -91,8 +91,8 @@ with tab1:
     col2, col3 = st.columns([1, 1])
 
     if btn:
-        # PREDICCIÓN
-        entrada = pd.DataFrame({"Genero":[genero],"Trabalho":[trabalho],"Habitacao":[habitacao],"Conta_poupanca":[cuenta_ahorro],"Conta_corrente":[cuenta_corriente],"Finalidade":[finalidad],"Idade":[edad],"Duracao":[duracion],"Valor_credito":[valor]})
+        # PREDICÇÃO
+        entrada = pd.DataFrame({"Genero":[genero],"Trabalho":[trabalho],"Habitacao":[habitacion],"Conta_poupanca":[cuenta_ahorro],"Conta_corrente":[cuenta_corriente],"Finalidade":[finalidad],"Idade":[edad],"Duracao":[duracion],"Valor_credito":[valor]})
         entrada_woe = sc.woebin_ply(entrada, bins_woe).reindex(columns=modelo.feature_names_in_, fill_value=0)
         prob = min(max(modelo.predict_proba(entrada_woe)[0][1], 0.0001), 0.9999)
 
@@ -139,12 +139,27 @@ with tab1:
         if flags: motivo += " | Riesgos: " + ", ".join(flags)
 
         with col2:
+            # Título centralizado, azul, 22px com 2 pulos de linha
             st.markdown("<div class='titulo-secao'>Resultado</div><br><br>", unsafe_allow_html=True)
+            
+            # Valor do Score
             st.markdown(f"<div class='score' style='color:{cor};'>{score}</div>", unsafe_allow_html=True)
+            
+            # Segmento
             st.markdown(f"<p style='text-align:center;font-size:22px;font-weight:700;color:#2563eb;'>{segmento}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:20px;font-weight:600;'>Probabilidad</p><p style='text-align:center;font-size:30px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:20px;font-weight:600;'>Límite</p><p style='text-align:center;font-size:30px;font-weight:700;'>${limite:,.0f}</p>", unsafe_allow_html=True)
+            
+            # Probabilidade
+            st.markdown("<p style='text-align:center;font-size:20px;font-weight:600;margin-bottom:0;'>Probabilidad</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:30px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
+            
+            # Límite
+            st.markdown("<p style='text-align:center;font-size:20px;font-weight:600;margin-bottom:0;'>Límite</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:30px;font-weight:700;'>${limite:,.0f}</p>", unsafe_allow_html=True)
+            
+            # Status Final
             st.markdown(f"<div style='text-align:center;font-size:40px;color:{cor};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
+            
+            # Motivo
             st.markdown(f"<p style='text-align:center;font-size:18px;color:#374151;'>{motivo}</p>", unsafe_allow_html=True)
 
         with col3:
@@ -153,7 +168,7 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: DESEMPENHO
+# TAB 2: DESEMPENHO (CENTRALIZADO)
 # ============================================
 with tab2:
     st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>", unsafe_allow_html=True)
@@ -180,7 +195,7 @@ with tab2:
     """, unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: ESTABILIDADE
+# TAB 3: ESTABILIDADE (PSI)
 # ============================================
 with tab3:
     st.markdown("<h2 style='text-align:center;color:#2563eb;'>Estabilidad de la Población (PSI)</h2><br>", unsafe_allow_html=True)
