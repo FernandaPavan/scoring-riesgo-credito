@@ -94,7 +94,7 @@ with tab1:
         score_base = int(offset+factor*np.log((1-prob)/prob))
 
         # ============================================
-        # POLICY LAYER AVANÇADO (SUA NOVA REGRA)
+        # POLICY LAYER AVANÇADO (REGRA)
         # ============================================
         penalidade_score = 0
         penalidade_limite = 1.0
@@ -158,22 +158,64 @@ with tab1:
             fig=go.Figure(go.Indicator(mode="gauge+number", value=prob*100, gauge={"axis":{"range":[0,100]},"steps":[{"range":[0,40],"color":"#16a34a"},{"range":[40,70],"color":"#facc15"},{"range":[70,100],"color":"#dc2626"}]}))
             st.plotly_chart(fig,use_container_width=True)
 
+
 # ============================================
-# TAB 2: MÉTRICAS (CORRIGIDO)
+# TAB 2: MÉTRICAS (LAYOUT ORIGINAL)
 # ============================================
 with tab2:
-    st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
-    metricas_df = pd.DataFrame({"Métrica":["Accuracy","Precisión","Recall","F1-Score","AUC","GINI","KS"],"Valor":[round(metricas_modelo["accuracy"],4), round(metricas_modelo["precision"],4), round(metricas_modelo["recall"],4), round(metricas_modelo["f1_score"],4), round(metricas_modelo["auc"],4), round(metricas_modelo["gini"],4), round(metricas_modelo["ks"],4)]})
-    
-    st.table(metricas_df) # Exibição simples para manter layout limpo
 
+    st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
+
+    metricas_df = pd.DataFrame({
+        "Métrica":["Accuracy","Precisión","Recall","F1-Score","AUC","GINI","KS"],
+        "Valor":[
+            round(metricas_modelo["accuracy"],4),
+            round(metricas_modelo["precision"],4),
+            round(metricas_modelo["recall"],4),
+            round(metricas_modelo["f1_score"],4),
+            round(metricas_modelo["auc"],4),
+            round(metricas_modelo["gini"],4),
+            round(metricas_modelo["ks"],4)
+        ]
+    })
+
+    # Tabela de Métricas Compacta (Igual ao início)
+    st.markdown(f"""
+    <div style='display:flex;justify-content:center;margin-top:20px;'>
+    <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;'>
+        <tr style='background-color:#2563eb;color:white;'>
+            <th style='padding:12px;'>Métrica</th>
+            <th style='padding:12px;'>Valor</th>
+        </tr>
+        {''.join([f"<tr><td style='padding:10px;border-bottom:1px solid #ddd;'>{m}</td><td style='padding:10px;border-bottom:1px solid #ddd;'>{v}</td></tr>" for m,v in zip(metricas_df["Métrica"],metricas_df["Valor"])])}
+    </table>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # MATRIZ DE CONFUSÃO
     cm = metricas_modelo["confusion_matrix"]
+    tn, fp, fn, tp = cm["TN"], cm["FP"], cm["FN"], cm["TP"]
+
+    st.markdown("<h3 style='text-align:center;color:#2563eb;font-size:22px;margin-top:30px;'>Matriz de Confusión</h3>",unsafe_allow_html=True)
+
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:20px;'>
     <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;border:1px solid #ddd;'>
-        <tr style='background-color:#2563eb;color:white;'><th></th><th>Pred: Bom (0)</th><th>Pred: Ruim (1)</th></tr>
-        <tr><td><b>Real: Bom (0)</b></td><td style='color:#16a34a;'>{cm['TN']}</td><td style='color:#dc2626;'>{cm['FP']}</td></tr>
-        <tr><td><b>Real: Ruim (1)</b></td><td style='color:#dc2626;'>{cm['FN']}</td><td style='color:#16a34a;'>{cm['TP']}</td></tr>
+        <tr style='background-color:#2563eb;color:white;'>
+            <th></th>
+            <th style='padding:12px;'>Pred: Bom (0)</th>
+            <th style='padding:12px;'>Pred: Ruim (1)</th>
+        </tr>
+        <tr>
+            <td style='padding:10px;'><b>Real: Bom (0)</b></td>
+            <td style='color:#16a34a;font-weight:700;'>{tn}</td>
+            <td style='color:#dc2626;font-weight:700;'>{fp}</td>
+        </tr>
+        <tr>
+            <td style='padding:10px;'><b>Real: Ruim (1)</b></td>
+            <td style='color:#dc2626;font-weight:700;'>{fn}</td>
+            <td style='color:#16a34a;font-weight:700;'>{tp}</td>
+        </tr>
     </table>
     </div>
     """, unsafe_allow_html=True)
