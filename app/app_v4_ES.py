@@ -31,7 +31,7 @@ with open(os.path.join(MODEL_PATH,"score_params.json"),"r") as f:
 st.set_page_config(layout="wide")
 
 # ============================================
-# CSS (IDÊNTICO AO ORIGINAL)
+# CSS
 # ============================================
 st.markdown("""
 <style>
@@ -144,7 +144,7 @@ with tab1:
         score_base=int(offset+factor*np.log(odds))
 
         # ============================================
-        # AJUSTE REGRA DE NEGOCIO (POLICY LAYER)
+        # POLICY LAYER
         # ============================================
         penalidade_score = 0
         penalidade_limite = 1.0
@@ -154,18 +154,25 @@ with tab1:
             penalidade_score -= 80
             penalidade_limite *= 0.5
             flags_risco.append("Sin empleo")
+
         if habitacion == "rent":
             penalidade_score -= 30
             penalidade_limite *= 0.85
             flags_risco.append("Alquiler")
+
         if cuenta_ahorro == "little":
             penalidade_score -= 20
             penalidade_limite *= 0.9
             flags_risco.append("Bajo ahorro")
 
+        if cuenta_corriente == "little":
+            penalidade_score -= 20
+            penalidade_limite *= 0.9
+            flags_risco.append("Baja liquidez")
+
         score = max(score_base + penalidade_score, 300)
 
-        # SEGMENTAÇÃO BASEADA NO SCORE AJUSTADO
+        # SEGMENTO
         if score >= 700:
             segmento="SUPER PRIME"; limite=18000
         elif score >= 650:
@@ -179,67 +186,71 @@ with tab1:
         else:
             segmento="SUBPRIME"; limite=0
 
-        # AJUSTE POR PRAZO E PENALIDADE DE LIMITE
+        # DOWNGRADE
+        if "Sin empleo" in flags_risco and segmento in ["SUPER PRIME","PRIME"]:
+            segmento="NEAR PRIME"
+
+        # AJUSTE LIMITE
         if duracion>48:
             limite*=0.85
         elif duracion>36:
             limite*=0.92
-        
+
         limite=int(limite * penalidade_limite)
 
-        # DECISÃO
-        if score < 460:
+        if score < 600:
+            limite=min(limite,3000)
+
+        # HARD RULE
+        if trabalho == 0 and cuenta_corriente == "little":
             status="RECHAZADO"; icon="✖"; cor="#dc2626"
-            motivo="Score por debajo del nivel mínimo permitido."
-        elif score < 520:
-            status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"
-            motivo="Cliente en zona de riesgo intermedio. Requiere evaluación manual."
+            motivo="Riesgo crítico: sin empleo y baja liquidez."
+
         else:
-            if valor <= limite:
-                status="APROBADO"; icon="✔"; cor="#16a34a"
-                motivo="Monto dentro del límite aprobado según score."
-            elif valor <= limite * 1.20:
-                status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"
-                motivo="Monto levemente superior al límite. Requiere revisión."
-            else:
+            if score < 460:
                 status="RECHAZADO"; icon="✖"; cor="#dc2626"
-                motivo="Monto solicitado excede el límite permitido."
+                motivo="Score por debajo del mínimo."
+            elif score < 520:
+                status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"
+                motivo="Zona de riesgo intermedio."
+            else:
+                if valor <= limite:
+                    status="APROBADO"; icon="✔"; cor="#16a34a"
+                    motivo="Dentro del límite aprobado."
+                elif valor <= limite*1.2:
+                    status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"
+                    motivo="Levemente superior al límite."
+                else:
+                    status="RECHAZADO"; icon="✖"; cor="#dc2626"
+                    motivo="Excede el límite."
 
         if flags_risco:
-            motivo += " | Riesgos detectados: " + ", ".join(flags_risco)
+            motivo += " | Riesgos: " + ", ".join(flags_risco)
 
+        # UI
         with col2:
 
             st.markdown("<div class='seccion'>Resultado del Análisis</div>",unsafe_allow_html=True)
             st.markdown("<br>",unsafe_allow_html=True)
 
-            st.markdown(f"<div class='score' style='color:{cor};'>{score}</div>",unsafe_allow_html=True)
+            st.markdown(f"<div class='score'>{score}</div>",unsafe_allow_html=True)
 
             st.markdown(f"<p style='text-align:center;font-size:22px;font-weight:700;color:#2563eb;'>{segmento}</p>",unsafe_allow_html=True)
 
-            st.markdown(f"<p style='text-align:center;font-size:20px;font-weight:600;'>Probabilidad de Riesgo</p><p style='text-align:center;font-size:30px;font-weight:700;'>{prob:.2%}</p>",unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:20px;'>Probabilidad de Riesgo</p><p style='text-align:center;font-size:30px;font-weight:700;'>{prob:.2%}</p>",unsafe_allow_html=True)
 
-            st.markdown(f"<p style='text-align:center;font-size:20px;font-weight:600;'>Límite Aprobado</p><p style='text-align:center;font-size:30px;font-weight:700;'>${limite:,.0f}</p>",unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:20px;'>Límite Aprobado</p><p style='text-align:center;font-size:30px;font-weight:700;'>${limite:,.0f}</p>",unsafe_allow_html=True)
 
             st.markdown(f"<div style='text-align:center;margin-top:25px;font-size:42px;font-weight:900;color:{cor};'>{icon} {status}</div>",unsafe_allow_html=True)
 
             st.markdown(f"<p style='text-align:center;font-size:20px;color:#374151;max-width:450px;margin:auto;'>{motivo}</p>",unsafe_allow_html=True)
 
         with col3:
-
             fig=go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob*100,
-                gauge={
-                    "axis":{"range":[0,100]},
-                    "steps":[
-                        {"range":[0,40],"color":"#16a34a"},
-                        {"range":[40,70],"color":"#facc15"},
-                        {"range":[70,100],"color":"#dc2626"}
-                    ]
-                }
+                gauge={"axis":{"range":[0,100]}}
             ))
-
             st.plotly_chart(fig,use_container_width=True)
 
 # ============================================
@@ -247,57 +258,6 @@ with tab1:
 # ============================================
 with tab2:
 
-    st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:#2563eb;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
 
-    metricas_df = pd.DataFrame({
-        "Métrica":["Accuracy","Precisión","Recall","F1-Score","AUC","GINI","KS"],
-        "Valor":[
-            round(metricas_modelo["accuracy"],4),
-            round(metricas_modelo["precision"],4),
-            round(metricas_modelo["recall"],4),
-            round(metricas_modelo["f1_score"],4),
-            round(metricas_modelo["auc"],4),
-            round(metricas_modelo["gini"],4),
-            round(metricas_modelo["ks"],4)
-        ]
-    })
-
-    st.markdown(f"""
-    <div style='display:flex;justify-content:center;margin-top:20px;'>
-    <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;'>
-        <tr style='background-color:#2563eb;color:white;'>
-            <th style='padding:12px;'>Métrica</th>
-            <th style='padding:12px;'>Valor</th>
-        </tr>
-        {''.join([f"<tr><td style='padding:10px;border-bottom:1px solid #ddd;'>{m}</td><td style='padding:10px;border-bottom:1px solid #ddd;'>{v}</td></tr>" for m,v in zip(metricas_df["Métrica"],metricas_df["Valor"])])}
-    </table>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # MATRIZ DE CONFUSÃO CORRIGIDA (SINTAXE DO DICIONÁRIO)
-    cm = metricas_modelo["confusion_matrix"]
-    tn, fp, fn, tp = cm["TN"], cm["FP"], cm["FN"], cm["TP"]
-
-    st.markdown("<h3 style='text-align:center;color:#2563eb;font-size:22px;margin-top:30px;'>Matriz de Confusión</h3>",unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div style='display:flex;justify-content:center;margin-top:20px;'>
-    <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;border:1px solid #ddd;'>
-        <tr style='background-color:#2563eb;color:white;'>
-            <th>Real \ Pred</th>
-            <th>Pred: Bom (0)</th>
-            <th>Pred: Ruim (1)</th>
-        </tr>
-        <tr>
-            <td><b>Real: Bom (0)</b></td>
-            <td style='color:#16a34a;font-weight:700;'>{tn}</td>
-            <td style='color:#dc2626;font-weight:700;'>{fp}</td>
-        </tr>
-        <tr>
-            <td><b>Real: Ruim (1)</b></td>
-            <td style='color:#dc2626;font-weight:700;'>{fn}</td>
-            <td style='color:#16a34a;font-weight:700;'>{tp}</td>
-        </tr>
-    </table>
-    </div>
-    """, unsafe_allow_html=True)
+    st.dataframe(pd.DataFrame(metricas_modelo.items()),use_container_width=True)
