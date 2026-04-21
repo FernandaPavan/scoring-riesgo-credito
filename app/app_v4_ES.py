@@ -195,17 +195,9 @@ with tab1:
 
             st.markdown(f"<p style='text-align:center;font-size:20px;font-weight:600;'>Límite Aprobado</p><p style='text-align:center;font-size:30px;font-weight:700;'>${limite:,.0f}</p>",unsafe_allow_html=True)
 
-            st.markdown(f"""
-            <div style='text-align:center;margin-top:25px;font-size:42px;font-weight:900;color:{cor};'>
-            {icon} {status}
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center;margin-top:25px;font-size:42px;font-weight:900;color:{cor};'>{icon} {status}</div>",unsafe_allow_html=True)
 
-            st.markdown(f"""
-            <p style='text-align:center;font-size:20px;color:#374151;max-width:450px;margin:auto;'>
-            {motivo}
-            </p>
-            """,unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:20px;color:#374151;max-width:450px;margin:auto;'>{motivo}</p>",unsafe_allow_html=True)
 
         with col3:
 
@@ -246,7 +238,7 @@ with tab2:
 
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:20px;'>
-    <table style='width:600px;font-size:18px;text-align:center;border-collapse:collapse;'>
+    <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;'>
         <tr style='background-color:#2563eb;color:white;'>
             <th style='padding:12px;'>Métrica</th>
             <th style='padding:12px;'>Valor</th>
@@ -256,66 +248,35 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # ============================================
-# MATRIZ DE CONFUSÃO (CORRIGIDA)
-# ============================================
-if "confusion_matrix" in metricas_modelo:
-
+    # MATRIZ DE CONFUSÃO
     cm = metricas_modelo["confusion_matrix"]
 
-    tn = cm.get("TN", 0)
-    fp = cm.get("FP", 0)
-    fn = cm.get("FN", 0)
-    tp = cm.get("TP", 0)
+    tn, fp, fn, tp = cm["TN"], cm["FP"], cm["FN"], cm["TP"]
 
-    st.markdown("""
-    <h3 style='text-align:center;color:#2563eb;font-size:22px;'>
-    Matriz de Confusión
-    </h3>
-    """, unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center;color:#2563eb;font-size:22px;margin-top:30px;'>Matriz de Confusión</h3>",unsafe_allow_html=True)
 
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:20px;'>
 
-    <table style='
-        width:600px;
-        font-size:18px;
-        text-align:center;
-        border-collapse:collapse;'>
+    <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;border:1px solid #ddd;'>
 
-        <thead>
-            <tr style='background-color:#2563eb;color:white;'>
-                <th style='padding:12px;border:1px solid #ddd;'></th>
-                <th style='padding:12px;border:1px solid #ddd;'>Pred: Bom (0)</th>
-                <th style='padding:12px;border:1px solid #ddd;'>Pred: Ruim (1)</th>
-            </tr>
-        </thead>
+        <tr style='background-color:#2563eb;color:white;'>
+            <th></th>
+            <th>Pred: Bom (0)</th>
+            <th>Pred: Ruim (1)</th>
+        </tr>
 
-        <tbody>
-            <tr>
-                <td style='padding:12px;border:1px solid #ddd;font-weight:bold;background:#f9fafb;'>
-                    Real: Bom (0)
-                </td>
-                <td style='padding:12px;border:1px solid #ddd;color:#16a34a;font-weight:700;'>
-                    {tn}
-                </td>
-                <td style='padding:12px;border:1px solid #ddd;color:#dc2626;font-weight:700;'>
-                    {fp}
-                </td>
-            </tr>
+        <tr>
+            <td><b>Real: Bom (0)</b></td>
+            <td style='color:#16a34a;font-weight:700;'>{tn}</td>
+            <td style='color:#dc2626;font-weight:700;'>{fp}</td>
+        </tr>
 
-            <tr>
-                <td style='padding:12px;border:1px solid #ddd;font-weight:bold;background:#f9fafb;'>
-                    Real: Ruim (1)
-                </td>
-                <td style='padding:12px;border:1px solid #ddd;color:#dc2626;font-weight:700;'>
-                    {fn}
-                </td>
-                <td style='padding:12px;border:1px solid #ddd;color:#16a34a;font-weight:700;'>
-                    {tp}
-                </td>
-            </tr>
-        </tbody>
+        <tr>
+            <td><b>Real: Ruim (1)</b></td>
+            <td style='color:#dc2626;font-weight:700;'>{fn}</td>
+            <td style='color:#16a34a;font-weight:700;'>{tp}</td>
+        </tr>
 
     </table>
 
