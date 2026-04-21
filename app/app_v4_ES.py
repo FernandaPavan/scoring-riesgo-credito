@@ -143,7 +143,7 @@ with tab1:
         offset=(BASE_SCORE+factor*np.log(BASE_ODDS))
         score=int(offset+factor*np.log(odds))
 
-        # SEGMENTAÇÃO
+        # SEGMENTAÇÃO BASE
         if score >= 700:
             segmento="SUPER PRIME"; limite=18000
         elif score >= 650:
@@ -157,130 +157,132 @@ with tab1:
         else:
             segmento="SUBPRIME"; limite=0
 
+        # AJUSTE POR PRAZO
         if duracion>48:
             limite*=0.85
         elif duracion>36:
             limite*=0.92
 
-        limite=int(limite)
+        # ============================================
+        # POLICY LAYER (AJUSTE DE RISCO)
+        # ============================================
+        penalidade_score = 0
+        penalidade_limite = 1.0
+        flags_risco = []
 
-        # DECISÃO
-        if score < 460:
+        if trabalho == 0:
+            penalidade_score -= 80
+            penalidade_limite *= 0.5
+            flags_risco.append("Sin empleo")
+
+        if habitacion == "rent":
+            penalidade_score -= 30
+            penalidade_limite *= 0.85
+            flags_risco.append("Vivienda alquilada")
+
+        if cuenta_ahorro == "little":
+            penalidade_score -= 20
+            penalidade_limite *= 0.9
+            flags_risco.append("Bajo ahorro")
+
+        if cuenta_corriente == "little":
+            penalidade_score -= 20
+            penalidade_limite *= 0.9
+            flags_risco.append("Baja liquidez")
+
+        score_ajustado = max(score + penalidade_score, 300)
+        limite = int(limite * penalidade_limite)
+
+        # ============================================
+        # DECISÃO FINAL
+        # ============================================
+        if score_ajustado < 460:
             status="RECHAZADO"; icon="✖"; cor="#dc2626"
-            motivo="Score por debajo del nivel mínimo de riesgo permitido."
-        elif score < 520:
+            motivo="Score por debajo del nivel mínimo."
+        elif score_ajustado < 520:
             status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"
-            motivo="Cliente en zona de riesgo intermedio. Requiere evaluación manual."
+            motivo="Zona intermedia de riesgo."
         else:
             if valor <= limite:
                 status="APROBADO"; icon="✔"; cor="#16a34a"
-                motivo="Monto dentro del límite aprobado según score."
+                motivo="Dentro del límite aprobado."
             elif valor <= limite * 1.20:
                 status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"
-                motivo="Monto levemente superior al límite. Requiere revisión."
+                motivo="Levemente superior al límite."
             else:
                 status="RECHAZADO"; icon="✖"; cor="#dc2626"
-                motivo="Monto solicitado excede el límite permitido."
+                motivo="Monto excede el límite."
 
+        if flags_risco:
+            motivo += " | Riesgos: " + ", ".join(flags_risco)
+
+        # ============================================
+        # UI RESULTADO
+        # ============================================
         with col2:
 
             st.markdown("<div class='seccion'>Resultado del Análisis</div>",unsafe_allow_html=True)
             st.markdown("<br>",unsafe_allow_html=True)
 
-            st.markdown(f"<div class='score'>{score}</div>",unsafe_allow_html=True)
+            st.markdown(f"<div class='score'>{score_ajustado}</div>",unsafe_allow_html=True)
 
             st.markdown(f"<p style='text-align:center;font-size:22px;font-weight:700;color:#2563eb;'>{segmento}</p>",unsafe_allow_html=True)
 
-            st.markdown(f"<p style='text-align:center;font-size:20px;font-weight:600;'>Probabilidad de Riesgo</p><p style='text-align:center;font-size:30px;font-weight:700;'>{prob:.2%}</p>",unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:20px;'>Probabilidad de Riesgo</p><p style='text-align:center;font-size:30px;font-weight:700;'>{prob:.2%}</p>",unsafe_allow_html=True)
 
-            st.markdown(f"<p style='text-align:center;font-size:20px;font-weight:600;'>Límite Aprobado</p><p style='text-align:center;font-size:30px;font-weight:700;'>${limite:,.0f}</p>",unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:20px;'>Límite Aprobado</p><p style='text-align:center;font-size:30px;font-weight:700;'>${limite:,.0f}</p>",unsafe_allow_html=True)
 
             st.markdown(f"<div style='text-align:center;margin-top:25px;font-size:42px;font-weight:900;color:{cor};'>{icon} {status}</div>",unsafe_allow_html=True)
 
             st.markdown(f"<p style='text-align:center;font-size:20px;color:#374151;max-width:450px;margin:auto;'>{motivo}</p>",unsafe_allow_html=True)
 
         with col3:
-
             fig=go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob*100,
-                gauge={
-                    "axis":{"range":[0,100]},
-                    "steps":[
-                        {"range":[0,40],"color":"#16a34a"},
-                        {"range":[40,70],"color":"#facc15"},
-                        {"range":[70,100],"color":"#dc2626"}
-                    ]
-                }
+                gauge={"axis":{"range":[0,100]}}
             ))
-
             st.plotly_chart(fig,use_container_width=True)
 
 # ============================================
-# ============================================
-# TAB 2
+# TAB 2 (MÉTRICAS + MATRIZ)
 # ============================================
 with tab2:
 
-    st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:#2563eb;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
 
-    # Criando o DataFrame de métricas com verificação de segurança (get) para evitar erros de chave
     metricas_df = pd.DataFrame({
-        "Métrica": ["Accuracy", "Precisión", "Recall", "F1-Score", "AUC", "GINI", "KS"],
-        "Valor": [
-            round(metricas_modelo.get("accuracy", 0), 4),
-            round(metricas_modelo.get("precision", 0), 4),
-            round(metricas_modelo.get("recall", 0), 4),
-            round(metricas_modelo.get("f1_score", 0), 4),
-            round(metricas_modelo.get("auc", 0), 4),
-            round(metricas_modelo.get("gini", 0), 4),
-            round(metricas_modelo.get("ks", 0), 4)
+        "Métrica":["Accuracy","Precisión","Recall","F1","AUC","GINI","KS"],
+        "Valor":[
+            round(metricas_modelo["accuracy"],4),
+            round(metricas_modelo["precision"],4),
+            round(metricas_modelo["recall"],4),
+            round(metricas_modelo["f1_score"],4),
+            round(metricas_modelo["auc"],4),
+            round(metricas_modelo["gini"],4),
+            round(metricas_modelo["ks"],4)
         ]
     })
 
-    # Tabela de Métricas Gerais
-    st.markdown(f"""
-    <div style='display:flex;justify-content:center;margin-top:20px;'>
-    <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;'>
-        <tr style='background-color:#2563eb;color:white;'>
-            <th style='padding:12px;'>Métrica</th>
-            <th style='padding:12px;'>Valor</th>
-        </tr>
-        {''.join([f"<tr><td style='padding:10px;border-bottom:1px solid #ddd;'>{m}</td><td style='padding:10px;border-bottom:1px solid #ddd;'>{v}</td></tr>" for m,v in zip(metricas_df["Métrica"], metricas_df["Valor"])])}
-    </table>
-    </div>
-    """, unsafe_allow_html=True)
+    st.dataframe(metricas_df,use_container_width=True)
 
-    # ============================================
-    # MATRIZ DE CONFUSÃO CORRIGIDA
-    # ============================================
-    st.markdown("<h3 style='text-align:center;color:#2563eb;font-size:22px;margin-top:40px;'>Matriz de Confusión</h3>", unsafe_allow_html=True)
-
-    # Extraindo os valores do dicionário "confusion_matrix" dentro de "metricas_modelo"
-    cm = metricas_modelo.get("confusion_matrix", {"TN": 0, "FP": 0, "FN": 0, "TP": 0})
-    
-    tn = cm.get("TN", 0)
-    fp = cm.get("FP", 0)
-    fn = cm.get("FN", 0)
-    tp = cm.get("TP", 0)
+    cm = metricas_modelo["confusion_matrix"]
 
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:20px;'>
-    <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;border:1px solid #ddd;'>
-        <tr style='background-color:#2563eb;color:white;'>
-            <th style='padding:15px; border:1px solid #fff;'>Real \ Predito</th>
-            <th style='padding:15px; border:1px solid #fff;'>Bom (0)</th>
-            <th style='padding:15px; border:1px solid #fff;'>Ruim (1)</th>
+    <table style='width:650px;text-align:center;border-collapse:collapse;'>
+        <tr style='background:#2563eb;color:white;'>
+            <th></th><th>Pred: Bom</th><th>Pred: Ruim</th>
         </tr>
         <tr>
-            <td style='padding:15px; background-color:#f8fafc; font-weight:bold; border:1px solid #ddd;'>Bom (0)</td>
-            <td style='padding:15px; color:#16a34a; font-weight:700; border:1px solid #ddd; background-color:#f0fdf4;'>{tn}<br><small>(TN)</small></td>
-            <td style='padding:15px; color:#dc2626; font-weight:700; border:1px solid #ddd; background-color:#fef2f2;'>{fp}<br><small>(FP)</small></td>
+            <td><b>Real: Bom</b></td>
+            <td style='color:green;'>{cm["TN"]}</td>
+            <td style='color:red;'>{cm["FP"]}</td>
         </tr>
         <tr>
-            <td style='padding:15px; background-color:#f8fafc; font-weight:bold; border:1px solid #ddd;'>Ruim (1)</td>
-            <td style='padding:15px; color:#dc2626; font-weight:700; border:1px solid #ddd; background-color:#fef2f2;'>{fn}<br><small>(FN)</small></td>
-            <td style='padding:15px; color:#16a34a; font-weight:700; border:1px solid #ddd; background-color:#f0fdf4;'>{tp}<br><small>(TP)</small></td>
+            <td><b>Real: Ruim</b></td>
+            <td style='color:red;'>{cm["FN"]}</td>
+            <td style='color:green;'>{cm["TP"]}</td>
         </tr>
     </table>
     </div>
