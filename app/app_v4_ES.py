@@ -285,8 +285,8 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    # ============================================
-# MATRIZ DE CONFUSÃO (VISUAL PROFISSIONAL)
+# ============================================
+# MATRIZ DE CONFUSÃO 
 # ============================================
 if "confusion_matrix" in metricas_modelo:
 
@@ -313,14 +313,12 @@ if "confusion_matrix" in metricas_modelo:
         border-collapse:collapse;
         box-shadow:0 2px 8px rgba(0,0,0,0.08);'>
 
-        <!-- HEADER -->
         <tr style='background-color:#2563eb;color:white;'>
             <th style='padding:12px;border:1px solid #ddd;'></th>
             <th style='padding:12px;border:1px solid #ddd;'>Pred: Bom (0)</th>
             <th style='padding:12px;border:1px solid #ddd;'>Pred: Ruim (1)</th>
         </tr>
 
-        <!-- REAL BOM -->
         <tr>
             <td style='padding:12px;border:1px solid #ddd;font-weight:bold;background:#f9fafb;'>
                 Real: Bom (0)
@@ -333,7 +331,6 @@ if "confusion_matrix" in metricas_modelo:
             </td>
         </tr>
 
-        <!-- REAL RUIM -->
         <tr>
             <td style='padding:12px;border:1px solid #ddd;font-weight:bold;background:#f9fafb;'>
                 Real: Ruim (1)
