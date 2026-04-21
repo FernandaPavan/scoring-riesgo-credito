@@ -1,0 +1,7 @@
+{
+    "best_prob_cutoff": 0.530427054093158,
+    "ks_score_cutoff": 490,
+    "reject_cutoff": 460,
+    "review_cutoff": 490,
+    "approve_cutoff": 520
+}
