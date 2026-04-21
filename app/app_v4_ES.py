@@ -217,25 +217,28 @@ with tab1:
             st.plotly_chart(fig,use_container_width=True)
 
 # ============================================
+# ============================================
 # TAB 2
 # ============================================
 with tab2:
 
-    st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:26px;'>Métricas del Modelo</h2>", unsafe_allow_html=True)
 
+    # Criando o DataFrame de métricas com verificação de segurança (get) para evitar erros de chave
     metricas_df = pd.DataFrame({
-        "Métrica":["Accuracy","Precisión","Recall","F1-Score","AUC","GINI","KS"],
-        "Valor":[
-            round(metricas_modelo["accuracy"],4),
-            round(metricas_modelo["precision"],4),
-            round(metricas_modelo["recall"],4),
-            round(metricas_modelo["f1_score"],4),
-            round(metricas_modelo["auc"],4),
-            round(metricas_modelo["gini"],4),
-            round(metricas_modelo["ks"],4)
+        "Métrica": ["Accuracy", "Precisión", "Recall", "F1-Score", "AUC", "GINI", "KS"],
+        "Valor": [
+            round(metricas_modelo.get("accuracy", 0), 4),
+            round(metricas_modelo.get("precision", 0), 4),
+            round(metricas_modelo.get("recall", 0), 4),
+            round(metricas_modelo.get("f1_score", 0), 4),
+            round(metricas_modelo.get("auc", 0), 4),
+            round(metricas_modelo.get("gini", 0), 4),
+            round(metricas_modelo.get("ks", 0), 4)
         ]
     })
 
+    # Tabela de Métricas Gerais
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:20px;'>
     <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;'>
@@ -243,42 +246,42 @@ with tab2:
             <th style='padding:12px;'>Métrica</th>
             <th style='padding:12px;'>Valor</th>
         </tr>
-        {''.join([f"<tr><td style='padding:10px;border-bottom:1px solid #ddd;'>{m}</td><td style='padding:10px;border-bottom:1px solid #ddd;'>{v}</td></tr>" for m,v in zip(metricas_df["Métrica"],metricas_df["Valor"])])}
+        {''.join([f"<tr><td style='padding:10px;border-bottom:1px solid #ddd;'>{m}</td><td style='padding:10px;border-bottom:1px solid #ddd;'>{v}</td></tr>" for m,v in zip(metricas_df["Métrica"], metricas_df["Valor"])])}
     </table>
     </div>
     """, unsafe_allow_html=True)
 
-    # MATRIZ DE CONFUSÃO
-    cm = metricas_modelo["confusion_matrix"]
+    # ============================================
+    # MATRIZ DE CONFUSÃO CORRIGIDA
+    # ============================================
+    st.markdown("<h3 style='text-align:center;color:#2563eb;font-size:22px;margin-top:40px;'>Matriz de Confusión</h3>", unsafe_allow_html=True)
 
-    tn, fp, fn, tp = cm["TN"], cm["FP"], cm["FN"], cm["TP"]
-
-    st.markdown("<h3 style='text-align:center;color:#2563eb;font-size:22px;margin-top:30px;'>Matriz de Confusión</h3>",unsafe_allow_html=True)
+    # Extraindo os valores do dicionário "confusion_matrix" dentro de "metricas_modelo"
+    cm = metricas_modelo.get("confusion_matrix", {"TN": 0, "FP": 0, "FN": 0, "TP": 0})
+    
+    tn = cm.get("TN", 0)
+    fp = cm.get("FP", 0)
+    fn = cm.get("FN", 0)
+    tp = cm.get("TP", 0)
 
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:20px;'>
-
     <table style='width:650px;font-size:18px;text-align:center;border-collapse:collapse;border:1px solid #ddd;'>
-
         <tr style='background-color:#2563eb;color:white;'>
-            <th></th>
-            <th>Pred: Bom (0)</th>
-            <th>Pred: Ruim (1)</th>
+            <th style='padding:15px; border:1px solid #fff;'>Real \ Predito</th>
+            <th style='padding:15px; border:1px solid #fff;'>Bom (0)</th>
+            <th style='padding:15px; border:1px solid #fff;'>Ruim (1)</th>
         </tr>
-
         <tr>
-            <td><b>Real: Bom (0)</b></td>
-            <td style='color:#16a34a;font-weight:700;'>{tn}</td>
-            <td style='color:#dc2626;font-weight:700;'>{fp}</td>
+            <td style='padding:15px; background-color:#f8fafc; font-weight:bold; border:1px solid #ddd;'>Bom (0)</td>
+            <td style='padding:15px; color:#16a34a; font-weight:700; border:1px solid #ddd; background-color:#f0fdf4;'>{tn}<br><small>(TN)</small></td>
+            <td style='padding:15px; color:#dc2626; font-weight:700; border:1px solid #ddd; background-color:#fef2f2;'>{fp}<br><small>(FP)</small></td>
         </tr>
-
         <tr>
-            <td><b>Real: Ruim (1)</b></td>
-            <td style='color:#dc2626;font-weight:700;'>{fn}</td>
-            <td style='color:#16a34a;font-weight:700;'>{tp}</td>
+            <td style='padding:15px; background-color:#f8fafc; font-weight:bold; border:1px solid #ddd;'>Ruim (1)</td>
+            <td style='padding:15px; color:#dc2626; font-weight:700; border:1px solid #ddd; background-color:#fef2f2;'>{fn}<br><small>(FN)</small></td>
+            <td style='padding:15px; color:#16a34a; font-weight:700; border:1px solid #ddd; background-color:#f0fdf4;'>{tp}<br><small>(TP)</small></td>
         </tr>
-
     </table>
-
     </div>
     """, unsafe_allow_html=True)
