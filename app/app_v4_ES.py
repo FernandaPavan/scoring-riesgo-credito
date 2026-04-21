@@ -16,10 +16,7 @@ BASE_PATH = os.path.dirname(
     )
 )
 
-MODEL_PATH = os.path.join(
-    BASE_PATH,
-    "models"
-)
+MODEL_PATH = os.path.join(BASE_PATH,"models")
 
 # ============================================
 # LOAD
@@ -174,18 +171,29 @@ with tab1:
 
         limite=int(limite)
 
-        # DECISÃO
+        # ============================================
+        # DECISÃO + MOTIVO
+        # ============================================
         if score < 460:
             status="RECHAZADO"
+            motivo="Score por debajo del nivel mínimo de riesgo permitido."
+
         elif score < 520:
             status="EN ANÁLISIS"
+            motivo="Cliente en zona de riesgo intermedio. Requiere evaluación manual."
+
         else:
             if valor <= limite:
                 status="APROBADO"
-            elif valor <= limite*1.20:
+                motivo="Monto dentro del límite aprobado según score."
+
+            elif valor <= limite * 1.20:
                 status="EN ANÁLISIS"
+                motivo="Monto levemente superior al límite. Requiere revisión."
+
             else:
                 status="RECHAZADO"
+                motivo="Monto solicitado excede el límite permitido."
 
         # ============================================
         # RESULTADO
@@ -241,7 +249,21 @@ with tab1:
             </div>
             """,unsafe_allow_html=True)
 
+            # MOTIVO
+            st.markdown(f"""
+            <br>
+            <p style='text-align:center;
+            font-size:17px;
+            color:#374151;
+            max-width:400px;
+            margin:auto;'>
+            {motivo}
+            </p>
+            """,unsafe_allow_html=True)
+
+        # ============================================
         # GAUGE
+        # ============================================
         with col3:
 
             st.markdown("<div class='seccion'>Indicador de Riesgo</div>",unsafe_allow_html=True)
