@@ -127,11 +127,9 @@ with tab1:
         entrada_woe=sc.woebin_ply(entrada,bins_woe)
         entrada_woe=entrada_woe.reindex(columns=modelo.feature_names_in_,fill_value=0)
 
-        # PROB
         prob=modelo.predict_proba(entrada_woe)[0][1]
         prob=min(max(prob,0.0001),0.9999)
 
-        # SCORE PDO
         odds=(1-prob)/prob
         PDO=score_params["pdo"]
         BASE_SCORE=score_params["base_score"]
@@ -142,9 +140,7 @@ with tab1:
 
         score=int(offset+factor*np.log(odds))
 
-        # ============================================
         # POLÍTICA
-        # ============================================
         if score >= 700:
             segmento="SUPER PRIME"
             limite=18000
@@ -171,33 +167,39 @@ with tab1:
 
         limite=int(limite)
 
-        # ============================================
         # DECISÃO + MOTIVO
-        # ============================================
         if score < 460:
             status="RECHAZADO"
+            icon="✖"
+            cor="#dc2626"
             motivo="Score por debajo del nivel mínimo de riesgo permitido."
 
         elif score < 520:
             status="EN ANÁLISIS"
+            icon="⚠"
+            cor="#facc15"
             motivo="Cliente en zona de riesgo intermedio. Requiere evaluación manual."
 
         else:
             if valor <= limite:
                 status="APROBADO"
+                icon="✔"
+                cor="#16a34a"
                 motivo="Monto dentro del límite aprobado según score."
 
             elif valor <= limite * 1.20:
                 status="EN ANÁLISIS"
+                icon="⚠"
+                cor="#facc15"
                 motivo="Monto levemente superior al límite. Requiere revisión."
 
             else:
                 status="RECHAZADO"
+                icon="✖"
+                cor="#dc2626"
                 motivo="Monto solicitado excede el límite permitido."
 
-        # ============================================
         # RESULTADO
-        # ============================================
         with col2:
 
             st.markdown("<div class='seccion'>Resultado del Análisis</div>",unsafe_allow_html=True)
@@ -224,46 +226,22 @@ with tab1:
             <p style='text-align:center;font-size:28px;font-weight:bold;'>${limite:,.0f}</p>
             """,unsafe_allow_html=True)
 
-            # STATUS VISUAL
-            if status == "APROBADO":
-                icon="✔"
-                cor="#16a34a"
-            elif status == "EN ANÁLISIS":
-                icon="⚠"
-                cor="#facc15"
-            else:
-                icon="✖"
-                cor="#dc2626"
-
             st.markdown(f"""
-            <div style='text-align:center;margin-top:20px;'>
-
-            <div style='font-size:70px;font-weight:900;color:{cor};'>
-            {icon}
+            <div style='text-align:center;margin-top:30px;'>
+            <div style='font-size:42px;font-weight:900;color:{cor};'>
+            {icon} {status}
             </div>
-
-            <div style='font-size:26px;font-weight:800;color:{cor};margin-top:8px;letter-spacing:1px;'>
-            {icon}{status}
             </div>
+            """, unsafe_allow_html=True)
 
-            </div>
-            """,unsafe_allow_html=True)
-
-            # MOTIVO
             st.markdown(f"""
             <br>
-            <p style='text-align:center;
-            font-size:17px;
-            color:#374151;
-            max-width:400px;
-            margin:auto;'>
+            <p style='text-align:center;font-size:17px;color:#374151;max-width:400px;margin:auto;'>
             {motivo}
             </p>
             """,unsafe_allow_html=True)
 
-        # ============================================
         # GAUGE
-        # ============================================
         with col3:
 
             st.markdown("<div class='seccion'>Indicador de Riesgo</div>",unsafe_allow_html=True)
@@ -288,9 +266,13 @@ with tab1:
 # ============================================
 with tab2:
 
-    st.markdown("<h2 style='text-align:center;color:#2563eb;'>Métricas del Modelo</h2>",unsafe_allow_html=True)
+    st.markdown("""
+    <h2 style='text-align:center;color:#2563eb;'>
+    Métricas del Modelo
+    </h2>
+    """, unsafe_allow_html=True)
 
-    metricas=pd.DataFrame({
+    metricas_df = pd.DataFrame({
         "Métrica":["Accuracy","Precisión","Recall","F1","AUC","GINI","KS"],
         "Valor":[
             metricas_modelo["accuracy"],
@@ -303,4 +285,16 @@ with tab2:
         ]
     })
 
-    st.dataframe(metricas,use_container_width=True)
+    st.markdown(metricas_df.to_html(index=False, justify="center"), unsafe_allow_html=True)
+
+    if "confusion_matrix" in metricas_modelo:
+
+        st.markdown("<h3 style='text-align:center;color:#2563eb;'>Matriz de Confusión</h3>",unsafe_allow_html=True)
+
+        cm_df = pd.DataFrame(
+            metricas_modelo["confusion_matrix"],
+            columns=["Pred: 0","Pred: 1"],
+            index=["Real: 0","Real: 1"]
+        )
+
+        st.dataframe(cm_df, width=400)
