@@ -267,12 +267,18 @@ with tab1:
 # ============================================
 with tab2:
 
+    # ============================================
+    # TÍTULO
+    # ============================================
     st.markdown("""
-    <h2 style='text-align:center;color:#2563eb;'>
+    <h2 style='text-align:center;color:#2563eb;font-size:26px;'>
     Métricas del Modelo
     </h2>
     """, unsafe_allow_html=True)
 
+    # ============================================
+    # MÉTRICAS
+    # ============================================
     metricas_df = pd.DataFrame({
         "Métrica":["Accuracy","Precisión","Recall","F1-Score","AUC","GINI","KS"],
         "Valor":[
@@ -286,16 +292,84 @@ with tab2:
         ]
     })
 
-    st.markdown(f"<div style='display:flex;justify-content:center;'>{metricas_df.to_html(index=False)}</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <h3 style='text-align:center;color:#2563eb;font-size:22px;'>
+    Indicadores de Desempeño
+    </h3>
+    """, unsafe_allow_html=True)
 
+    # TABELA GRANDE CENTRALIZADA
+    st.markdown(f"""
+    <div style='display:flex;justify-content:center;margin-top:20px;'>
+
+    <table style='
+        width:600px;
+        font-size:18px;
+        text-align:center;
+        border-collapse:collapse;'>
+
+        <tr style='background-color:#2563eb;color:white;'>
+            <th style='padding:12px;'>Métrica</th>
+            <th style='padding:12px;'>Valor</th>
+        </tr>
+
+        {''.join([
+            f"<tr><td style='padding:10px;border-bottom:1px solid #ddd;'>{m}</td><td style='padding:10px;border-bottom:1px solid #ddd;'>{v}</td></tr>"
+            for m, v in zip(metricas_df["Métrica"], metricas_df["Valor"])
+        ])}
+
+    </table>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ============================================
+    # MATRIZ DE CONFUSÃO
+    # ============================================
     if "confusion_matrix" in metricas_modelo:
 
-        st.markdown("<h3 style='text-align:center;color:#2563eb;'>Matriz de Confusión</h3>",unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        cm_df = pd.DataFrame(
-            metricas_modelo["confusion_matrix"],
-            columns=["Pred: 0","Pred: 1"],
-            index=["Real: 0","Real: 1"]
-        )
+        st.markdown("""
+        <h3 style='text-align:center;color:#2563eb;font-size:22px;'>
+        Matriz de Confusión
+        </h3>
+        """, unsafe_allow_html=True)
 
-        st.markdown(f"<div style='display:flex;justify-content:center;'>{cm_df.to_html()}</div>", unsafe_allow_html=True)
+        cm = metricas_modelo["confusion_matrix"]
+
+        tn, fp = cm[0]
+        fn, tp = cm[1]
+
+        # TABELA MAIOR E CENTRALIZADA
+        st.markdown(f"""
+        <div style='display:flex;justify-content:center;margin-top:20px;'>
+
+        <table style='
+            width:500px;
+            font-size:18px;
+            text-align:center;
+            border-collapse:collapse;'>
+
+            <tr style='background-color:#2563eb;color:white;'>
+                <th></th>
+                <th style='padding:12px;'>Pred: 0</th>
+                <th style='padding:12px;'>Pred: 1</th>
+            </tr>
+
+            <tr>
+                <td style='padding:12px;font-weight:bold;'>Real: 0</td>
+                <td style='padding:12px;border:1px solid #ddd;'>{tn}</td>
+                <td style='padding:12px;border:1px solid #ddd;'>{fp}</td>
+            </tr>
+
+            <tr>
+                <td style='padding:12px;font-weight:bold;'>Real: 1</td>
+                <td style='padding:12px;border:1px solid #ddd;'>{fn}</td>
+                <td style='padding:12px;border:1px solid #ddd;'>{tp}</td>
+            </tr>
+
+        </table>
+
+        </div>
+        """, unsafe_allow_html=True)
