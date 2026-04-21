@@ -285,41 +285,68 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-    if "confusion_matrix" in metricas_modelo:
+    # ============================================
+# MATRIZ DE CONFUSÃO (VISUAL PROFISSIONAL)
+# ============================================
+if "confusion_matrix" in metricas_modelo:
 
-        cm = metricas_modelo["confusion_matrix"]
+    cm = metricas_modelo["confusion_matrix"]
 
-        tn = cm.get("TN",0)
-        fp = cm.get("FP",0)
-        fn = cm.get("FN",0)
-        tp = cm.get("TP",0)
+    tn = cm.get("TN", 0)
+    fp = cm.get("FP", 0)
+    fn = cm.get("FN", 0)
+    tp = cm.get("TP", 0)
 
-        st.markdown("<h3 style='text-align:center;color:#2563eb;font-size:22px;'>Matriz de Confusión</h3>",unsafe_allow_html=True)
+    st.markdown("""
+    <h3 style='text-align:center;color:#2563eb;font-size:22px;'>
+    Matriz de Confusión
+    </h3>
+    """, unsafe_allow_html=True)
 
-        st.markdown(f"""
-        <div style='display:flex;justify-content:center;margin-top:20px;'>
+    st.markdown(f"""
+    <div style='display:flex;justify-content:center;margin-top:20px;'>
 
-        <table style='width:550px;font-size:18px;text-align:center;border-collapse:collapse;'>
+    <table style='
+        width:600px;
+        font-size:18px;
+        text-align:center;
+        border-collapse:collapse;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);'>
 
-            <tr style='background-color:#2563eb;color:white;'>
-                <th></th>
-                <th>Pred: Bom (0)</th>
-                <th>Pred: Ruim (1)</th>
-            </tr>
+        <!-- HEADER -->
+        <tr style='background-color:#2563eb;color:white;'>
+            <th style='padding:12px;border:1px solid #ddd;'></th>
+            <th style='padding:12px;border:1px solid #ddd;'>Pred: Bom (0)</th>
+            <th style='padding:12px;border:1px solid #ddd;'>Pred: Ruim (1)</th>
+        </tr>
 
-            <tr>
-                <td><b>Real: Bom (0)</b></td>
-                <td>{tn}</td>
-                <td>{fp}</td>
-            </tr>
+        <!-- REAL BOM -->
+        <tr>
+            <td style='padding:12px;border:1px solid #ddd;font-weight:bold;background:#f9fafb;'>
+                Real: Bom (0)
+            </td>
+            <td style='padding:12px;border:1px solid #ddd;color:#16a34a;font-weight:700;'>
+                {tn}
+            </td>
+            <td style='padding:12px;border:1px solid #ddd;color:#dc2626;font-weight:700;'>
+                {fp}
+            </td>
+        </tr>
 
-            <tr>
-                <td><b>Real: Ruim (1)</b></td>
-                <td>{fn}</td>
-                <td>{tp}</td>
-            </tr>
+        <!-- REAL RUIM -->
+        <tr>
+            <td style='padding:12px;border:1px solid #ddd;font-weight:bold;background:#f9fafb;'>
+                Real: Ruim (1)
+            </td>
+            <td style='padding:12px;border:1px solid #ddd;color:#dc2626;font-weight:700;'>
+                {fn}
+            </td>
+            <td style='padding:12px;border:1px solid #ddd;color:#16a34a;font-weight:700;'>
+                {tp}
+            </td>
+        </tr>
 
-        </table>
+    </table>
 
-        </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
