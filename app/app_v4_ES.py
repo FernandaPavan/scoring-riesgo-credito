@@ -43,7 +43,7 @@ st.markdown("""
 /* 2. SIDEBAR - Fontes e Caixas Pequenas */
 /* Diminui o nome das variáveis (labels) */
 [data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 10px !important;
+    font-size: 12px !important;
     font-weight: 500 !important;
     margin-bottom: -22px !important;
     color: #4b5563;
@@ -51,7 +51,7 @@ st.markdown("""
 
 /* Reduz o tamanho das fontes dentro das caixas de texto/seletores */
 [data-testid="stSidebar"] div[data-baseweb="select"] * {
-    font-size: 11px !important;
+    font-size: 12px !important;
 }
 
 /* Compacta o espaçamento vertical entre os elementos */
