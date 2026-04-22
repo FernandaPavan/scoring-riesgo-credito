@@ -31,23 +31,36 @@ with open(os.path.join(MODEL_PATH,"score_params.json"),"r") as f:
 st.set_page_config(layout="wide")
 
 # ============================================
-# CSS CUSTOMIZADO (Versão Super Compacta)
+# ============================================
+# CSS CUSTOMIZADO (Versão Super Compacta + Sidebar)
 # ============================================
 st.markdown("""
 <style>
-/* Remove o excesso de espaço no topo e laterais */
+/* 1. Ajuste Geral da Página */
 .block-container {
     padding-top: 1rem !important;
     padding-bottom: 0rem !important;
 }
 
-/* Estilo das Abas - 16px */
+/* 2. Ajuste do SIDEBAR (Fonte e Espaçamento) */
+/* Diminui o título dos campos (labels) no sidebar */
+[data-testid="stSidebar"] .stWidgetLabel p {
+    font-size: 13px !important;
+    margin-bottom: -15px !important; /* Aproxima o label do campo */
+}
+
+/* Diminui o espaçamento entre os widgets no sidebar */
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0.3rem !important;
+}
+
+/* 3. Estilo das Abas */
 button[data-baseweb="tab"] p {
-    font-size: 16px !important;
+    font-size: 15px !important;
     font-weight: 600 !important;
 }
 
-/* Títulos de Seção - 18px */
+/* 4. Títulos de Seção */
 .titulo-secao {
     text-align: center;
     color: #2563eb;
@@ -55,7 +68,7 @@ button[data-baseweb="tab"] p {
     font-weight: 700;
 }
 
-/* Score - Reduzido de 60px para 42px */
+/* 5. Score e Resultados */
 .score { 
     text-align: center; 
     font-size: 42px; 
@@ -63,6 +76,7 @@ button[data-baseweb="tab"] p {
     line-height: 1;
 }
 
+/* 6. Botão Calcular */
 div.stButton > button {
     background-color: #2563eb;
     color: white;
@@ -70,6 +84,7 @@ div.stButton > button {
     border-radius: 8px;
     height: 35px;
     width: 100%;
+    margin-top: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
