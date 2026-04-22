@@ -40,11 +40,11 @@ st.markdown("""
 .block-container { padding-top: 1rem !important; }
 
 /* 2. SIDEBAR - Ultra Compacta */
-/* Tamanho da fonte dos Labels */
+/* Ajuste da Label (Nome) */
 [data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 8px !important;
-    font-weight: 500 !important;
-    margin-bottom: 0px !important; /* Remove espaço abaixo do label */
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    margin-bottom: -15px !important; /* Puxa a caixa de texto para cima da label */
     padding-bottom: 0px !important;
     color: #4b5563;
 }
@@ -54,33 +54,33 @@ st.markdown("""
 [data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMin"],
 [data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMax"],
 [data-testid="stSidebar"] .stSlider div[role="slider"] {
-    font-size: 10px !important;
+    font-size: 12px !important;
 }
 
-/* Reduz o espaçamento vertical entre os widgets */
+/* Reduz o espaçamento vertical ENTRE um widget e outro */
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
     padding-top: 0px !important;
-    padding-bottom: 2px !important;
-    margin-bottom: 0px !important;
+    padding-bottom: 0px !important;
+    margin-bottom: -12px !important; /* Puxa o conjunto de baixo para cima */
 }
 
-/* Ajuste específico para o Slider (diminuir altura ocupada) */
+/* Ajuste específico para o Slider */
 [data-testid="stSidebar"] [data-testid="stSlider"] {
     padding-top: 0px !important;
-    margin-top: -8px !important;
+    margin-top: -10px !important;
 }
 
 /* 3. BOTÃO CALCULAR */
 div.stButton > button {
     background-color: #2563eb !important;
     color: white !important;
-    font-weight: 500;
+    font-weight: 600;
     border-radius: 6px;
-    height: 30px; /* Reduzido */
+    height: 30px;
     width: 90% !important;
     margin-left: 5%;
     border: none;
-    margin-top: 8px;
+    margin-top: 15px;
     font-size: 11px;
 }
 
