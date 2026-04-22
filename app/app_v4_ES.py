@@ -8,75 +8,72 @@ import json
 import scorecardpy as sc
 
 # ============================================
-# PATH
+# CONFIGURAÇÃO INICIAL
+# ============================================
+st.set_page_config(layout="wide", page_title="Credit Score App")
+
+# ============================================
+# PATH E CARREGAMENTO
 # ============================================
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_PATH,"models")
+MODEL_PATH = os.path.join(BASE_PATH, "models")
+
+@st.cache_resource
+def load_data():
+    modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
+    bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
+    with open(os.path.join(MODEL_PATH, "metricas.json"), "r") as f:
+        metricas = json.load(f)
+    with open(os.path.join(MODEL_PATH, "score_params.json"), "r") as f:
+        params = json.load(f)
+    return modelo, bins_woe, metricas, params
+
+modelo, bins_woe, metricas_modelo, score_params = load_data()
 
 # ============================================
-# LOAD
-# ============================================
-modelo = joblib.load(os.path.join(MODEL_PATH,"modelo.pkl"))
-bins_woe = joblib.load(os.path.join(MODEL_PATH,"woe_bins.pkl"))
-
-with open(os.path.join(MODEL_PATH,"metricas.json"),"r") as f:
-    metricas_modelo = json.load(f)
-
-with open(os.path.join(MODEL_PATH,"score_params.json"),"r") as f:
-    score_params = json.load(f)
-
-# ============================================
-# CONFIG
-# ============================================
-st.set_page_config(layout="wide")
-
-# ============================================
-# ============================================
-# CSS CUSTOMIZADO (Versão Super Compacta + Sidebar)
+# CSS CUSTOMIZADO (SIDEBAR E GRÁFICO OTIMIZADOS)
 # ============================================
 st.markdown("""
 <style>
-/* 1. Ajuste Geral da Página */
+/* 1. Redução de Margens Gerais */
 .block-container {
     padding-top: 1rem !important;
     padding-bottom: 0rem !important;
 }
 
-/* 2. Ajuste do SIDEBAR (Fonte e Espaçamento) */
-/* Diminui o título dos campos (labels) no sidebar */
+/* 2. SIDEBAR ULTRA-COMPACTO */
 [data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 13px !important;
-    margin-bottom: -15px !important; /* Aproxima o label do campo */
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    margin-bottom: -15px !important;
 }
-
-/* Diminui o espaçamento entre os widgets no sidebar */
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-    gap: 0.3rem !important;
+    gap: 0.1rem !important;
+}
+[data-testid="stSidebar"] div[data-baseweb="select"], 
+[data-testid="stSidebar"] div[data-testid="stSlider"] {
+    transform: scale(0.95);
+    transform-origin: left top;
 }
 
-/* 3. Estilo das Abas */
-button[data-baseweb="tab"] p {
-    font-size: 15px !important;
-    font-weight: 600 !important;
-}
-
-/* 4. Títulos de Seção */
+/* 3. TÍTULOS E TEXTOS */
 .titulo-secao {
     text-align: center;
     color: #2563eb;
     font-size: 18px;
     font-weight: 700;
 }
-
-/* 5. Score e Resultados */
 .score { 
     text-align: center; 
-    font-size: 42px; 
+    font-size: 40px; 
     font-weight: 700; 
     line-height: 1;
 }
+button[data-baseweb="tab"] p {
+    font-size: 14px !important;
+}
 
-/* 6. Botão Calcular */
+/* 4. BOTÃO CALCULAR */
 div.stButton > button {
     background-color: #2563eb;
     color: white;
@@ -84,13 +81,12 @@ div.stButton > button {
     border-radius: 8px;
     height: 35px;
     width: 100%;
-    margin-top: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================
-# HEADER
+# HEADER PRINCIPAL
 # ============================================
 st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weight:700;margin-bottom:0;'>Evaluación de Riesgo y Score de Crédito</h1>", unsafe_allow_html=True)
 
@@ -101,7 +97,7 @@ tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", 
 # ============================================
 with tab1:
     with st.sidebar:
-        st.markdown("<div style='text-align:center;color:#2563eb;font-size:18px;font-weight:600;'>Datos del Cliente</div>",unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;color:#2563eb;font-size:16px;font-weight:600;'>Datos del Cliente</div>", unsafe_allow_html=True)
         edad = st.slider("Edad", 18, 75, 30)
         valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
         duracion = st.slider("Duración (meses)", 4, 72, 24)
@@ -113,9 +109,9 @@ with tab1:
         cuenta_corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[st.selectbox("Cuenta Corriente", ["Bajo","Medio","Alto"])]
         finalidad = {"Auto":"car","Muebles":"furniture/equipment","Electrónicos":"radio/TV","Negocios":"business","Educación":"education","Reparaciones":"repairs","Otros":"vacation/others"}[st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])]
 
-        btn = st.button("Calcular", use_container_width=True)
+        btn = st.button("Calcular")
 
-    col2, col3 = st.columns([1, 1])
+    col_res, col_graf = st.columns([1, 1])
 
     if btn:
         # PREDICÇÃO
@@ -123,15 +119,12 @@ with tab1:
         entrada_woe = sc.woebin_ply(entrada, bins_woe).reindex(columns=modelo.feature_names_in_, fill_value=0)
         prob = min(max(modelo.predict_proba(entrada_woe)[0][1], 0.0001), 0.9999)
 
-        # CÁLCULO SCORE E POLICY LAYER
+        # CÁLCULO SCORE E POLICY
         factor = score_params["pdo"]/np.log(2)
         offset = score_params["base_score"] + factor*np.log(score_params["base_odds"])
         score_base = int(offset + factor*np.log((1-prob)/prob))
         
-        penalidade_score = 0
-        penalidade_limite = 1.0
-        flags = []
-
+        penalidade_score, penalidade_limite, flags = 0, 1.0, []
         if trabalho == 0: penalidade_score -= 80; penalidade_limite *= 0.5; flags.append("Sin empleo")
         if habitacion == "rent": penalidade_score -= 30; penalidade_limite *= 0.85; flags.append("Vivienda alquilada")
         if cuenta_ahorro == "little": penalidade_score -= 20; penalidade_limite *= 0.9; flags.append("Bajo ahorro")
@@ -140,63 +133,54 @@ with tab1:
         score = max(score_base + penalidade_score, 300)
 
         # SEGMENTAÇÃO
-        if score >= 700: segmento="SUPER PRIME"; limite_base=18000
-        elif score >= 650: segmento="PRIME"; limite_base=10000
-        elif score >= 600: segmento="STANDARD"; limite_base=5000
-        elif score >= 520: segmento="NEAR PRIME"; limite_base=2500
-        elif score >= 460: segmento="REVIEW"; limite_base=1000
-        else: segmento="SUBPRIME"; limite_base=0
+        if score >= 700: segmento, limite_base = "SUPER PRIME", 18000
+        elif score >= 650: segmento, limite_base = "PRIME", 10000
+        elif score >= 600: segmento, limite_base = "STANDARD", 5000
+        elif score >= 520: segmento, limite_base = "NEAR PRIME", 2500
+        elif score >= 460: segmento, limite_base = "REVIEW", 1000
+        else: segmento, limite_base = "SUBPRIME", 0
 
-        # REGRAS DE DOWNGRADE E LIMITE
-        if "Sin empleo" in flags and segmento in ["SUPER PRIME","PRIME"]: segmento = "NEAR PRIME"
         limite = int(limite_base * penalidade_limite)
         if duracion > 48: limite = int(limite * 0.85)
         
         # DECISÃO FINAL
         if trabalho == 0 and cuenta_corriente == "little":
-            status="RECHAZADO"; icon="✖"; cor="#dc2626"; motivo="Riesgo crítico: sin empleo y baixa liquidez."
+            status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Riesgo crítico: sin empleo y baja liquidez."
         else:
-            if score < 460: status="RECHAZADO"; icon="✖"; cor="#dc2626"; motivo="Score bajo política mínima."
-            elif score < 520: status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"; motivo="Zona intermedia de riesgo."
+            if score < 460: status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Score bajo política mínima."
+            elif score < 520: status, icon, cor, motivo = "EN ANÁLISIS", "⚠", "#facc15", "Zona intermedia de riesgo."
             else:
-                if valor <= limite: status="APROBADO"; icon="✔"; cor="#16a34a"; motivo="Dentro del límite aprobado."
-                elif valor <= limite * 1.2: status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"; motivo="Monto superior al limite sugerido."
-                else: status="RECHAZADO"; icon="✖"; cor="#dc2626"; motivo="Excede límite permitido."
-
+                if valor <= limite: status, icon, cor, motivo = "APROBADO", "✔", "#16a34a", "Dentro del límite aprobado."
+                elif valor <= limite * 1.2: status, icon, cor, motivo = "EN ANÁLISIS", "⚠", "#facc15", "Monto superior al límite sugerido."
+                else: status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Excede límite permitido."
+        
         if flags: motivo += " | Riesgos: " + ", ".join(flags)
 
-        with col2:
-            st.markdown("<div class='titulo-secao'>Resultado</div>", unsafe_allow_html=True)
-            
-            # Valor do Score
+        with col_res:
+            st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
             st.markdown(f"<div class='score' style='color:{cor};'>{score}</div>", unsafe_allow_html=True)
-            
-            # Segmento
             st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;margin-bottom:0;'>{segmento}</p>", unsafe_allow_html=True)
             
-            # Probabilidade
-            st.markdown("<p style='text-align:center;font-size:14px;font-weight:600;margin-bottom:0;'>Probabilidad</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:22px;font-weight:700;margin-bottom:0;'>{prob:.2%}</p>", unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            c1.metric("Probabilidad", f"{prob:.1%}")
+            c2.metric("Límite", f"${limite:,.0f}")
             
-            # Límite
-            st.markdown("<p style='text-align:center;font-size:14px;font-weight:600;margin-bottom:0;'>Límite</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:22px;font-weight:700;margin-bottom:0;'>${limite:,.0f}</p>", unsafe_allow_html=True)
-            
-            # Status Final
-            st.markdown(f"<div style='text-align:center;font-size:30px;color:{cor};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
-            
-            # Motivo
+            st.markdown(f"<div style='text-align:center;font-size:28px;color:{cor};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align:center;font-size:12px;color:#374151;'>{motivo}</p>", unsafe_allow_html=True)
 
-        with col3:
-            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div>", unsafe_allow_html=True)
-            fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, gauge={"axis":{"range":[0,100]},"steps":[{"range":[0,40],"color":"#16a34a"},{"range":[40,70],"color":"#facc15"},{"range":[70,100],"color":"#dc2626"}]}))
+        with col_graf:
+            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br>", unsafe_allow_html=True)
+            fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, 
+                gauge={"axis":{"range":[0,100]},"steps":[
+                    {"range":[0,40],"color":"#16a34a"},
+                    {"range":[40,70],"color":"#facc15"},
+                    {"range":[70,100],"color":"#dc2626"}]}))
             
-            # Redução de margens do gráfico
             fig.update_layout(
-                height=260, 
-                margin=dict(l=20, r=20, t=30, b=0),
-                paper_bgcolor="rgba(0,0,0,0)"
+                height=220, 
+                margin=dict(l=30, r=30, t=0, b=0),
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(size=10)
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -205,7 +189,8 @@ with tab1:
 # ============================================
 with tab2:
     st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:20px;'>Métricas del Modelo</h2>", unsafe_allow_html=True)
-    metricas_df = pd.DataFrame({"Métrica":["Accuracy","Precisión","Recall","AUC","GINI","KS"],"Valor":[round(metricas_modelo["accuracy"],4), round(metricas_modelo["precision"],4), round(metricas_modelo["recall"],4), round(metricas_modelo["auc"],4), round(metricas_modelo["gini"],4), round(metricas_modelo["ks"],4)]})
+    m = metricas_modelo
+    metricas_df = pd.DataFrame({"Métrica":["Accuracy","Precisión","Recall","AUC","GINI","KS"],"Valor":[round(m["accuracy"],4), round(m["precision"],4), round(m["recall"],4), round(m["auc"],4), round(m["gini"],4), round(m["ks"],4)]})
     
     st.markdown(f"""
     <div style='display:flex;justify-content:center;margin-top:5px;'>
