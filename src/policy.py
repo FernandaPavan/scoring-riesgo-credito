@@ -22,19 +22,22 @@ def get_score(prob, score_params):
 # ============================================
 def apply_business_policy(
     score,
-    prob,
     trabalho,
     habitacao,
+    ahorro,
+    corriente,
     valor_solicitado
 ):
     """
-    - Decisão via probabilidade (cutoff)
-    - Score apenas para segmentação
-    - Penalidade apenas no limite
+    Policy 100% baseada em cutoff (SEM penalização)
     """
 
+    # CUT-OFF FIXO (ou pode vir do score_params depois)
+    REJECT_CUTOFF = 460
+    APPROVE_CUTOFF = 520
+
     # =============================
-    # 1. SEGMENTAÇÃO
+    # 1. SEGMENTAÇÃO (só informativa)
     # =============================
     if score >= 700:
         segmento, limite_base = "SUPER PRIME", 18000
@@ -49,79 +52,67 @@ def apply_business_policy(
     else:
         segmento, limite_base = "SUBPRIME", 0
 
-    # =============================
-    # 2. AJUSTE DE LIMITE (APENAS)
-    # =============================
-    penalidade_limite = 1.0
-    flags = []
-
-    # desemprego
-    if trabalho == 0:
-        penalidade_limite *= 0.7
-        flags.append("Sin empleo")
-
-    # aluguel
-    if habitacao == "rent":
-        penalidade_limite *= 0.9
-        flags.append("Vivienda alquilada")
-
-    # moradia gratuita (leve ajuste)
-    if habitacao == "free":
-        penalidade_limite *= 0.95
-        flags.append("Vivienda gratuita")
-
-    limite_final = int(limite_base * penalidade_limite)
+    limite_final = limite_base
 
     # =============================
-    # 3. DECISÃO PELO MODELO (CUT-OFF)
+    # 2. DECISÃO (CORRETA)
     # =============================
-    REJECT_CUTOFF = 0.5304
-    REVIEW_CUTOFF = 0.45
 
-    # HARD RULE (opcional)
-    if trabalho == 0 and limite_final < 800:
-        status = "RECHAZADO"
-        icon = "✖"
-        cor = "#dc2626"
-        motivo = "Sin capacidad mínima de pago."
+    # HARD RULE
+    if trabalho == 0 and corriente == "little":
+        return {
+            "score": score,
+            "segmento": segmento,
+            "limite": 0,
+            "status": "RECHAZADO",
+            "icon": "✖",
+            "cor": "#dc2626",
+            "motivo": "Riesgo crítico: sin empleo y baja liquidez."
+        }
 
-    # REJEIÇÃO
-    elif prob >= REJECT_CUTOFF:
-        status = "RECHAZADO"
-        icon = "✖"
-        cor = "#dc2626"
-        motivo = "Alta probabilidad de incumplimiento."
+    # ❌ REJECT
+    if score < REJECT_CUTOFF:
+        return {
+            "score": score,
+            "segmento": segmento,
+            "limite": 0,
+            "status": "RECHAZADO",
+            "icon": "✖",
+            "cor": "#dc2626",
+            "motivo": f"Score bajo cutoff ({score} < {REJECT_CUTOFF})"
+        }
 
-    # ZONA CINZA
-    elif REVIEW_CUTOFF <= prob < REJECT_CUTOFF:
-        status = "EN ANÁLISIS"
-        icon = "⚠"
-        cor = "#facc15"
-        motivo = "Zona intermedia de riesgo."
+    # ⚠ REVIEW (AQUI ESTAVA O ERRO)
+    if REJECT_CUTOFF <= score < APPROVE_CUTOFF:
+        return {
+            "score": score,
+            "segmento": segmento,
+            "limite": limite_final,
+            "status": "EN ANÁLISIS",
+            "icon": "⚠",
+            "cor": "#facc15",
+            "motivo": "Zona intermedia entre cutoffs"
+        }
 
-    # APROVAÇÃO
-    else:
+    # ✅ APPROVE
+    if score >= APPROVE_CUTOFF:
         if valor_solicitado <= limite_final:
-            status = "APROBADO"
-            icon = "✔"
-            cor = "#16a34a"
-            motivo = "Dentro del límite aprobado."
+            return {
+                "score": score,
+                "segmento": segmento,
+                "limite": limite_final,
+                "status": "APROBADO",
+                "icon": "✔",
+                "cor": "#16a34a",
+                "motivo": "Dentro del límite"
+            }
         else:
-            status = "EN ANÁLISIS"
-            icon = "⚠"
-            cor = "#facc15"
-            motivo = f"Excede límite (${limite_final:,.0f})."
-
-    # adiciona explicação
-    if flags:
-        motivo += " | " + ", ".join(flags)
-
-    return {
-        "score": score,
-        "segmento": segmento,
-        "limite": limite_final,
-        "status": status,
-        "icon": icon,
-        "cor": cor,
-        "motivo": motivo
-    }
+            return {
+                "score": score,
+                "segmento": segmento,
+                "limite": limite_final,
+                "status": "EN ANÁLISIS",
+                "icon": "⚠",
+                "cor": "#facc15",
+                "motivo": "Excede límite, requiere análisis"
+            }
