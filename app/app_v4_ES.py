@@ -1,100 +1,38 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
 import plotly.graph_objects as go
 import os
-import json
+import sys
 import scorecardpy as sc
 
 # ============================================
-# CONFIGURAÇÃO INICIAL
+# AJUSTE DE PATH PARA MODULARIZAÇÃO
+# ============================================
+# Permite que o app encontre a pasta 'src' na raiz
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from styles import apply_custom_styles
+from src.loader import load_assets
+from src.policy import get_score, apply_business_policy
+
+# ============================================
+# CONFIGURAÇÃO INICIAL E ESTILOS
 # ============================================
 st.set_page_config(layout="wide", page_title="Credit Score App")
 
-# ============================================
-# PATH E CARREGAMENTO
-# ============================================
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_PROJECT = os.path.dirname(CURRENT_DIR)
-MODEL_PATH = os.path.join(BASE_PROJECT, "models")
+# Aplica exatamente o layout que você definiu (CSS agora centralizado no styles.py)
+apply_custom_styles()
 
+# ============================================
+# CARREGAMENTO DE ATIVOS (CACHE)
+# ============================================
 @st.cache_resource
-def load_data():
-    modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
-    bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
-    with open(os.path.join(MODEL_PATH, "metricas.json"), "r") as f:
-        metricas = json.load(f)
-    with open(os.path.join(MODEL_PATH, "score_params.json"), "r") as f:
-        params = json.load(f)
-    return modelo, bins_woe, metricas, params
+def get_all_assets():
+    # O loader.py cuida da lógica de caminhos relativos/absolutos
+    return load_assets()
 
-modelo, bins_woe, metricas_modelo, score_params = load_data()
-
-# ============================================
-# CSS CUSTOMIZADO (VOLTANDO AO TAMANHO ORIGINAL)
-# ============================================
-st.markdown("""
-<style>
-.block-container { padding-top: 1rem !important; }
-
-/* SIDEBAR ULTRA COMPACTA */
-[data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 10px !important;
-    font-weight: 600 !important;
-    margin-bottom: -15px !important; 
-    padding-bottom: 0px !important;
-    color: #4b5563;
-}
-
-[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div,
-[data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMin"],
-[data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMax"],
-[data-testid="stSidebar"] .stSlider div[role="slider"] {
-    font-size: 12px !important;
-}
-
-[data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
-    padding-top: 0px !important;
-    padding-bottom: 0px !important;
-    margin-bottom: -12px !important;
-}
-
-[data-testid="stSidebar"] [data-testid="stSlider"] {
-    padding-top: 0px !important;
-    margin-top: -10px !important;
-}
-
-div.stButton > button {
-    background-color: #2563eb !important;
-    color: white !important;
-    font-weight: 600;
-    border-radius: 6px;
-    height: 30px;
-    width: 90% !important;
-    margin-left: 5%;
-    margin-top: 15px;
-    font-size: 11px;
-}
-
-/* RESULTADOS E TABELAS (TAMANHO ORIGINAL COMPACTO) */
-.container-performance {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
-
-.titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
-.score { text-align: center; font-size: 40px; font-weight: 700; }
-
-table { margin-left: auto; margin-right: auto; font-size: 13px; text-align: center; border-collapse: collapse; width: 450px; }
-th { background-color: #2563eb; color: white; padding: 8px; }
-td { padding: 8px; border-bottom: 1px solid #eee; }
-.val-pos { color: #16a34a; font-weight: 800; }
-.val-neg { color: #dc2626; font-weight: 800; }
-</style>
-""", unsafe_allow_html=True)
+modelo, bins_woe, metricas_modelo, score_params = get_all_assets()
 
 # ============================================
 # HEADER
@@ -103,7 +41,6 @@ st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weig
 
 tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", "Estabilidad (PSI)"])
 
-# ============================================
 # ============================================
 # TAB 1: SIMULACIÓN
 # ============================================
@@ -137,46 +74,33 @@ with tab1:
     col_res, col_graf = st.columns([1, 1])
     
     if btn:
-        entrada = pd.DataFrame({"Genero":[genero],"Trabalho":[trabalho],"Habitacao":[habitacion],"Conta_poupanca":[cuenta_ahorro],"Conta_corrente":[cuenta_corriente],"Finalidade":[finalidad],"Idade":[edad],"Duracao":[duracion],"Valor_credito":[valor_solicitado]})
+        # Preprocessamento (WoE)
+        entrada = pd.DataFrame({
+            "Genero":[genero], "Trabalho":[trabalho], "Habitacao":[habitacao], 
+            "Conta_poupanca":[cuenta_ahorro], "Conta_corrente":[cuenta_corriente], 
+            "Finalidade":[finalidad], "Idade":[edad], "Duracao":[duracion], 
+            "Valor_credito":[valor_solicitado]
+        })
+        
         entrada_woe = sc.woebin_ply(entrada, bins_woe).reindex(columns=modelo.feature_names_in_, fill_value=0)
-        prob = min(max(modelo.predict_proba(entrada_woe)[0][1], 0.0001), 0.9999)
-
-        factor = score_params["pdo"]/np.log(2)
-        offset = score_params["base_score"] + factor*np.log(score_params["base_odds"])
-        score_base = int(offset + factor*np.log((1-prob)/prob))
         
-        penalidade_score, penalidade_limite = 0, 1.0
-        if trabalho == 0: penalidade_score -= 80; penalidade_limite *= 0.5
-        if habitacion == "rent": penalidade_score -= 30; penalidade_limite *= 0.85
-        if cuenta_ahorro == "little": penalidade_score -= 20; penalidade_limite *= 0.9
-        if cuenta_corriente == "little": penalidade_score -= 20; penalidade_limite *= 0.9
+        # Cálculo de Probabilidade
+        prob = modelo.predict_proba(entrada_woe)[0][1]
         
-        score = max(score_base + penalidade_score, 300)
-
-        if score >= 700: segmento="SUPER PRIME"; limite_base=18000
-        elif score >= 650: segmento="PRIME"; limite_base=10000
-        elif score >= 600: segmento="STANDARD"; limite_base=5000
-        elif score >= 520: segmento="NEAR PRIME"; limite_base=2500
-        elif score >= 460: segmento="REVIEW"; limite_base=1000
-        else: segmento="SUBPRIME"; limite_base=0
-
-        limite = int(limite_base * penalidade_limite)
-        
-        if trabalho == 0 and cuenta_corriente == "little":
-            status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Riesgo crítico: sin empleo e baja liquidez."
-        elif score < 460: status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Score bajo política mínima."
-        elif score < 520: status, icon, cor, motivo = "EN ANÁLISIS", "⚠", "#facc15", "Zona intermedia de riesgo."
-        elif valor_solicitado <= limite: status, icon, cor, motivo = "APROBADO", "✔", "#16a34a", "Dentro del límite aprobado."
-        else: status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Excede limite permitido."
+        # Lógica de Negócio Modular (Vem do policy.py)
+        # 1. Gera o Score Base
+        score_puro = get_score(prob, score_params)
+        # 2. Aplica Política de Crédito e Penalidades
+        res = apply_business_policy(score_puro, trabalho, habitacao, cuenta_ahorro, cuenta_corriente, valor_solicitado)
 
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br><br>", unsafe_allow_html=True)
-            st.markdown(f"<div class='score' style='color:{cor};'>{score}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{segmento}</p>", unsafe_allow_html=True)
+            st.markdown(f"<div class='score' style='color:{res['cor']};'>{res['score']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{res['segmento']}</p>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite Sugerido</p><p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:center;font-size:28px;color:{cor};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;padding:0 20px;'>{motivo}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite Sugerido</p><p style='text-align:center;font-size:22px;font-weight:700;'>${res['limite']:,.0f}</p>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center;font-size:28px;color:{res['cor']};font-weight:900;'>{res['icon']} {res['status']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;padding:0 20px;'>{res['motivo']}</p>", unsafe_allow_html=True)
 
         with col_graf:
             st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br><br>", unsafe_allow_html=True)
@@ -186,7 +110,7 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: DESEMPEÑO DEL MODELO (CENTRALIZADA + ORIGINAL)
+# TAB 2: DESEMPEÑO DEL MODELO
 # ============================================
 with tab2:
     m = metricas_modelo
@@ -213,7 +137,7 @@ with tab2:
     </div>""", unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: ESTABILIDADE (CENTRALIZADA + ORIGINAL)
+# TAB 3: ESTABILIDADE
 # ============================================
 with tab3:
     psi_v = metricas_modelo.get("psi", 0.00)
