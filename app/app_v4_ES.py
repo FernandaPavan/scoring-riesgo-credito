@@ -37,7 +37,7 @@ st.markdown("""
 <style>
 /* 1. Margens Gerais */
 .block-container {
-    padding-top: 1rem !important;
+    padding-top: 0.5rem !important;
 }
 
 /* 2. SIDEBAR - Fontes e Caixas Pequenas */
@@ -45,7 +45,7 @@ st.markdown("""
 [data-testid="stSidebar"] .stWidgetLabel p {
     font-size: 12px !important;
     font-weight: 500 !important;
-    margin-bottom: -22px !important;
+    margin-bottom: -20px !important;
     color: #4b5563;
 }
 
@@ -73,8 +73,8 @@ div.stButton > button {
     color: white !important;
     font-weight: 600;
     border-radius: 6px;
-    height: 32px;
-    width: 90%;
+    height: 30px;
+    width: 60%;
     margin-left: 5%;
     border: none;
 }
