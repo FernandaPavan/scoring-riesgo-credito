@@ -7,7 +7,7 @@ import scorecardpy as sc
 import plotly.graph_objects as go
 
 # ============================================
-# PATH (IMPORTANTE PARA STREAMLIT CLOUD)
+# PATH
 # ============================================
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -29,6 +29,12 @@ def get_all_assets():
     return load_assets()
 
 modelo, bins_woe, metricas_modelo, score_params = get_all_assets()
+
+# CUT-OFFS (IMPORTANTE)
+cutoffs = score_params.get("cutoffs", {
+    "reject_cutoff": 460,
+    "approve_cutoff": 520
+})
 
 # ============================================
 # HEADER
@@ -116,12 +122,12 @@ with tab1:
         })
 
         # ============================================
-        # WOE TRANSFORM
+        # WOE
         # ============================================
         try:
             entrada_woe = sc.woebin_ply(entrada, bins_woe)
         except Exception:
-            st.error("Erro na transformação WOE. Verifique os bins.")
+            st.error("Erro na transformação WOE")
             st.stop()
 
         if hasattr(modelo, "feature_names_in_"):
@@ -134,10 +140,13 @@ with tab1:
         prob = float(np.clip(prob, 0.0001, 0.9999))
 
         # ============================================
-        # SCORE + POLICY
+        # SCORE
         # ============================================
         score_base = get_score(prob, score_params)
 
+        # ============================================
+        # POLICY (AGORA BASEADA EM CUT-OFF)
+        # ============================================
         res = apply_business_policy(
             score_base,
             trabalho_idx,
@@ -148,12 +157,14 @@ with tab1:
         )
 
         # ============================================
-        # DEBUG (ESSENCIAL)
+        # DEBUG
         # ============================================
         with st.expander("🔎 DEBUG MODELO"):
             st.write("Probabilidade:", prob)
             st.write("Score Base:", score_base)
             st.write("Score Final:", res["score"])
+            st.write("Cutoff Reject:", cutoffs["reject_cutoff"])
+            st.write("Cutoff Approve:", cutoffs["approve_cutoff"])
             st.write("Status:", res["status"])
             st.write("Limite:", res["limite"])
 
@@ -168,13 +179,13 @@ with tab1:
             st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{res['segmento']}</p>", unsafe_allow_html=True)
 
             st.markdown(
-                f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad de Incumplimiento</p>"
+                f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p>"
                 f"<p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>",
                 unsafe_allow_html=True
             )
 
             st.markdown(
-                f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite Sugerido</p>"
+                f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite</p>"
                 f"<p style='text-align:center;font-size:22px;font-weight:700;'>${res['limite']:,.0f}</p>",
                 unsafe_allow_html=True
             )
@@ -186,7 +197,7 @@ with tab1:
             )
 
             st.markdown(
-                f"<p style='text-align:center;font-size:12px;color:#64748b;padding:0 20px;'>{res['motivo']}</p>",
+                f"<p style='text-align:center;font-size:12px;color:#64748b;'>{res['motivo']}</p>",
                 unsafe_allow_html=True
             )
 
@@ -194,12 +205,10 @@ with tab1:
         # GAUGE
         # ============================================
         with col_graf:
-            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br>", unsafe_allow_html=True)
-
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob * 100,
-                number={'font': {'size': 45}, 'suffix': "%"},
+                number={'suffix': "%"},
                 gauge={
                     "axis":{"range":[0,100]},
                     "steps":[
@@ -210,5 +219,4 @@ with tab1:
                 }
             ))
 
-            fig.update_layout(height=260, margin=dict(l=30, r=30, t=0, b=0))
             st.plotly_chart(fig, use_container_width=True)
