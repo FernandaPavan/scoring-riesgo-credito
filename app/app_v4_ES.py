@@ -204,16 +204,18 @@ with tab2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: ESTABILIDADE (AJUSTADA: PULA 1 LINHA)
+# ============================================
+# TAB 3: ESTABILIDADE (AJUSTADA COM ESPAÇAMENTOS)
 # ============================================
 with tab3:
+    # Coleta dos dados
     psi_valor = metricas_modelo.get("psi", 0.00)
     psi_cor = "#16a34a" if psi_valor < 0.1 else "#facc15" if psi_valor < 0.25 else "#dc2626"
     psi_status = "ESTÁVEL" if psi_valor < 0.1 else "ALERTA" if psi_valor < 0.25 else "INSTÁVEL"
 
     st.markdown(f"""
     <div class='container-performance'>
-        <p class='titulo-tabela-azul'>Estabilidad del Modelo (PSI)</p>
+        <br><br> <p class='titulo-tabela-azul'>Estabilidad del Modelo (PSI)</p>
         <br> <div class='card-psi'>
             <p style='margin:0; font-size:11px; color:#64748b; font-weight:700; letter-spacing:1px;'>PSI ACUMULADO</p>
             <h1 style='margin:0; font-size:42px; font-weight:800; color:{psi_cor};'>{psi_valor:.4f}</h1>
