@@ -30,7 +30,7 @@ def get_all_assets():
 
 modelo, bins_woe, metricas_modelo, score_params = get_all_assets()
 
-# CUT-OFFS (IMPORTANTE)
+# CUT-OFFS
 cutoffs = score_params.get("cutoffs", {
     "reject_cutoff": 460,
     "approve_cutoff": 520
@@ -134,10 +134,15 @@ with tab1:
             entrada_woe = entrada_woe.reindex(columns=modelo.feature_names_in_, fill_value=0)
 
         # ============================================
-        # PREDIÇÃO
+        # PREDIÇÃO CORRETA (ROBUSTA)
         # ============================================
-        prob = modelo.predict_proba(entrada_woe)[0][1]
-        prob = float(np.clip(prob, 0.0001, 0.9999))
+        probs = modelo.predict_proba(entrada_woe)[0]
+        classes = list(modelo.classes_)
+
+        idx_default = classes.index(0)
+        idx_good = classes.index(1)
+
+        prob = float(np.clip(probs[idx_default], 0.0001, 0.9999))
 
         # ============================================
         # SCORE
@@ -145,7 +150,7 @@ with tab1:
         score_base = get_score(prob, score_params)
 
         # ============================================
-        # POLICY (AGORA BASEADA EM CUT-OFF)
+        # POLICY
         # ============================================
         res = apply_business_policy(
             score_base,
@@ -157,10 +162,26 @@ with tab1:
         )
 
         # ============================================
-        # DEBUG
+        # DEBUG COMPLETO
         # ============================================
         with st.expander("🔎 DEBUG MODELO"):
-            st.write("Probabilidade:", prob)
+
+            prob_default = probs[idx_default]
+            prob_good = probs[idx_good]
+
+            st.write("Classes do modelo:", classes)
+            st.write("Probabilidades:", probs)
+            st.write("Prob DEFAULT (0 - mau):", prob_default)
+            st.write("Prob GOOD (1 - bom):", prob_good)
+            st.write("Prob usada no score:", prob)
+
+            if prob > 0.5 and res["score"] > 600:
+                st.error("⚠️ POSSÍVEL INVERSÃO: alta probabilidade com score alto")
+            elif prob < 0.3 and res["score"] < 500:
+                st.error("⚠️ POSSÍVEL INVERSÃO: baixa probabilidade com score baixo")
+            else:
+                st.success("✅ Probabilidade e score estão coerentes")
+
             st.write("Score Base:", score_base)
             st.write("Score Final:", res["score"])
             st.write("Cutoff Reject:", cutoffs["reject_cutoff"])
