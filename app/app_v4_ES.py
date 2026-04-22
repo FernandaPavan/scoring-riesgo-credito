@@ -206,15 +206,48 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2 e 3 (Mantidos conforme layout novo)
+# ============================================
+# TAB 2: DESEMPEÑO DEL MODELO (AJUSTADA)
 # ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
-    st.markdown("<div class='container-performance'><p class='titulo-secao'>Métricas Generales</p>", unsafe_allow_html=True)
-    st.markdown(f"<table><tr><th>Métrica</th><th>Valor</th></tr><tr><td>Accuracy</td><td>{m['accuracy']:.4f}</td></tr><tr><td>Precision</td><td>{m['precision']:.4f}</td></tr><tr><td>Recall</td><td>{m['recall']:.4f}</td></tr><tr><td>AUC</td><td>{m['auc']:.4f}</td></tr><tr><td>Gini</td><td>{m['gini']:.4f}</td></tr><tr><td>KS</td><td>{m['ks']:.4f}</td></tr></table>", unsafe_allow_html=True)
-    st.markdown("<p class='titulo-secao' style='margin-top:20px;'>Matriz de Confusión</p>", unsafe_allow_html=True)
-    st.markdown(f"<table><tr><th>Real\Pred</th><th>Bom (0)</th><th>Ruim (1)</th></tr><tr><td>Bom (0)</td><td class='val-pos'>{cm['TN']}</td><td class='val-neg'>{cm['FP']}</td></tr><tr><td>Ruim (1)</td><td class='val-neg'>{cm['FN']}</td><td class='val-pos'>{cm['TP']}</td></tr></table></div>", unsafe_allow_html=True)
+    
+    # O container-performance já centraliza os itens internamente
+    st.markdown("""
+    <div class='container-performance'>
+        <br> <p class='titulo-secao'>Métricas Generales</p>
+        
+        <table>
+            <tr><th>Métrica</th><th>Valor</th></tr>
+            <tr><td>Accuracy</td><td>{:.4f}</td></tr>
+            <tr><td>Precision</td><td>{:.4f}</td></tr>
+            <tr><td>Recall</td><td>{:.4f}</td></tr>
+            <tr><td>AUC</td><td>{:.4f}</td></tr>
+            <tr><td>Gini</td><td>{:.4f}</td></tr>
+            <tr><td>KS</td><td>{:.4f}</td></tr>
+        </table>
+
+        <p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p>
+        
+        <table>
+            <tr><th>Real\Pred</th><th>Bom (0)</th><th>Ruim (1)</th></tr>
+            <tr>
+                <td>Bom (0)</td>
+                <td class='val-pos'>{}</td>
+                <td class='val-neg'>{}</td>
+            </tr>
+            <tr>
+                <td>Ruim (1)</td>
+                <td class='val-neg'>{}</td>
+                <td class='val-pos'>{}</td>
+            </tr>
+        </table>
+    </div>
+    """.format(
+        m['accuracy'], m['precision'], m['recall'], m['auc'], m['gini'], m['ks'],
+        cm['TN'], cm['FP'], cm['FN'], cm['TP']
+    ), unsafe_allow_html=True)
 
 with tab3:
     psi_valor = metricas_modelo.get("psi", 0.00)
