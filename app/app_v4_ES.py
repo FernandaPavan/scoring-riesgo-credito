@@ -104,6 +104,7 @@ st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weig
 tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", "Estabilidad (PSI)"])
 
 # ============================================
+# ============================================
 # TAB 1: SIMULACIÓN
 # ============================================
 with tab1:
@@ -169,7 +170,7 @@ with tab1:
         else: status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Excede limite permitido."
 
         with col_res:
-            st.markdown("<div class='titulo-secao'>Resultado</div>", unsafe_allow_html=True)
+            st.markdown("<div class='titulo-secao'>Resultado</div><br><br>", unsafe_allow_html=True)
             st.markdown(f"<div class='score' style='color:{cor};'>{score}</div>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{segmento}</p>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
@@ -178,7 +179,7 @@ with tab1:
             st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;padding:0 20px;'>{motivo}</p>", unsafe_allow_html=True)
 
         with col_graf:
-            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div>", unsafe_allow_html=True)
+            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br><br>", unsafe_allow_html=True)
             fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, number={'font': {'size': 45}, 'suffix': "%"},
                 gauge={"axis":{"range":[0,100]},"steps":[{"range":[0,40],"color":"#16a34a"},{"range":[40,70],"color":"#facc15"},{"range":[70,100],"color":"#dc2626"}]}))
             fig.update_layout(height=260, margin=dict(l=30, r=30, t=0, b=0), paper_bgcolor="rgba(0,0,0,0)")
