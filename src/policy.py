@@ -5,9 +5,8 @@ import numpy as np
 # ============================================
 def get_score(prob, score_params):
     """
-    Transforma probabilidade de inadimplência em score (300 - 1000)
+    Transforma probabilidade em score (300 - 1000)
     """
-    # Proteção numérica
     prob = max(min(prob, 0.9999), 0.0001)
 
     factor = score_params["pdo"] / np.log(2)
@@ -19,134 +18,106 @@ def get_score(prob, score_params):
 
 
 # ============================================
-# POLICY
+# POLICY (SEM PENALIDADE DE SCORE)
 # ============================================
 def apply_business_policy(
     score,
+    prob,
     trabalho,
     habitacao,
-    ahorro,
-    corriente,
     valor_solicitado
 ):
     """
-    Aplica regras de negócio:
-    - Penalizações calibradas
-    - Segmentação
-    - Limite
-    - Decisão com cutoffs
+    - Decisão via probabilidade (cutoff)
+    - Score apenas para segmentação
+    - Penalidade apenas no limite
     """
 
     # =============================
-    # 1. PENALIZAÇÕES (AJUSTADAS)
+    # 1. SEGMENTAÇÃO
     # =============================
-    penalidade_score = 0
-    penalidade_limite = 1.0
-    flags = []
-
-    if trabalho == 0:
-        penalidade_score -= 60   # antes -80 (muito agressivo)
-        penalidade_limite *= 0.6
-        flags.append("Sin empleo")
-
-    if habitacao == "rent":
-        penalidade_score -= 20
-        penalidade_limite *= 0.90
-        flags.append("Vivienda alquilada")
-
-    if habitacao == "free":
-        penalidade_limite *= 0.95
-        flags.append("Vivienda gratuita")
-
-    if ahorro == "little":
-        penalidade_score -= 15
-        penalidade_limite *= 0.95
-        flags.append("Bajo ahorro")
-
-    if corriente == "little":
-        penalidade_score -= 15
-        penalidade_limite *= 0.95
-        flags.append("Baja liquidez")
-
-    # =============================
-    # 2. SCORE FINAL
-    # =============================
-    score_final = max(score + penalidade_score, 300)
-
-    # =============================
-    # 3. SEGMENTAÇÃO
-    # =============================
-    if score_final >= 700:
+    if score >= 700:
         segmento, limite_base = "SUPER PRIME", 18000
-    elif score_final >= 650:
+    elif score >= 650:
         segmento, limite_base = "PRIME", 10000
-    elif score_final >= 600:
+    elif score >= 600:
         segmento, limite_base = "STANDARD", 5000
-    elif score_final >= 520:
+    elif score >= 520:
         segmento, limite_base = "NEAR PRIME", 2500
-    elif score_final >= 460:
+    elif score >= 460:
         segmento, limite_base = "REVIEW", 1000
     else:
         segmento, limite_base = "SUBPRIME", 0
 
     # =============================
-    # 4. LIMITE FINAL
+    # 2. AJUSTE DE LIMITE (APENAS)
     # =============================
+    penalidade_limite = 1.0
+    flags = []
+
+    # desemprego
+    if trabalho == 0:
+        penalidade_limite *= 0.7
+        flags.append("Sin empleo")
+
+    # aluguel
+    if habitacao == "rent":
+        penalidade_limite *= 0.9
+        flags.append("Vivienda alquilada")
+
+    # moradia gratuita (leve ajuste)
+    if habitacao == "free":
+        penalidade_limite *= 0.95
+        flags.append("Vivienda gratuita")
+
     limite_final = int(limite_base * penalidade_limite)
 
     # =============================
-    # 5. DECISÃO COM CUT-OFF
+    # 3. DECISÃO PELO MODELO (CUT-OFF)
     # =============================
+    REJECT_CUTOFF = 0.5304
+    REVIEW_CUTOFF = 0.45
 
-    # HARD RULE (sempre prioriza)
-    if trabalho == 0 and corriente == "little":
+    # HARD RULE (opcional)
+    if trabalho == 0 and limite_final < 800:
         status = "RECHAZADO"
         icon = "✖"
         cor = "#dc2626"
-        motivo = "Riesgo crítico: sin empleo y baja liquidez."
+        motivo = "Sin capacidad mínima de pago."
 
-    # ❌ REJEIÇÃO
-    elif score_final < 460:
+    # REJEIÇÃO
+    elif prob >= REJECT_CUTOFF:
         status = "RECHAZADO"
         icon = "✖"
         cor = "#dc2626"
-        motivo = f"Score por debajo del cutoff ({score_final} < 460)."
+        motivo = "Alta probabilidad de incumplimiento."
 
-    # ⚠ ZONA CINZA (ESSENCIAL)
-    elif 460 <= score_final < 520:
+    # ZONA CINZA
+    elif REVIEW_CUTOFF <= prob < REJECT_CUTOFF:
         status = "EN ANÁLISIS"
         icon = "⚠"
         cor = "#facc15"
-        motivo = "Zona intermedia de riesgo. Requiere análisis."
+        motivo = "Zona intermedia de riesgo."
 
-    # ✅ APROVAÇÃO CONTROLADA
+    # APROVAÇÃO
     else:
         if valor_solicitado <= limite_final:
             status = "APROBADO"
             icon = "✔"
             cor = "#16a34a"
             motivo = "Dentro del límite aprobado."
-
-        elif valor_solicitado <= limite_final * 1.2:
+        else:
             status = "EN ANÁLISIS"
             icon = "⚠"
             cor = "#facc15"
-            motivo = "Monto levemente superior al límite."
+            motivo = f"Excede límite (${limite_final:,.0f})."
 
-        else:
-            status = "RECHAZADO"
-            icon = "✖"
-            cor = "#dc2626"
-            motivo = f"Excede límite permitido (${limite_final:,.0f})."
-
-    # =============================
-    # 6. FLAGS (EXPLICAÇÃO)
-    # =============================
+    # adiciona explicação
     if flags:
-        motivo += " | Riesgos: " + ", ".join(flags)
+        motivo += " | " + ", ".join(flags)
 
     return {
-        "score": score_final,
+        "score": score,
         "segmento": segmento,
         "limite": limite_final,
         "status": status,
