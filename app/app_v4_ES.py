@@ -65,13 +65,13 @@ div.stButton > button {
     margin-top: 20px;
 }
 
-/* 4. ABA DESEMPENHO - CENTRALIZAÇÃO E ALTURA */
+/* 4. ABA DESEMPENHO E PSI - CENTRALIZAÇÃO E ALTURA */
 .container-performance {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    margin-top: -45px !important; /* Puxa tudo para cima */
+    margin-top: -45px !important; 
 }
 
 .titulo-tabela-azul {
@@ -79,8 +79,8 @@ div.stButton > button {
     color: #2563eb;
     font-size: 16px;
     font-weight: 700;
-    margin-top: 10px; /* Reduzido */
-    margin-bottom: 5px;  /* Colado na tabela */
+    margin-top: 10px;
+    margin-bottom: 5px;
 }
 
 table {
@@ -98,7 +98,26 @@ td { padding: 8px; border-bottom: 1px solid #eee; }
 .val-pos { color: #16a34a; font-weight: 800; }
 .val-neg { color: #dc2626; font-weight: 800; }
 
-/* 5. TEXTOS RESULTADO TAB 1 */
+/* 5. CARD PSI ESTILIZADO */
+.card-psi {
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    padding: 20px;
+    border-radius: 12px;
+    background-color: #ffffff;
+    width: 280px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-top: 15px;
+}
+
+.psi-valor {
+    margin: 0;
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* 6. TEXTOS RESULTADO TAB 1 */
 .titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
 .score { text-align: center; font-size: 40px; font-weight: 700; }
 </style>
@@ -109,10 +128,10 @@ td { padding: 8px; border-bottom: 1px solid #eee; }
 # ============================================
 st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weight:700;'>Evaluación de Riesgo y Score de Crédito</h1>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", "Estabilidad (PSI)"])
+tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño do Modelo", "Estabilidad (PSI)"])
 
 # ============================================
-# TAB 1: SIMULACIÓN (Original)
+# TAB 1: SIMULACIÓN
 # ============================================
 with tab1:
     with st.sidebar:
@@ -141,15 +160,13 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: DESEMPENHO (SUBIDO 1 LINHA EM TUDO)
+# TAB 2: DESEMPENHO
 # ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
     
     st.markdown("<div class='container-performance'>", unsafe_allow_html=True)
-    
-    # Primeira Tabela
     st.markdown("<p class='titulo-tabela-azul'>Métricas Generales</p>", unsafe_allow_html=True)
     st.markdown(f"""
     <table style='margin-bottom: 15px;'>
@@ -164,7 +181,6 @@ with tab2:
         <tr><td>KS</td><td>{m.get('ks', 0):.4f}</td></tr>
     </table>""", unsafe_allow_html=True)
 
-    # Segunda Tabela (Matriz) - Também subida
     st.markdown("<p class='titulo-tabela-azul'>Matriz de Confusión</p>", unsafe_allow_html=True)
     st.markdown(f"""
     <table>
@@ -180,12 +196,26 @@ with tab2:
             <td class='val-pos'>{cm.get('TP', 0)} (TP)</td>
         </tr>
     </table>""", unsafe_allow_html=True)
-    
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: ESTABILIDADE
+# TAB 3: ESTABILIDADE (PSI AJUSTADO)
 # ============================================
 with tab3:
     psi_valor = metricas_modelo.get("psi", 0.00)
-    st.markdown(f"<div class='container-performance'><p class='titulo-tabela-azul'>Estabilidad (PSI)</p><h1>{psi_valor}</h1></div>", unsafe_allow_html=True)
+    # Lógica de cor: Verde para estável (< 0.1), Amarelo (< 0.25), Vermelho (> 0.25)
+    psi_cor = "#16a34a" if psi_valor < 0.1 else "#facc15" if psi_valor < 0.25 else "#dc2626"
+    psi_status = "ESTÁVEL" if psi_valor < 0.1 else "ALERTA" if psi_valor < 0.25 else "INSTÁVEL"
+
+    st.markdown(f"""
+    <div class='container-performance'>
+        <p class='titulo-tabela-azul'>Estabilidad del Modelo (PSI)</p>
+        <div class='card-psi'>
+            <p style='margin:0; font-size:11px; color:#64748b; font-weight:700; letter-spacing:1px;'>PSI ACUMULADO</p>
+            <h1 class='psi-valor' style='color:{psi_cor};'>{psi_valor:.4f}</h1>
+            <p style='margin-top:10px; margin-bottom:0; font-size:12px; color:{psi_cor}; font-weight:800;'>
+                STATUS: {psi_status}
+            </p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
