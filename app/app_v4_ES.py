@@ -164,6 +164,9 @@ with tab1:
 # ============================================
 # TAB 2: DESEMPENHO (MÉTRICAS COMPLETAS E CENTRALIZADAS)
 # ============================================
+# ============================================
+# TAB 2: DESEMPENHO (MÉTRICAS COMPLETAS E CENTRALIZADAS)
+# ============================================
 with tab2:
     m = metricas_modelo
     
@@ -172,10 +175,14 @@ with tab2:
     st.markdown(f"""
     <table>
         <tr><th>Métrica</th><th>Valor</th></tr>
+        <tr><td>Modelo</td><td>{m.get('best_model', 'N/A')}</td></tr>
         <tr><td>Accuracy</td><td>{m.get('accuracy', 0):.4f}</td></tr>
+        <tr><td>Precision</td><td>{m.get('precision', 0):.4f}</td></tr>
+        <tr><td>Recall</td><td>{m.get('recall', 0):.4f}</td></tr>
+        <tr><td>F1-Score</td><td>{m.get('f1_score', 0):.4f}</td></tr>
         <tr><td>AUC</td><td>{m.get('auc', 0):.4f}</td></tr>
         <tr><td>Gini</td><td>{m.get('gini', 0):.4f}</td></tr>
-        <tr><td>F1-Score</td><td>{m.get('f1', 0):.4f}</td></tr>
+        <tr><td>KS</td><td>{m.get('ks', 0):.4f}</td></tr>
     </table><br>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -187,13 +194,13 @@ with tab2:
         <tr><th></th><th>Pred Negativo</th><th>Pred Positivo</th></tr>
         <tr>
             <td><b>Real Negativo</b></td>
-            <td class='val-pos'>{cm['TN']} (TN)</td>
-            <td class='val-neg'>{cm['FP']} (FP)</td>
+            <td class='val-pos'>{cm.get('TN', 0)} (TN)</td>
+            <td class='val-neg'>{cm.get('FP', 0)} (FP)</td>
         </tr>
         <tr>
             <td><b>Real Positivo</b></td>
-            <td class='val-neg'>{cm['FN']} (FN)</td>
-            <td class='val-pos'>{cm['TP']} (TP)</td>
+            <td class='val-neg'>{cm.get('FN', 0)} (FN)</td>
+            <td class='val-pos'>{cm.get('TP', 0)} (TP)</td>
         </tr>
     </table>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
