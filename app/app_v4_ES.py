@@ -31,7 +31,7 @@ def load_data():
 modelo, bins_woe, metricas_modelo, score_params = load_data()
 
 # ============================================
-# CSS CUSTOMIZADO (SIDEBAR, BOTÃO E TABELAS)
+# CSS CUSTOMIZADO
 # ============================================
 st.markdown("""
 <style>
@@ -43,16 +43,16 @@ st.markdown("""
 
 /* 2. SIDEBAR ULTRA-COMPACTO */
 [data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 11px !important; /* Fonte reduzida */
+    font-size: 11px !important;
     font-weight: 500 !important;
-    margin-bottom: -20px !important; /* Mais compressão */
+    margin-bottom: -20px !important;
 }
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-    gap: 0.05rem !important; /* Espaçamento mínimo */
+    gap: 0.05rem !important;
 }
 [data-testid="stSidebar"] div[data-baseweb="select"], 
 [data-testid="stSidebar"] div[data-testid="stSlider"] {
-    transform: scale(0.90); /* Caixas e sliders menores */
+    transform: scale(0.90);
     transform-origin: left top;
 }
 
@@ -67,7 +67,7 @@ div.stButton > button {
     border: none;
 }
 
-/* 4. TÍTULOS E TEXTOS */
+/* 4. TÍTULOS E SCORE */
 .titulo-secao {
     text-align: center;
     color: #2563eb;
@@ -82,15 +82,29 @@ div.stButton > button {
 }
 
 /* 5. TABELAS CENTRALIZADAS */
-.centered-table {
+.container-tabela {
     display: flex;
-    justify-content: center;
-    margin-top: 10px;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
 }
 table {
+    margin-left: auto;
+    margin-right: auto;
     font-size: 13px;
     text-align: center;
     border-collapse: collapse;
+    width: 500px; /* Largura fixa para padronizar */
+}
+th {
+    background-color: #2563eb;
+    color: white;
+    padding: 8px;
+}
+td {
+    padding: 6px;
+    border-bottom: 1px solid #eee;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -119,28 +133,27 @@ with tab1:
         cuenta_corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[st.selectbox("Cuenta Corriente", ["Bajo","Medio","Alto"])]
         finalidad = {"Auto":"car","Muebles":"furniture/equipment","Electrónicos":"radio/TV","Negocios":"business","Educación":"education","Reparaciones":"repairs","Otros":"vacation/others"}[st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])]
         
-        st.write("") # Pula uma linha antes do botão
+        st.write("") 
         btn = st.button("Calcular")
 
     col_res, col_graf = st.columns([1, 1])
 
     if btn:
-        # PREDICÇÃO
         entrada = pd.DataFrame({"Genero":[genero],"Trabalho":[trabalho],"Habitacao":[habitacion],"Conta_poupanca":[cuenta_ahorro],"Conta_corrente":[cuenta_corriente],"Finalidade":[finalidad],"Idade":[edad],"Duracao":[duracion],"Valor_credito":[valor]})
         entrada_woe = sc.woebin_ply(entrada, bins_woe).reindex(columns=modelo.feature_names_in_, fill_value=0)
         prob = min(max(modelo.predict_proba(entrada_woe)[0][1], 0.0001), 0.9999)
 
-        # CÁLCULO SCORE
+        # SCORE E STATUS
         factor = score_params["pdo"]/np.log(2)
         offset = score_params["base_score"] + factor*np.log(score_params["base_odds"])
         score = max(int(offset + factor*np.log((1-prob)/prob)), 300)
-
-        # LÓGICA DE STATUS (Simplificada para exemplo)
+        
         if prob < 0.4: status, icon, cor, segmento = "APROBADO", "✔", "#16a34a", "PRIME"
         elif prob < 0.7: status, icon, cor, segmento = "EN ANÁLISIS", "⚠", "#facc15", "NEAR PRIME"
         else: status, icon, cor, segmento = "RECHAZADO", "✖", "#dc2626", "SUBPRIME"
-        limite = 5000 # Valor fixo para o exemplo
-        motivo = "Basado en el perfil de riesgo analizado."
+        
+        limite = 5000
+        motivo = "Perfil analizado mediante el modelo de scoring crediticio."
 
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
@@ -159,52 +172,49 @@ with tab1:
         with col_graf:
             st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br>", unsafe_allow_html=True)
             fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, 
-                number={'font': {'size': 40}, 'suffix': "%", 'valueformat': ".1f"}, # Número centralizado com o gráfico
+                number={'font': {'size': 40}, 'suffix': "%", 'valueformat': ".1f"},
                 gauge={"axis":{"range":[0,100]},"steps":[
                     {"range":[0,40],"color":"#16a34a"},
                     {"range":[40,70],"color":"#facc15"},
                     {"range":[70,100],"color":"#dc2626"}]}))
-            
             fig.update_layout(height=250, margin=dict(l=30, r=30, t=0, b=0), paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: DESEMPEÑO
+# TAB 2: DESEMPENHO (Centralizado e Organizado)
 # ============================================
 with tab2:
     st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:20px;'>Desempeño del Modelo</h2>", unsafe_allow_html=True)
     
-    # Métricas e Matriz em uma só página (colunas lado a lado)
-    c1, c2 = st.columns(2)
-    
-    with c1:
-        st.markdown("<p style='text-align:center;font-weight:700;'>Métricas Generales</p>", unsafe_allow_html=True)
-        m = metricas_modelo
-        metrics_html = f"""
-        <div class='centered-table'>
-        <table style='width:80%;'>
-            <tr style='background-color:#2563eb;color:white;'><th>Métrica</th><th>Valor</th></tr>
-            <tr><td>Accuracy</td><td>{m['accuracy']:.4f}</td></tr>
-            <tr><td>AUC</td><td>{m['auc']:.4f}</td></tr>
-            <tr><td>Gini</td><td>{m['gini']:.4f}</td></tr>
-            <tr><td>KS</td><td>{m['ks']:.4f}</td></tr>
-        </table>
-        </div>"""
-        st.markdown(metrics_html, unsafe_allow_html=True)
+    # 1. Tabela de Métricas Centralizada
+    st.markdown("<div class='container-tabela'>", unsafe_allow_html=True)
+    st.markdown("<p style='font-weight:700; text-align:center;'>Métricas Generales</p>", unsafe_allow_html=True)
+    m = metricas_modelo
+    metrics_html = f"""
+    <table>
+        <tr><th>Métrica</th><th>Valor</th></tr>
+        <tr><td>Accuracy</td><td>{m['accuracy']:.4f}</td></tr>
+        <tr><td>AUC</td><td>{m['auc']:.4f}</td></tr>
+        <tr><td>Gini</td><td>{m['gini']:.4f}</td></tr>
+        <tr><td>KS</td><td>{m['ks']:.4f}</td></tr>
+    </table><br>
+    """
+    st.markdown(metrics_html, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    with c2:
-        st.markdown("<p style='text-align:center;font-weight:700;'>Matriz de Confusión</p>", unsafe_allow_html=True)
-        cm = m.get("confusion_matrix", {"TN": 0, "FP": 0, "FN": 0, "TP": 0})
-        # TP e TN em verde conforme solicitado
-        matrix_html = f"""
-        <div class='centered-table'>
-        <table style='width:80%;'>
-            <tr style='background-color:#2563eb;color:white;'><th></th><th>Pred. Negativo</th><th>Pred. Positivo</th></tr>
-            <tr><td style='font-weight:700;'>Real Negativo</td><td style='color:#16a34a;font-weight:700;'>{cm['TN']}</td><td>{cm['FP']}</td></tr>
-            <tr><td style='font-weight:700;'>Real Positivo</td><td>{cm['FN']}</td><td style='color:#16a34a;font-weight:700;'>{cm['TP']}</td></tr>
-        </table>
-        </div>"""
-        st.markdown(matrix_html, unsafe_allow_html=True)
+    # 2. Pulo de linha e Matriz de Confusão Centralizada
+    st.markdown("<div class='container-tabela'>", unsafe_allow_html=True)
+    st.markdown("<p style='font-weight:700; text-align:center;'>Matriz de Confusión</p>", unsafe_allow_html=True)
+    cm = m.get("confusion_matrix", {"TN": 0, "FP": 0, "FN": 0, "TP": 0})
+    matrix_html = f"""
+    <table>
+        <tr><th></th><th>Pred. Negativo</th><th>Pred. Positivo</th></tr>
+        <tr><td style='font-weight:700; background-color:#f9f9f9;'>Real Negativo</td><td style='color:#16a34a; font-weight:900;'>{cm['TN']} (TN)</td><td>{cm['FP']} (FP)</td></tr>
+        <tr><td style='font-weight:700; background-color:#f9f9f9;'>Real Positivo</td><td>{cm['FN']} (FN)</td><td style='color:#16a34a; font-weight:900;'>{cm['TP']} (TP)</td></tr>
+    </table>
+    """
+    st.markdown(matrix_html, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================
 # TAB 3: ESTABILIDADE
