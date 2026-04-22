@@ -31,7 +31,7 @@ def load_data():
 modelo, bins_woe, metricas_modelo, score_params = load_data()
 
 # ============================================
-# CSS CUSTOMIZADO (SIDEBAR, BOTÃO E TABELAS)
+# CSS CUSTOMIZADO (CORREÇÃO DE SOBREPOSIÇÃO E CORES)
 # ============================================
 st.markdown("""
 <style>
@@ -40,23 +40,24 @@ st.markdown("""
     padding-top: 1rem !important;
 }
 
-/* 2. SIDEBAR - Fontes Minúsculas e Caixas Compactas */
+/* 2. SIDEBAR - Ajuste de Fontes e Espaçamento (Sem sobreposição) */
 [data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 10px !important; /* Fonte bem pequena para os nomes */
-    font-weight: 500 !important;
-    margin-bottom: -25px !important; /* Aproxima label da caixa */
+    font-size: 11px !important; 
+    font-weight: 600 !important;
+    margin-bottom: 0px !important; /* Essencial para não sobrepor */
+    padding-bottom: 2px !important;
     color: #4b5563;
 }
 
+/* Ajusta o tamanho das caixas e sliders sem quebrar o layout */
 [data-testid="stSidebar"] div[data-baseweb="select"], 
 [data-testid="stSidebar"] div[data-testid="stSlider"] {
-    transform: scale(0.88);
-    transform-origin: left top;
-    margin-bottom: -15px !important;
+    margin-bottom: 10px !important;
 }
 
+/* Compacta levemente o gap do sidebar */
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
-    gap: 0rem !important;
+    gap: 0.4rem !important;
 }
 
 /* 3. BOTÃO CALCULAR AZUL */
@@ -69,15 +70,16 @@ div.stButton > button {
     width: 90% !important;
     margin-left: 5%;
     border: none;
+    margin-top: 15px !important;
 }
 
-/* 4. TABELAS CENTRALIZADAS NA ABA DESEMPENHO */
+/* 4. TABELAS CENTRALIZADAS E MATRIZ COLORIDA */
 .container-tabela {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    margin-top: 15px;
+    margin-top: 20px;
 }
 table {
     margin-left: auto;
@@ -87,25 +89,15 @@ table {
     border-collapse: collapse;
     width: 450px;
 }
-th { background-color: #2563eb; color: white; padding: 8px; }
+th { background-color: #2563eb; color: white; padding: 10px; }
 td { padding: 8px; border-bottom: 1px solid #eee; }
 
-/* Cores da Matriz de Confusão */
-.val-pos { color: #16a34a; font-weight: 800; } /* Verde */
-.val-neg { color: #dc2626; font-weight: 800; } /* Vermelho */
+/* Cores da Matriz */
+.val-pos { color: #16a34a; font-weight: 800; } /* Verde para acertos */
+.val-neg { color: #dc2626; font-weight: 800; } /* Vermelho para erros */
 
-/* 5. TÍTULOS E SCORE */
-.titulo-secao {
-    text-align: center;
-    color: #2563eb;
-    font-size: 18px;
-    font-weight: 700;
-}
-.score { 
-    text-align: center; 
-    font-size: 40px; 
-    font-weight: 700; 
-}
+.titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
+.score { text-align: center; font-size: 40px; font-weight: 700; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -121,21 +113,22 @@ tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", 
 # ============================================
 with tab1:
     with st.sidebar:
-        st.markdown("<div style='text-align:center;color:#2563eb;font-size:14px;font-weight:600;margin-bottom:10px;'>Datos del Cliente</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;color:#2563eb;font-size:15px;font-weight:600;margin-bottom:10px;'>Datos del Cliente</div>", unsafe_allow_html=True)
         
-        # Inputs compactos
+        # Sliders
         edad = st.slider("Edad", 18, 75, 30)
         valor = st.slider("Monto", 250, 20000, 5000, step=250)
         duracion = st.slider("Meses", 4, 72, 24)
+        
+        # Selectboxes com mapeamento
         genero = {"Masculino":"male","Femenino":"female"}[st.selectbox("Género", ["Masculino","Femenino"])]
         trabalho = {"Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3}[st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])]
         habitacion = {"Propia":"own","Alquilada":"rent","Gratuita":"free"}[st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])]
         ahorro = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[st.selectbox("Ahorro", ["Bajo","Medio","Alto"])]
         corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[st.selectbox("Corriente", ["Bajo","Medio","Alto"])]
-        finalidad = {"Auto":"car","Muebles":"furniture","Electrónicos":"radio/TV","Negocios":"business","Edu":"education","Outros":"others"}[st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Edu","Outros"])]
+        finalidad = {"Auto":"car","Muebles":"furniture","Electrónicos":"radio/TV","Negocios":"business","Edu":"education","Otros":"others"}[st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Edu","Otros"])]
         
         st.markdown("<br>", unsafe_allow_html=True) 
-        st.write("") # Linha extra de respiro
         btn = st.button("Calcular")
 
     col_res, col_graf = st.columns([1, 1])
@@ -149,23 +142,22 @@ with tab1:
         offset = score_params["base_score"] + factor*np.log(score_params["base_odds"])
         score = max(int(offset + factor*np.log((1-prob)/prob)), 300)
         
-        cor_score = "#16a34a" if prob < 0.4 else "#facc15" if prob < 0.7 else "#dc2626"
+        cor = "#16a34a" if prob < 0.4 else "#facc15" if prob < 0.7 else "#dc2626"
         status = "APROBADO" if prob < 0.4 else "EN ANÁLISIS" if prob < 0.7 else "RECHAZADO"
         icon = "✔" if prob < 0.4 else "⚠" if prob < 0.7 else "✖"
-        segmento = "PRIME" if prob < 0.4 else "NEAR PRIME" if prob < 0.7 else "SUBPRIME"
 
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
-            st.markdown(f"<div class='score' style='color:{cor_score};'>{score}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{segmento}</p><br>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p><br>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite</p><p style='text-align:center;font-size:22px;font-weight:700;'>$1,012</p><br>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:center;font-size:28px;color:{cor_score};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='score' style='color:{cor};'>{score}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-weight:700;'>NEAR PRIME</p><br>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin:0;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p><br>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin:0;'>Límite</p><p style='text-align:center;font-size:22px;font-weight:700;'>$1,012</p><br>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center;font-size:28px;color:{cor};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
 
         with col_graf:
             st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br>", unsafe_allow_html=True)
             fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, 
-                number={'font': {'size': 45}, 'suffix': "%", 'valueformat': ".1f"},
+                number={'font': {'size': 45}, 'suffix': "%"},
                 gauge={"axis":{"range":[0,100]},"steps":[
                     {"range":[0,40],"color":"#16a34a"},
                     {"range":[40,70],"color":"#facc15"},
@@ -180,7 +172,7 @@ with tab2:
     st.markdown("<h2 style='text-align:center;color:#2563eb;font-size:20px;'>Desempeño del Modelo</h2>", unsafe_allow_html=True)
     m = metricas_modelo
     
-    # Métricas Gerais
+    # Métricas
     st.markdown("<div class='container-tabela'>", unsafe_allow_html=True)
     st.write("**Métricas Generales**")
     st.markdown(f"""
@@ -192,7 +184,7 @@ with tab2:
     </table><br>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Matriz de Confusão
+    # Matriz
     st.markdown("<div class='container-tabela'>", unsafe_allow_html=True)
     st.write("**Matriz de Confusión**")
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
