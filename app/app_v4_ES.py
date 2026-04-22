@@ -107,7 +107,6 @@ td { padding: 8px; border-bottom: 1px solid #eee; }
     background-color: #ffffff;
     width: 280px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    margin-top: 15px;
 }
 
 /* 6. ESTILO RESULTADOS ORIGINAIS */
@@ -124,7 +123,7 @@ st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weig
 tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", "Estabilidad (PSI)"])
 
 # ============================================
-# TAB 1: SIMULACIÓN (RESTAURADA)
+# TAB 1: SIMULACIÓN
 # ============================================
 with tab1:
     with st.sidebar:
@@ -140,11 +139,9 @@ with tab1:
         finalidad = st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Edu","Outros"])
         btn = st.button("Calcular")
 
-    # Colunas originais do seu layout de resultado
     col_res, col_graf = st.columns([1, 1])
     
     if btn:
-        # Valores simulados (mantendo conforme seu padrão original)
         prob, score, cor_score = 0.5547, 586, "#facc15" 
         status = "EN ANÁLISIS"
         icon = "⚠"
@@ -207,7 +204,7 @@ with tab2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: ESTABILIDADE (AJUSTADA)
+# TAB 3: ESTABILIDADE (AJUSTADA: PULA 1 LINHA)
 # ============================================
 with tab3:
     psi_valor = metricas_modelo.get("psi", 0.00)
@@ -217,7 +214,7 @@ with tab3:
     st.markdown(f"""
     <div class='container-performance'>
         <p class='titulo-tabela-azul'>Estabilidad del Modelo (PSI)</p>
-        <div class='card-psi'>
+        <br> <div class='card-psi'>
             <p style='margin:0; font-size:11px; color:#64748b; font-weight:700; letter-spacing:1px;'>PSI ACUMULADO</p>
             <h1 style='margin:0; font-size:42px; font-weight:800; color:{psi_cor};'>{psi_valor:.4f}</h1>
             <p style='margin-top:10px; margin-bottom:0; font-size:12px; color:{psi_cor}; font-weight:800;'>
