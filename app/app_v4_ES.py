@@ -39,7 +39,7 @@ st.markdown("""
 /* 1. Margens Gerais */
 .block-container { padding-top: 1rem !important; }
 
-/* 2. SIDEBAR - Ajuste de Labels e Caixas */
+/* 2. SIDEBAR - Estilo Compacto */
 [data-testid="stSidebar"] .stWidgetLabel p {
     font-size: 11px !important;
     font-weight: 600 !important;
@@ -65,7 +65,7 @@ div.stButton > button {
     margin-top: 20px;
 }
 
-/* 4. ABA DESEMPENHO E PSI - CENTRALIZAÇÃO E ALTURA */
+/* 4. TABELAS E TÍTULOS AZUIS */
 .container-performance {
     display: flex;
     flex-direction: column;
@@ -98,7 +98,7 @@ td { padding: 8px; border-bottom: 1px solid #eee; }
 .val-pos { color: #16a34a; font-weight: 800; }
 .val-neg { color: #dc2626; font-weight: 800; }
 
-/* 5. CARD PSI ESTILIZADO */
+/* 5. CARD PSI */
 .card-psi {
     text-align: center;
     border: 1px solid #e2e8f0;
@@ -110,14 +110,7 @@ td { padding: 8px; border-bottom: 1px solid #eee; }
     margin-top: 15px;
 }
 
-.psi-valor {
-    margin: 0;
-    font-size: 42px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-/* 6. TEXTOS RESULTADO TAB 1 */
+/* 6. ESTILO RESULTADOS ORIGINAIS */
 .titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
 .score { text-align: center; font-size: 40px; font-weight: 700; }
 </style>
@@ -128,10 +121,10 @@ td { padding: 8px; border-bottom: 1px solid #eee; }
 # ============================================
 st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weight:700;'>Evaluación de Riesgo y Score de Crédito</h1>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño do Modelo", "Estabilidad (PSI)"])
+tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", "Estabilidad (PSI)"])
 
 # ============================================
-# TAB 1: SIMULACIÓN
+# TAB 1: SIMULACIÓN (RESTAURADA)
 # ============================================
 with tab1:
     with st.sidebar:
@@ -147,16 +140,31 @@ with tab1:
         finalidad = st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Edu","Outros"])
         btn = st.button("Calcular")
 
+    # Colunas originais do seu layout de resultado
     col_res, col_graf = st.columns([1, 1])
+    
     if btn:
+        # Valores simulados (mantendo conforme seu padrão original)
         prob, score, cor_score = 0.5547, 586, "#facc15" 
+        status = "EN ANÁLISIS"
+        icon = "⚠"
+        
         with col_res:
-            st.markdown("<div class='titulo-secao'>Resultado</div>", unsafe_allow_html=True)
+            st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
             st.markdown(f"<div class='score' style='color:{cor_score};'>{score}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-weight:700;color:#2563eb;'>NEAR PRIME</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>NEAR PRIME</p><br>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p><br>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center;font-size:28px;color:{cor_score};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
+
         with col_graf:
-            fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, number={'suffix': "%"}))
-            fig.update_layout(height=240, margin=dict(l=30, r=30, t=0, b=0))
+            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br>", unsafe_allow_html=True)
+            fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, 
+                number={'font': {'size': 45}, 'suffix': "%"},
+                gauge={"axis":{"range":[0,100]},"steps":[
+                    {"range":[0,40],"color":"#16a34a"},
+                    {"range":[40,70],"color":"#facc15"},
+                    {"range":[70,100],"color":"#dc2626"}]}))
+            fig.update_layout(height=260, margin=dict(l=30, r=30, t=0, b=0), paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
@@ -199,11 +207,10 @@ with tab2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: ESTABILIDADE (PSI AJUSTADO)
+# TAB 3: ESTABILIDADE (AJUSTADA)
 # ============================================
 with tab3:
     psi_valor = metricas_modelo.get("psi", 0.00)
-    # Lógica de cor: Verde para estável (< 0.1), Amarelo (< 0.25), Vermelho (> 0.25)
     psi_cor = "#16a34a" if psi_valor < 0.1 else "#facc15" if psi_valor < 0.25 else "#dc2626"
     psi_status = "ESTÁVEL" if psi_valor < 0.1 else "ALERTA" if psi_valor < 0.25 else "INSTÁVEL"
 
@@ -212,7 +219,7 @@ with tab3:
         <p class='titulo-tabela-azul'>Estabilidad del Modelo (PSI)</p>
         <div class='card-psi'>
             <p style='margin:0; font-size:11px; color:#64748b; font-weight:700; letter-spacing:1px;'>PSI ACUMULADO</p>
-            <h1 class='psi-valor' style='color:{psi_cor};'>{psi_valor:.4f}</h1>
+            <h1 style='margin:0; font-size:42px; font-weight:800; color:{psi_cor};'>{psi_valor:.4f}</h1>
             <p style='margin-top:10px; margin-bottom:0; font-size:12px; color:{psi_cor}; font-weight:800;'>
                 STATUS: {psi_status}
             </p>
