@@ -32,7 +32,7 @@ def load_data():
 modelo, bins_woe, metricas_modelo, score_params = load_data()
 
 # ============================================
-# CSS CUSTOMIZADO (SIDEBAR COMPACTA + RESULTADO ORIGINAL)
+# CSS CUSTOMIZADO (VOLTANDO AO TAMANHO ORIGINAL)
 # ============================================
 st.markdown("""
 <style>
@@ -77,11 +77,7 @@ div.stButton > button {
     font-size: 11px;
 }
 
-/* LAYOUT DE RESULTADOS ORIGINAL (FONTES GRANDES) */
-.titulo-secao { text-align: center; color: #2563eb; font-size: 22px; font-weight: 700; }
-.score { text-align: center; font-size: 60px; font-weight: 700; }
-
-/* CENTRALIZAÇÃO PARA ABAS DE DESEMPENHO E PSI */
+/* RESULTADOS E TABELAS (TAMANHO ORIGINAL COMPACTO) */
 .container-performance {
     display: flex;
     flex-direction: column;
@@ -89,18 +85,21 @@ div.stButton > button {
     width: 100%;
 }
 
-table { margin-left: auto; margin-right: auto; font-size: 18px; text-align: center; border-collapse: collapse; width: 650px; }
-th { background-color: #2563eb; color: white; padding: 10px; }
-td { padding: 10px; border-bottom: 1px solid #ddd; }
-.val-pos { color: #16a34a; font-weight: 700; }
-.val-neg { color: #dc2626; font-weight: 700; }
+.titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
+.score { text-align: center; font-size: 40px; font-weight: 700; }
+
+table { margin-left: auto; margin-right: auto; font-size: 13px; text-align: center; border-collapse: collapse; width: 450px; }
+th { background-color: #2563eb; color: white; padding: 8px; }
+td { padding: 8px; border-bottom: 1px solid #eee; }
+.val-pos { color: #16a34a; font-weight: 800; }
+.val-neg { color: #dc2626; font-weight: 800; }
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================
 # HEADER
 # ============================================
-st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:32px;font-weight:700;'>Evaluación de Riesgo y Score de Crédito</h1><br>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weight:700;'>Evaluación de Riesgo y Score de Crédito</h1>", unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", "Estabilidad (PSI)"])
 
@@ -134,10 +133,9 @@ with tab1:
         
         btn = st.button("Calcular")
 
-    col2, col3 = st.columns([1, 1])
+    col_res, col_graf = st.columns([1, 1])
     
     if btn:
-        # LÓGICA DE NEGÓCIO (REGRAS DO MODELO)
         entrada = pd.DataFrame({"Genero":[genero],"Trabalho":[trabalho],"Habitacao":[habitacion],"Conta_poupanca":[cuenta_ahorro],"Conta_corrente":[cuenta_corriente],"Finalidade":[finalidad],"Idade":[edad],"Duracao":[duracion],"Valor_credito":[valor_solicitado]})
         entrada_woe = sc.woebin_ply(entrada, bins_woe).reindex(columns=modelo.feature_names_in_, fill_value=0)
         prob = min(max(modelo.predict_proba(entrada_woe)[0][1], 0.0001), 0.9999)
@@ -146,11 +144,11 @@ with tab1:
         offset = score_params["base_score"] + factor*np.log(score_params["base_odds"])
         score_base = int(offset + factor*np.log((1-prob)/prob))
         
-        penalidade_score, penalidade_limite, flags = 0, 1.0, []
-        if trabalho == 0: penalidade_score -= 80; penalidade_limite *= 0.5; flags.append("Sin empleo")
-        if habitacion == "rent": penalidade_score -= 30; penalidade_limite *= 0.85; flags.append("Vivienda alquilada")
-        if cuenta_ahorro == "little": penalidade_score -= 20; penalidade_limite *= 0.9; flags.append("Bajo ahorro")
-        if cuenta_corriente == "little": penalidade_score -= 20; penalidade_limite *= 0.9; flags.append("Baja liquidez")
+        penalidade_score, penalidade_limite = 0, 1.0
+        if trabalho == 0: penalidade_score -= 80; penalidade_limite *= 0.5
+        if habitacion == "rent": penalidade_score -= 30; penalidade_limite *= 0.85
+        if cuenta_ahorro == "little": penalidade_score -= 20; penalidade_limite *= 0.9
+        if cuenta_corriente == "little": penalidade_score -= 20; penalidade_limite *= 0.9
         
         score = max(score_base + penalidade_score, 300)
 
@@ -162,34 +160,32 @@ with tab1:
         else: segmento="SUBPRIME"; limite_base=0
 
         limite = int(limite_base * penalidade_limite)
-        if duracion > 48: limite = int(limite * 0.85)
         
         if trabalho == 0 and cuenta_corriente == "little":
-            status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Riesgo crítico: sin empleo e baixa liquidez."
+            status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Riesgo crítico: sin empleo e baja liquidez."
         elif score < 460: status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Score bajo política mínima."
         elif score < 520: status, icon, cor, motivo = "EN ANÁLISIS", "⚠", "#facc15", "Zona intermedia de riesgo."
         elif valor_solicitado <= limite: status, icon, cor, motivo = "APROBADO", "✔", "#16a34a", "Dentro del límite aprobado."
-        elif valor_solicitado <= limite * 1.2: status, icon, cor, motivo = "EN ANÁLISIS", "⚠", "#facc15", "Monto superior ao sugerido."
-        else: status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Excede límite permitido."
+        else: status, icon, cor, motivo = "RECHAZADO", "✖", "#dc2626", "Excede limite permitido."
 
-        with col2:
-            st.markdown("<div class='titulo-secao'>Resultado</div><br><br>", unsafe_allow_html=True)
+        with col_res:
+            st.markdown("<div class='titulo-secao'>Resultado</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='score' style='color:{cor};'>{score}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:22px;font-weight:700;color:#2563eb;'>{segmento}</p>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align:center;font-size:20px;font-weight:600;margin-bottom:0;'>Probabilidad</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:30px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align:center;font-size:20px;font-weight:600;margin-bottom:0;'>Límite</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:30px;font-weight:700;'>${limite:,.0f}</p>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:center;font-size:40px;color:{cor};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:18px;color:#374151;'>{motivo}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{segmento}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite Sugerido</p><p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center;font-size:28px;color:{cor};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;padding:0 20px;'>{motivo}</p>", unsafe_allow_html=True)
 
-        with col3:
-            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br><br>", unsafe_allow_html=True)
-            fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, gauge={"axis":{"range":[0,100]},"steps":[{"range":[0,40],"color":"#16a34a"},{"range":[40,70],"color":"#facc15"},{"range":[70,100],"color":"#dc2626"}]}))
+        with col_graf:
+            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div>", unsafe_allow_html=True)
+            fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, number={'font': {'size': 45}, 'suffix': "%"},
+                gauge={"axis":{"range":[0,100]},"steps":[{"range":[0,40],"color":"#16a34a"},{"range":[40,70],"color":"#facc15"},{"range":[70,100],"color":"#dc2626"}]}))
+            fig.update_layout(height=260, margin=dict(l=30, r=30, t=0, b=0), paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: DESEMPEÑO DEL MODELO (CENTRALIZADA)
+# TAB 2: DESEMPEÑO DEL MODELO (CENTRALIZADA + ORIGINAL)
 # ============================================
 with tab2:
     m = metricas_modelo
@@ -208,25 +204,26 @@ with tab2:
             <tr><td>KS</td><td>{m['ks']:.4f}</td></tr>
         </table>
         <p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p>
-        <table style='border:1px solid #ddd;'>
-            <tr style='background-color:#2563eb;color:white;'><th>Real \ Pred</th><th>Bom (0)</th><th>Ruim (1)</th></tr>
-            <tr><td><b>Real: Bom (0)</b></td><td class='val-pos'>{cm['TN']}</td><td class='val-neg'>{cm['FP']}</td></tr>
-            <tr><td><b>Real: Ruim (1)</b></td><td class='val-neg'>{cm['FN']}</td><td class='val-pos'>{cm['TP']}</td></tr>
+        <table>
+            <tr><th>Real \ Pred</th><th>Bom (0)</th><th>Ruim (1)</th></tr>
+            <tr><td>Bom (0)</td><td class='val-pos'>{cm['TN']}</td><td class='val-neg'>{cm['FP']}</td></tr>
+            <tr><td>Ruim (1)</td><td class='val-neg'>{cm['FN']}</td><td class='val-pos'>{cm['TP']}</td></tr>
         </table>
     </div>""", unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: ESTABILIDADE (CENTRALIZADA)
+# TAB 3: ESTABILIDADE (CENTRALIZADA + ORIGINAL)
 # ============================================
 with tab3:
-    st.markdown("<div class='container-performance'><br><p class='titulo-secao'>Estabilidad de la Población (PSI)</p><br>", unsafe_allow_html=True)
     psi_v = metricas_modelo.get("psi", 0.00)
     psi_c = "#16a34a" if psi_v < 0.1 else "#facc15" if psi_v < 0.25 else "#dc2626"
-    psi_s = "Estable" if psi_v < 0.1 else "Alerta" if psi_v < 0.25 else "Inestable"
+    psi_s = "ESTÁVEL" if psi_v < 0.1 else "ALERTA" if psi_v < 0.25 else "INSTÁVEL"
     st.markdown(f"""
-        <div style='text-align:center; border:2px solid {psi_c}; padding:40px; border-radius:15px; width:400px; background-color:#f9fafb;'>
-            <p style='margin:0; font-size:24px; color:#4b5563;'>PSI Acumulado</p>
-            <p style='margin:10px 0; font-size:64px; font-weight:800; color:{psi_c};'>{psi_v:.4f}</p>
-            <div style='background-color:{psi_c}; color:white; padding:8px 20px; border-radius:20px; display:inline-block; font-weight:700; font-size:20px;'>{psi_s}</div>
+    <div class='container-performance'>
+        <br><br><p class='titulo-secao'>Estabilidad del Modelo (PSI)</p><br>
+        <div style='text-align:center; border:1px solid #e2e8f0; padding:20px; border-radius:12px; width:280px;'>
+            <p style='font-size:11px; color:#64748b;'>PSI ACUMULADO</p>
+            <h1 style='font-size:42px; color:{psi_c};'>{psi_v:.4f}</h1>
+            <p style='color:{psi_c}; font-weight:800;'>{psi_s}</p>
         </div>
     </div>""", unsafe_allow_html=True)
