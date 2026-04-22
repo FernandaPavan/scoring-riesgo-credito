@@ -145,18 +145,33 @@ with tab2:
     </div>""", unsafe_allow_html=True)
 
 # ============================================
+# ============================================
 # TAB 3: ESTABILIDADE (PSI)
 # ============================================
 with tab3:
     psi_v = metricas_modelo.get("psi", 0.00)
     psi_c = "#16a34a" if psi_v < 0.1 else "#facc15" if psi_v < 0.25 else "#dc2626"
     psi_s = "ESTÁVEL" if psi_v < 0.1 else "ALERTA" if psi_v < 0.25 else "INSTÁVEL"
-    st.markdown(f"""
-    <div class='container-performance'>
-        <br><br><p class='titulo-secao'>Estabilidad del Modelo (PSI)</p><br>
-        <div style='text-align:center; border:1px solid #e2e8f0; padding:20px; border-radius:12px; width:280px;'>
-            <p style='font-size:11px; color:#64748b;'>PSI ACUMULADO</p>
-            <h1 style='font-size:42px; color:{psi_c};'>{psi_v:.4f}</h1>
-            <p style='color:{psi_c}; font-weight:800;'>{psi_s}</p>
-        </div>
-    </div>""", unsafe_allow_html=True)
+    
+    # Criamos 3 colunas: a do meio conterá o conteúdo centralizado
+    # O ajuste [1, 1, 1] cria colunas iguais, deixando o centro com 33% da largura
+    col_esq, col_central, col_dir = st.columns([1, 1, 1])
+    
+    with col_central:
+        st.markdown(f"""
+        <div style='text-align: center;'>
+            <br><br>
+            <p class='titulo-secao'>Estabilidad del Modelo (PSI)</p>
+            <br>
+            <div style='
+                display: inline-block; 
+                border: 1px solid #e2e8f0; 
+                padding: 20px; 
+                border-radius: 12px; 
+                width: 280px;
+                text-align: center;'>
+                <p style='font-size:11px; color:#64748b; margin:0;'>PSI ACUMULADO</p>
+                <h1 style='font-size:42px; color:{psi_c}; margin:10px 0;'>{psi_v:.4f}</h1>
+                <p style='color:{psi_c}; font-weight:800; margin:0;'>{psi_s}</p>
+            </div>
+        </div>""", unsafe_allow_html=True)
