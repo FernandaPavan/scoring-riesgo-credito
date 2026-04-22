@@ -116,16 +116,19 @@ with tab1:
         })
 
         # ============================================
-        # WOE TRANSFORM
+        # WOE TRANSFORM (com proteção)
         # ============================================
-        entrada_woe = sc.woebin_ply(entrada, bins_woe)
+        try:
+            entrada_woe = sc.woebin_ply(entrada, bins_woe)
+        except Exception:
+            st.error("Erro na transformação WOE. Verifique os bins.")
+            st.stop()
 
-        # garante ordem correta
         if hasattr(modelo, "feature_names_in_"):
             entrada_woe = entrada_woe.reindex(columns=modelo.feature_names_in_, fill_value=0)
 
         # ============================================
-        # PREDIÇÃO
+        # PREDIÇÃO (estável)
         # ============================================
         prob = modelo.predict_proba(entrada_woe)[0][1]
         prob = float(np.clip(prob, 0.0001, 0.9999))
