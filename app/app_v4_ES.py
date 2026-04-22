@@ -37,12 +37,12 @@ modelo, bins_woe, metricas_modelo, score_params = load_data()
 st.markdown("""
 <style>
 /* 1. Margens Gerais */
-.block-container { padding-top: 0.5rem !important; }
+.block-container { padding-top: 1rem !important; }
 
 /* 2. SIDEBAR - Ultra Compacta */
 /* Tamanho da fonte dos Labels */
 [data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 10px !important;
+    font-size: 8px !important;
     font-weight: 500 !important;
     margin-bottom: 0px !important; /* Remove espaço abaixo do label */
     padding-bottom: 0px !important;
