@@ -32,24 +32,42 @@ def load_data():
 modelo, bins_woe, metricas_modelo, score_params = load_data()
 
 # ============================================
-# CSS CUSTOMIZADO
+# CSS CUSTOMIZADO (SIDEBAR COMPACTA)
 # ============================================
 st.markdown("""
 <style>
 /* 1. Margens Gerais */
 .block-container { padding-top: 1rem !important; }
 
-/* 2. SIDEBAR - Estilo Compacto */
+/* 2. SIDEBAR - Ultra Compacta */
+/* Tamanho da fonte dos Labels */
 [data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
-    margin-bottom: 5px !important;
+    margin-bottom: 0px !important; /* Remove espaço abaixo do label */
+    padding-bottom: 0px !important;
     color: #4b5563;
 }
 
-[data-testid="stSidebar"] div[data-baseweb="select"], 
-[data-testid="stSidebar"] div[data-testid="stSlider"] {
-    margin-bottom: 15px !important;
+/* Tamanho da fonte dentro das caixas de texto/select e sliders */
+[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div,
+[data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMin"],
+[data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMax"],
+[data-testid="stSidebar"] .stSlider div[role="slider"] {
+    font-size: 10px !important;
+}
+
+/* Reduz o espaçamento vertical entre os widgets */
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
+    padding-top: 0px !important;
+    padding-bottom: 2px !important;
+    margin-bottom: 0px !important;
+}
+
+/* Ajuste específico para o Slider (diminuir altura ocupada) */
+[data-testid="stSidebar"] [data-testid="stSlider"] {
+    padding-top: 0px !important;
+    margin-top: -10px !important;
 }
 
 /* 3. BOTÃO CALCULAR */
@@ -58,11 +76,12 @@ div.stButton > button {
     color: white !important;
     font-weight: 600;
     border-radius: 6px;
-    height: 35px;
+    height: 30px; /* Reduzido */
     width: 90% !important;
     margin-left: 5%;
     border: none;
-    margin-top: 20px;
+    margin-top: 10px;
+    font-size: 11px;
 }
 
 /* 4. TABELAS E TÍTULOS AZUIS */
@@ -127,7 +146,7 @@ tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", 
 # ============================================
 with tab1:
     with st.sidebar:
-        st.markdown("<div style='text-align:center;color:#2563eb;font-size:14px;font-weight:600;margin-bottom:10px;'>Datos del Cliente</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;color:#2563eb;font-size:12px;font-weight:600;margin-bottom:5px;'>Datos del Cliente</div>", unsafe_allow_html=True)
         edad = st.slider("Edad", 18, 75, 30)
         valor = st.slider("Monto", 250, 20000, 5000, step=250)
         duracion = st.slider("Meses", 4, 72, 24)
@@ -204,19 +223,19 @@ with tab2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================
-# ============================================
-# TAB 3: ESTABILIDADE (AJUSTADA COM ESPAÇAMENTOS)
+# TAB 3: ESTABILIDADE
 # ============================================
 with tab3:
-    # Coleta dos dados
     psi_valor = metricas_modelo.get("psi", 0.00)
     psi_cor = "#16a34a" if psi_valor < 0.1 else "#facc15" if psi_valor < 0.25 else "#dc2626"
     psi_status = "ESTÁVEL" if psi_valor < 0.1 else "ALERTA" if psi_valor < 0.25 else "INSTÁVEL"
 
     st.markdown(f"""
     <div class='container-performance'>
-        <br><br> <p class='titulo-tabela-azul'>Estabilidad del Modelo (PSI)</p>
-        <br> <div class='card-psi'>
+        <br><br>
+        <p class='titulo-tabela-azul'>Estabilidad del Modelo (PSI)</p>
+        <br>
+        <div class='card-psi'>
             <p style='margin:0; font-size:11px; color:#64748b; font-weight:700; letter-spacing:1px;'>PSI ACUMULADO</p>
             <h1 style='margin:0; font-size:42px; font-weight:800; color:{psi_cor};'>{psi_valor:.4f}</h1>
             <p style='margin-top:10px; margin-bottom:0; font-size:12px; color:{psi_cor}; font-weight:800;'>
