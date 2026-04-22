@@ -32,24 +32,21 @@ def load_data():
 modelo, bins_woe, metricas_modelo, score_params = load_data()
 
 # ============================================
-# CSS CUSTOMIZADO (SIDEBAR COMPACTA)
+# CSS CUSTOMIZADO (MANTENDO SEU LAYOUT)
 # ============================================
 st.markdown("""
 <style>
-/* 1. Margens Gerais */
 .block-container { padding-top: 1rem !important; }
 
-/* 2. SIDEBAR - Ultra Compacta */
-/* Ajuste da Label (Nome) */
+/* SIDEBAR ULTRA COMPACTA */
 [data-testid="stSidebar"] .stWidgetLabel p {
     font-size: 10px !important;
     font-weight: 600 !important;
-    margin-bottom: -15px !important; /* Puxa a caixa de texto para cima da label */
+    margin-bottom: -15px !important; 
     padding-bottom: 0px !important;
     color: #4b5563;
 }
 
-/* Tamanho da fonte dentro das caixas de texto/select e sliders */
 [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div,
 [data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMin"],
 [data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMax"],
@@ -57,20 +54,17 @@ st.markdown("""
     font-size: 12px !important;
 }
 
-/* Reduz o espaçamento vertical ENTRE um widget e outro */
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
     padding-top: 0px !important;
     padding-bottom: 0px !important;
-    margin-bottom: -12px !important; /* Puxa o conjunto de baixo para cima */
+    margin-bottom: -12px !important;
 }
 
-/* Ajuste específico para o Slider */
 [data-testid="stSidebar"] [data-testid="stSlider"] {
     padding-top: 0px !important;
     margin-top: -10px !important;
 }
 
-/* 3. BOTÃO CALCULAR */
 div.stButton > button {
     background-color: #2563eb !important;
     color: white !important;
@@ -79,12 +73,11 @@ div.stButton > button {
     height: 30px;
     width: 90% !important;
     margin-left: 5%;
-    border: none;
     margin-top: 15px;
     font-size: 11px;
 }
 
-/* 4. TABELAS E TÍTULOS AZUIS */
+/* RESULTADOS */
 .container-performance {
     display: flex;
     flex-direction: column;
@@ -93,44 +86,15 @@ div.stButton > button {
     margin-top: -45px !important; 
 }
 
-.titulo-tabela-azul {
-    text-align: center;
-    color: #2563eb;
-    font-size: 16px;
-    font-weight: 700;
-    margin-top: 10px;
-    margin-bottom: 5px;
-}
-
-table {
-    margin-left: auto;
-    margin-right: auto;
-    font-size: 13px;
-    text-align: center;
-    border-collapse: collapse;
-    width: 450px;
-}
-
-th { background-color: #2563eb; color: white; padding: 8px; }
-td { padding: 8px; border-bottom: 1px solid #eee; }
-
-.val-pos { color: #16a34a; font-weight: 800; }
-.val-neg { color: #dc2626; font-weight: 800; }
-
-/* 5. CARD PSI */
-.card-psi {
-    text-align: center;
-    border: 1px solid #e2e8f0;
-    padding: 20px;
-    border-radius: 12px;
-    background-color: #ffffff;
-    width: 280px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-/* 6. ESTILO RESULTADOS ORIGINAIS */
 .titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
 .score { text-align: center; font-size: 40px; font-weight: 700; }
+
+/* TABELAS */
+table { margin-left: auto; margin-right: auto; font-size: 13px; text-align: center; border-collapse: collapse; width: 450px; }
+th { background-color: #2563eb; color: white; padding: 8px; }
+td { padding: 8px; border-bottom: 1px solid #eee; }
+.val-pos { color: #16a34a; font-weight: 800; }
+.val-neg { color: #dc2626; font-weight: 800; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -142,35 +106,93 @@ st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weig
 tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", "Estabilidad (PSI)"])
 
 # ============================================
-# TAB 1: SIMULACIÓN
+# TAB 1: SIMULACIÓN (COM REGRA DE NEGÓCIO)
 # ============================================
 with tab1:
     with st.sidebar:
         st.markdown("<div style='text-align:center;color:#2563eb;font-size:12px;font-weight:600;margin-bottom:5px;'>Datos del Cliente</div>", unsafe_allow_html=True)
         edad = st.slider("Edad", 18, 75, 30)
-        valor = st.slider("Monto", 250, 20000, 5000, step=250)
-        duracion = st.slider("Meses", 4, 72, 24)
-        genero = st.selectbox("Género", ["Masculino","Femenino"])
-        trabalho = st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])
-        habitacion = st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])
-        ahorro = st.selectbox("Ahorro", ["Bajo","Medio","Alto"])
-        corriente = st.selectbox("Corriente", ["Bajo","Medio","Alto"])
-        finalidad = st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Edu","Outros"])
+        valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
+        duracion = st.slider("Duración (meses)", 4, 72, 24)
+        
+        # Mapeamento para o modelo
+        genero_sel = st.selectbox("Género", ["Masculino","Femenino"])
+        genero = "male" if genero_sel == "Masculino" else "female"
+        
+        trabalho_sel = st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])
+        trabalho = {"Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3}[trabalho_sel]
+        
+        habitacion_sel = st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])
+        habitacion = {"Propia":"own","Alquilada":"rent","Gratuita":"free"}[habitacion_sel]
+        
+        ahorro_sel = st.selectbox("Cuenta de Ahorro", ["Bajo","Medio","Alto"])
+        cuenta_ahorro = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[ahorro_sel]
+        
+        corriente_sel = st.selectbox("Cuenta Corriente", ["Bajo","Medio","Alto"])
+        cuenta_corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[corriente_sel]
+        
+        finalidad_sel = st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])
+        finalidad = {"Auto":"car","Muebles":"furniture/equipment","Electrónicos":"radio/TV","Negocios":"business","Educación":"education","Reparaciones":"repairs","Otros":"vacation/others"}[finalidad_sel]
+        
         btn = st.button("Calcular")
 
     col_res, col_graf = st.columns([1, 1])
     
     if btn:
-        prob, score, cor_score = 0.5547, 586, "#facc15" 
-        status = "EN ANÁLISIS"
-        icon = "⚠"
+        # 1. PREDICÇÃO WOE
+        entrada = pd.DataFrame({"Genero":[genero],"Trabalho":[trabalho],"Habitacao":[habitacion],"Conta_poupanca":[cuenta_ahorro],"Conta_corrente":[cuenta_corriente],"Finalidade":[finalidad],"Idade":[edad],"Duracao":[duracion],"Valor_credito":[valor]})
+        entrada_woe = sc.woebin_ply(entrada, bins_woe).reindex(columns=modelo.feature_names_in_, fill_value=0)
+        prob = min(max(modelo.predict_proba(entrada_woe)[0][1], 0.0001), 0.9999)
+
+        # 2. CÁLCULO SCORE E POLICY LAYER
+        factor = score_params["pdo"]/np.log(2)
+        offset = score_params["base_score"] + factor*np.log(score_params["base_odds"])
+        score_base = int(offset + factor*np.log((1-prob)/prob))
+        
+        penalidade_score = 0
+        penalidade_limite = 1.0
+        flags = []
+
+        if trabalho == 0: penalidade_score -= 80; penalidade_limite *= 0.5; flags.append("Sin empleo")
+        if habitacion == "rent": penalidade_score -= 30; penalidade_limite *= 0.85; flags.append("Vivienda alquilada")
+        if cuenta_ahorro == "little": penalidade_score -= 20; penalidade_limite *= 0.9; flags.append("Bajo ahorro")
+        if cuenta_corriente == "little": penalidade_score -= 20; penalidade_limite *= 0.9; flags.append("Baja liquidez")
+        
+        score = max(score_base + penalidade_score, 300)
+
+        # 3. SEGMENTAÇÃO
+        if score >= 700: segmento="SUPER PRIME"; limite_base=18000
+        elif score >= 650: segmento="PRIME"; limite_base=10000
+        elif score >= 600: segmento="STANDARD"; limite_base=5000
+        elif score >= 520: segmento="NEAR PRIME"; limite_base=2500
+        elif score >= 460: segmento="REVIEW"; limite_base=1000
+        else: segmento="SUBPRIME"; limite_base=0
+
+        if "Sin emprego" in flags and segmento in ["SUPER PRIME","PRIME"]: segmento = "NEAR PRIME"
+        limite = int(limite_base * penalidade_limite)
+        if duracion > 48: limite = int(limite * 0.85)
+        
+        # 4. DECISÃO FINAL
+        if trabalho == 0 and cuenta_corriente == "little":
+            status="RECHAZADO"; icon="✖"; cor="#dc2626"; motivo="Riesgo crítico: sin empleo y baja liquidez."
+        else:
+            if score < 460: status="RECHAZADO"; icon="✖"; cor="#dc2626"; motivo="Score bajo política mínima."
+            elif score < 520: status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"; motivo="Zona intermedia de riesgo."
+            else:
+                if valor <= limite: status="APROBADO"; icon="✔"; cor="#16a34a"; motivo="Dentro del límite aprobado."
+                elif valor <= limite * 1.2: status="EN ANÁLISIS"; icon="⚠"; cor="#facc15"; motivo="Monto superior al limite sugerido."
+                else: status="RECHAZADO"; icon="✖"; cor="#dc2626"; motivo="Excede límite permitido."
+
+        if flags: motivo += " | Riesgos: " + ", ".join(flags)
         
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
-            st.markdown(f"<div class='score' style='color:{cor_score};'>{score}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>NEAR PRIME</p><br>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p><br>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:center;font-size:28px;color:{cor_score};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='score' style='color:{cor};'>{score}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{segmento}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite Sugerido</p><p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center;font-size:28px;color:{cor};font-weight:900;'>{icon} {status}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;padding:0 20px;'>{motivo}</p>", unsafe_allow_html=True)
 
         with col_graf:
             st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br>", unsafe_allow_html=True)
@@ -184,63 +206,18 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: DESEMPENHO
+# TAB 2 e 3 (Mantidos conforme layout novo)
 # ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
-    
-    st.markdown("<div class='container-performance'>", unsafe_allow_html=True)
-    st.markdown("<p class='titulo-tabela-azul'>Métricas Generales</p>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <table style='margin-bottom: 15px;'>
-        <tr><th>Métrica</th><th>Valor</th></tr>
-        <tr><td>Best Model</td><td>{m.get('best_model', 'N/A')}</td></tr>
-        <tr><td>Accuracy</td><td>{m.get('accuracy', 0):.4f}</td></tr>
-        <tr><td>Precision</td><td>{m.get('precision', 0):.4f}</td></tr>
-        <tr><td>Recall</td><td>{m.get('recall', 0):.4f}</td></tr>
-        <tr><td>F1-Score</td><td>{m.get('f1_score', 0):.4f}</td></tr>
-        <tr><td>AUC</td><td>{m.get('auc', 0):.4f}</td></tr>
-        <tr><td>Gini</td><td>{m.get('gini', 0):.4f}</td></tr>
-        <tr><td>KS</td><td>{m.get('ks', 0):.4f}</td></tr>
-    </table>""", unsafe_allow_html=True)
+    st.markdown("<div class='container-performance'><p class='titulo-secao'>Métricas Generales</p>", unsafe_allow_html=True)
+    st.markdown(f"<table><tr><th>Métrica</th><th>Valor</th></tr><tr><td>Accuracy</td><td>{m['accuracy']:.4f}</td></tr><tr><td>Precision</td><td>{m['precision']:.4f}</td></tr><tr><td>Recall</td><td>{m['recall']:.4f}</td></tr><tr><td>AUC</td><td>{m['auc']:.4f}</td></tr><tr><td>Gini</td><td>{m['gini']:.4f}</td></tr><tr><td>KS</td><td>{m['ks']:.4f}</td></tr></table>", unsafe_allow_html=True)
+    st.markdown("<p class='titulo-secao' style='margin-top:20px;'>Matriz de Confusión</p>", unsafe_allow_html=True)
+    st.markdown(f"<table><tr><th>Real\Pred</th><th>Bom (0)</th><th>Ruim (1)</th></tr><tr><td>Bom (0)</td><td class='val-pos'>{cm['TN']}</td><td class='val-neg'>{cm['FP']}</td></tr><tr><td>Ruim (1)</td><td class='val-neg'>{cm['FN']}</td><td class='val-pos'>{cm['TP']}</td></tr></table></div>", unsafe_allow_html=True)
 
-    st.markdown("<p class='titulo-tabela-azul'>Matriz de Confusión</p>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <table>
-        <tr><th></th><th>Pred Negativo</th><th>Pred Positivo</th></tr>
-        <tr>
-            <td><b>Real Negativo</b></td>
-            <td class='val-pos'>{cm.get('TN', 0)} (TN)</td>
-            <td class='val-neg'>{cm.get('FP', 0)} (FP)</td>
-        </tr>
-        <tr>
-            <td><b>Real Positivo</b></td>
-            <td class='val-neg'>{cm.get('FN', 0)} (FN)</td>
-            <td class='val-pos'>{cm.get('TP', 0)} (TP)</td>
-        </tr>
-    </table>""", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ============================================
-# TAB 3: ESTABILIDADE
-# ============================================
 with tab3:
     psi_valor = metricas_modelo.get("psi", 0.00)
     psi_cor = "#16a34a" if psi_valor < 0.1 else "#facc15" if psi_valor < 0.25 else "#dc2626"
     psi_status = "ESTÁVEL" if psi_valor < 0.1 else "ALERTA" if psi_valor < 0.25 else "INSTÁVEL"
-
-    st.markdown(f"""
-    <div class='container-performance'>
-        <br><br>
-        <p class='titulo-tabela-azul'>Estabilidad del Modelo (PSI)</p>
-        <br>
-        <div class='card-psi'>
-            <p style='margin:0; font-size:11px; color:#64748b; font-weight:700; letter-spacing:1px;'>PSI ACUMULADO</p>
-            <h1 style='margin:0; font-size:42px; font-weight:800; color:{psi_cor};'>{psi_valor:.4f}</h1>
-            <p style='margin-top:10px; margin-bottom:0; font-size:12px; color:{psi_cor}; font-weight:800;'>
-                STATUS: {psi_status}
-            </p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"<div class='container-performance'><br><br><p class='titulo-secao'>Estabilidad del Modelo (PSI)</p><br><div style='text-align:center; border:1px solid #e2e8f0; padding:20px; border-radius:12px; width:280px;'><p style='font-size:11px; color:#64748b;'>PSI ACUMULADO</p><h1 style='font-size:42px; color:{psi_cor};'>{psi_valor:.4f}</h1><p style='color:{psi_cor}; font-weight:800;'>{psi_status}</p></div></div>", unsafe_allow_html=True)
