@@ -37,13 +37,13 @@ modelo, bins_woe, metricas_modelo, score_params = load_data()
 st.markdown("""
 <style>
 /* 1. Margens Gerais */
-.block-container { padding-top: 1rem !important; }
+.block-container { padding-top: 0.5rem !important; }
 
 /* 2. SIDEBAR - Ultra Compacta */
 /* Tamanho da fonte dos Labels */
 [data-testid="stSidebar"] .stWidgetLabel p {
     font-size: 10px !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     margin-bottom: 0px !important; /* Remove espaço abaixo do label */
     padding-bottom: 0px !important;
     color: #4b5563;
@@ -67,20 +67,20 @@ st.markdown("""
 /* Ajuste específico para o Slider (diminuir altura ocupada) */
 [data-testid="stSidebar"] [data-testid="stSlider"] {
     padding-top: 0px !important;
-    margin-top: -10px !important;
+    margin-top: -8px !important;
 }
 
 /* 3. BOTÃO CALCULAR */
 div.stButton > button {
     background-color: #2563eb !important;
     color: white !important;
-    font-weight: 600;
+    font-weight: 500;
     border-radius: 6px;
     height: 30px; /* Reduzido */
     width: 90% !important;
     margin-left: 5%;
     border: none;
-    margin-top: 10px;
+    margin-top: 8px;
     font-size: 11px;
 }
 
