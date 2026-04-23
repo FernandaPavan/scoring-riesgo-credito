@@ -1,22 +1,57 @@
-import numpy as np
-import numpy as np
+import math
 
 # ============================================
-# SCORE
+# SCORE (PDO)
 # ============================================
-def get_score(prob, score_params):
-    prob = max(min(prob, 0.9999), 0.0001)
+def get_score(prob, params):
+    """
+    Converte probabilidade de default em score
+    """
 
-    factor = score_params["pdo"] / np.log(2)
-    offset = score_params["base_score"] + factor * np.log(score_params["base_odds"])
+    pdo = params.get("pdo", 20)
+    base_score = params.get("base_score", 600)
+    base_odds = params.get("base_odds", 50)
 
-    score = int(offset + factor * np.log((1 - prob) / prob))
+    # fator
+    factor = pdo / math.log(2)
 
-    return max(min(score, 1000), 300)
+    # offset
+    offset = base_score - factor * math.log(base_odds)
+
+    # evita erro numérico
+    prob = min(max(prob, 1e-6), 1 - 1e-6)
+
+    odds = (1 - prob) / prob
+
+    score = offset + factor * math.log(odds)
+
+    return int(round(score))
 
 
 # ============================================
-# POLICY (NOVA - COMPATÍVEL)
+# LIMITE DE CRÉDITO
+# ============================================
+def calcular_limite(score, monto):
+    """
+    Define limite baseado no score
+    """
+
+    if score >= 700:
+        return monto * 2.0
+    elif score >= 650:
+        return monto * 1.5
+    elif score >= 600:
+        return monto * 1.2
+    elif score >= 550:
+        return monto * 1.0
+    elif score >= 500:
+        return monto * 0.5
+    else:
+        return 0
+
+
+# ============================================
+# POLICY PRINCIPAL
 # ============================================
 def apply_business_policy(
     score,
@@ -24,73 +59,35 @@ def apply_business_policy(
     habitacao,
     ahorro,
     corriente,
-    valor_solicitado
+    monto
 ):
     """
-    Nova regra:
-    - SEM penalização
-    - Baseada no KS (490)
-    - Zona cinza estratégica
+    Policy NÃO decide aprovação.
+    Apenas enriquece com limite e informações visuais.
     """
 
-    # CUT-OFFS (KS)
-    reject_cutoff = 490
-    approve_cutoff = 540
+    limite = calcular_limite(score, monto)
 
-    # =============================
-    # SCORE FINAL (SEM ALTERAÇÃO)
-    # =============================
-    score_final = score
+    # status neutro (será sobrescrito pelo app via cutoff KS)
+    status = "EN ANÁLISIS"
+    icon = "⚠️"
+    cor = "#facc15"
+    segmento = "Riesgo Medio"
 
-    # =============================
-    # SEGMENTAÇÃO
-    # =============================
-    if score_final >= 700:
-        segmento, limite = "SUPER PRIME", 18000
-    elif score_final >= 650:
-        segmento, limite = "PRIME", 10000
-    elif score_final >= 600:
-        segmento, limite = "STANDARD", 5000
-    elif score_final >= 550:
-        segmento, limite = "NEAR PRIME", 3000
-    elif score_final >= 490:
-        segmento, limite = "REVIEW", 1500
+    # motivo básico
+    if score < 500:
+        motivo = "Score bajo"
+    elif score < 600:
+        motivo = "Score medio"
     else:
-        segmento, limite = "SUBPRIME", 0
-
-    # =============================
-    # DECISÃO
-    # =============================
-    if score_final < reject_cutoff:
-        status = "RECHAZADO"
-        cor = "#dc2626"
-        icon = "✖"
-        motivo = f"Score abaixo do cutoff ({score_final} < {reject_cutoff})"
-
-    elif score_final < approve_cutoff:
-        status = "EN ANÁLISIS"
-        cor = "#facc15"
-        icon = "⚠"
-        motivo = "Zona cinza (KS) — revisão manual"
-
-    else:
-        if valor_solicitado <= limite:
-            status = "APROBADO"
-            cor = "#16a34a"
-            icon = "✔"
-            motivo = "Aprovado dentro do limite"
-        else:
-            status = "EN ANÁLISIS"
-            cor = "#facc15"
-            icon = "⚠"
-            motivo = "Acima do limite — revisão"
+        motivo = "Buen perfil de crédito"
 
     return {
-        "score": score_final,
-        "segmento": segmento,
-        "limite": limite,
+        "score": score,
         "status": status,
         "icon": icon,
         "cor": cor,
+        "segmento": segmento,
+        "limite": int(limite),
         "motivo": motivo
     }
