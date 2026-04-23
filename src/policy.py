@@ -1,37 +1,94 @@
-import math
+import numpy as np
 
-def get_score(prob, params):
-    pdo = params.get("pdo", 20)
-    base_score = params.get("base_score", 600)
-    base_odds = params.get("base_odds", 50)
-    factor = pdo / math.log(2)
-    offset = base_score - factor * math.log(base_odds)
-    prob = min(max(prob, 1e-6), 1 - 1e-6)
-    odds = (1 - prob) / prob
-    score = offset + factor * math.log(odds)
-    return int(round(score))
+# ============================================
+# SCORE (PDO)
+# ============================================
+def get_score(prob_default, score_params):
+    prob_default = float(np.clip(prob_default, 0.0001, 0.9999))
 
-def calcular_limite(score, monto):
-    if score >= 700: return monto * 2.0
-    elif score >= 650: return monto * 1.5
-    elif score >= 600: return monto * 1.2
-    elif score >= 550: return monto * 1.0
-    elif score >= 500: return monto * 0.5
-    else: return 0
+    pdo = score_params.get("pdo", 20)
+    base_score = score_params.get("base_score", 600)
+    base_odds = score_params.get("base_odds", 50)
 
-def apply_business_policy(score, trabalho, habitacao, ahorro, corriente, monto):
-    limite = calcular_limite(score, monto)
-    
-    if score < 500: motivo = "Score bajo"
-    elif score < 600: motivo = "Score medio"
-    else: motivo = "Buen perfil de crédito"
+    factor = pdo / np.log(2)
+    offset = base_score - factor * np.log(base_odds)
+
+    odds = (1 - prob_default) / prob_default
+
+    score = int(round(offset + factor * np.log(odds)))
+
+    return max(score, 300)
+
+
+# ============================================
+# POLICY (KS + LIMITE)
+# ============================================
+def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
+
+    reject_cutoff = cutoffs["reject_cutoff"]
+    approve_cutoff = cutoffs["approve_cutoff"]
+
+    # ============================================
+    # LIMITE (BASEADO NA PROBABILIDADE)
+    # ============================================
+    limite_sugerido = int(max(500, (1 - prob_default) * 20000))
+
+    # ============================================
+    # SEGMENTO
+    # ============================================
+    if score >= 700:
+        segmento = "SUPER PRIME"
+    elif score >= 650:
+        segmento = "PRIME"
+    elif score >= 600:
+        segmento = "STANDARD"
+    elif score >= approve_cutoff:
+        segmento = "NEAR PRIME"
+    elif score >= reject_cutoff:
+        segmento = "REVIEW"
+    else:
+        segmento = "SUBPRIME"
+
+    # ============================================
+    # DECISÃO FINAL (SEM PENALIDADE)
+    # ============================================
+    if score < reject_cutoff:
+        status = "RECHAZADO"
+        icon = "❌"
+        cor = "#dc2626"
+        motivo = "Score abaixo do cutoff mínimo"
+
+    elif score >= approve_cutoff:
+        if valor_solicitado <= limite_sugerido:
+            status = "APROBADO"
+            icon = "✅"
+            cor = "#16a34a"
+            motivo = "Dentro del límite aprobado"
+
+        elif valor_solicitado <= limite_sugerido * 1.2:
+            status = "EN ANÁLISIS"
+            icon = "⚠️"
+            cor = "#facc15"
+            motivo = "Monto levemente superior al límite"
+
+        else:
+            status = "RECHAZADO"
+            icon = "❌"
+            cor = "#dc2626"
+            motivo = "Excede límite permitido"
+
+    else:
+        status = "EN ANÁLISIS"
+        icon = "⚠️"
+        cor = "#facc15"
+        motivo = "Zona intermedia (cutoff KS)"
 
     return {
         "score": score,
-        "status": "EN ANÁLISIS",
-        "icon": "⚠️",
-        "cor": "#facc15",
-        "segmento": "Riesgo Medio",
-        "limite": int(limite),
+        "segmento": segmento,
+        "limite": limite_sugerido,
+        "status": status,
+        "icon": icon,
+        "cor": cor,
         "motivo": motivo
     }
