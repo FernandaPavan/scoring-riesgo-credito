@@ -17,12 +17,12 @@ def load_assets():
         score_params = json.load(f)
 
     # ============================================
-    # POLÍTICA DE CRÉDITO (ALINHADA COM APP)
+    # CUTOFFS PADRONIZADOS (ALINHADO COM POLICY.PY)
     # ============================================
     cutoffs = {
-        "reject_score": 460,      # abaixo disso reprova direto
-        "analysis_score": 520     # entre 460 e 520 fica em análise
-        # acima de 520 → decisão por limite
+        "reject_cutoff": 460,     # reprova direto
+        "analysis_cutoff": 520,   # zona de análise
+        "approve_cutoff": 520     # acima disso depende do limite
     }
 
     return modelo, bins_woe, metricas, score_params, cutoffs
