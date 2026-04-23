@@ -1,23 +1,26 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
 import plotly.graph_objects as go
-import os
-import json
 import scorecardpy as sc
+import sys
+import os
 
-# IMPORTS NOVOS (SEPARAÇÃO CORRETA)
+# ============================================
+# IMPORTS LOCAIS (RESOLVE MODULE ERROR)
+# ============================================
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from loader import load_assets
 from policy import get_score, apply_business_policy
 
 # ============================================
-# CONFIGURAÇÃO INICIAL
+# CONFIGURAÇÃO
 # ============================================
 st.set_page_config(layout="wide", page_title="Credit Score App")
 
 # ============================================
-# LOAD CENTRALIZADO
+# LOAD MODELO + REGRAS
 # ============================================
 modelo, bins_woe, metricas_modelo, score_params, cutoffs = load_assets()
 
@@ -31,14 +34,11 @@ st.markdown("""
 [data-testid="stSidebar"] .stWidgetLabel p {
     font-size: 10px !important;
     font-weight: 600 !important;
-    margin-bottom: -15px !important; 
-    padding-bottom: 0px !important;
+    margin-bottom: -15px !important;
     color: #4b5563;
 }
 
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
-    padding-top: 0px !important;
-    padding-bottom: 0px !important;
     margin-bottom: -12px !important;
 }
 
@@ -47,10 +47,8 @@ div.stButton > button {
     color: white !important;
     font-weight: 600;
     border-radius: 6px;
-    height: 30px;
     width: 90% !important;
     margin-left: 5%;
-    margin-top: 15px;
     font-size: 11px;
 }
 
@@ -61,19 +59,38 @@ div.stButton > button {
     width: 100%;
 }
 
-.titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
-.score { text-align: center; font-size: 40px; font-weight: 700; }
+.titulo-secao {
+    text-align: center;
+    color: #2563eb;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.score {
+    text-align: center;
+    font-size: 40px;
+    font-weight: 700;
+}
 
 table {
-    margin-left: auto;
-    margin-right: auto;
+    margin: auto;
     font-size: 13px;
     text-align: center;
     border-collapse: collapse;
     width: 450px;
 }
-th { background-color: #2563eb; color: white; padding: 8px; }
-td { padding: 8px; border-bottom: 1px solid #eee; }
+
+th {
+    background-color: #2563eb;
+    color: white;
+    padding: 8px;
+}
+
+td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
 .val-pos { color: #16a34a; font-weight: 800; }
 .val-neg { color: #dc2626; font-weight: 800; }
 </style>
@@ -83,7 +100,7 @@ td { padding: 8px; border-bottom: 1px solid #eee; }
 # HEADER
 # ============================================
 st.markdown(
-    "<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weight:700;'>"
+    "<h1 style='text-align:center;color:#2563eb;'>"
     "Evaluación de Riesgo y Score de Crédito</h1>",
     unsafe_allow_html=True
 )
@@ -100,13 +117,13 @@ tab1, tab2, tab3 = st.tabs([
 with tab1:
 
     with st.sidebar:
-        st.markdown("<div style='text-align:center;color:#2563eb;font-size:12px;font-weight:600;'>Datos del Cliente</div>", unsafe_allow_html=True)
+        st.markdown("### Datos del Cliente")
 
         edad = st.slider("Edad", 18, 75, 30)
-        valor_solicitado = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
+        valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
         duracion = st.slider("Duración (meses)", 4, 72, 24)
 
-        genero = "male" if st.selectbox("Género", ["Masculino","Femenino"]) == "Masculino" else "female"
+        genero = "male" if st.selectbox("Género", ["Masculino", "Femenino"]) == "Masculino" else "female"
 
         trabajo = {"Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3}[
             st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])
@@ -117,11 +134,11 @@ with tab1:
         ]
 
         ahorro = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[
-            st.selectbox("Cuenta de Ahorro", ["Bajo","Medio","Alto"])
+            st.selectbox("Ahorro", ["Bajo","Medio","Alto"])
         ]
 
         corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[
-            st.selectbox("Cuenta Corriente", ["Bajo","Medio","Alto"])
+            st.selectbox("Corriente", ["Bajo","Medio","Alto"])
         ]
 
         finalidad = {
@@ -133,77 +150,70 @@ with tab1:
 
         btn = st.button("Calcular")
 
-    col_res, col_graf = st.columns([1, 1])
+    col1, col2 = st.columns(2)
 
     if btn:
 
         # =========================
         # INPUT
         # =========================
-        entrada = pd.DataFrame({
+        df = pd.DataFrame({
             "Genero":[genero],
-            "Trabalho":[trabajo],
+            "Trabalho":[trabalho],
             "Habitacao":[habitacion],
             "Conta_poupanca":[ahorro],
             "Conta_corrente":[corriente],
             "Finalidade":[finalidad],
             "Idade":[edad],
             "Duracao":[duracion],
-            "Valor_credito":[valor_solicitado]
+            "Valor_credito":[valor]
         })
 
-        entrada_woe = sc.woebin_ply(entrada, bins_woe)\
+        df_woe = sc.woebin_ply(df, bins_woe)\
             .reindex(columns=modelo.feature_names_in_, fill_value=0)
 
-        prob = modelo.predict_proba(entrada_woe)[0][1]
+        prob = modelo.predict_proba(df_woe)[0][1]
 
         # =========================
-        # SCORE VIA POLICY MODULE
+        # SCORE
         # =========================
         score = get_score(prob, score_params)
 
-        policy = apply_business_policy(
-            score=score,
-            prob_default=prob,
-            valor_solicitado=valor_solicitado,
-            cutoffs=cutoffs
-        )
+        # =========================
+        # POLICY ENGINE
+        # =========================
+        result = apply_business_policy(score, prob, valor, cutoffs)
 
         # =========================
-        # RESULTADO (UI ORIGINAL)
+        # RESULTADO
         # =========================
-        with col_res:
-            st.markdown("<div class='titulo-secao'>Resultado</div><br><br>", unsafe_allow_html=True)
+        with col1:
+            st.markdown("<div class='titulo-secao'>Resultado</div>", unsafe_allow_html=True)
 
-            st.markdown(f"<div class='score' style='color:{policy['cor']};'>{score}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='score' style='color:{result['cor']};'>{score}</div>",
+                unsafe_allow_html=True
+            )
 
-            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>"
-                        f"{policy['segmento']}</p>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align:center;color:#2563eb;'>{result['segmento']}</h3>", unsafe_allow_html=True)
 
-            st.markdown(f"<p style='text-align:center;'>Probabilidad</p>"
-                        f"<p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>",
-                        unsafe_allow_html=True)
+            st.metric("Probabilidad", f"{prob:.2%}")
+            st.metric("Límite", f"${result['limite']:,.0f}")
 
-            st.markdown(f"<p style='text-align:center;'>Límite Sugerido</p>"
-                        f"<p style='text-align:center;font-size:22px;font-weight:700;'>${policy['limite']:,.0f}</p>",
-                        unsafe_allow_html=True)
+            st.markdown(
+                f"<h2 style='text-align:center;color:{result['cor']};'>{result['icon']} {result['status']}</h2>",
+                unsafe_allow_html=True
+            )
 
-            st.markdown(f"<div style='text-align:center;font-size:28px;color:{policy['cor']};font-weight:900;'>"
-                        f"{policy['icon']} {policy['status']}</div>", unsafe_allow_html=True)
-
-            st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;'>"
-                        f"{policy['motivo']}</p>", unsafe_allow_html=True)
+            st.caption(result["motivo"])
 
         # =========================
-        # GAUGE (INALTERADO)
+        # GAUGE
         # =========================
-        with col_graf:
-            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br><br>", unsafe_allow_html=True)
-
+        with col2:
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob * 100,
-                number={'suffix': "%"},
                 gauge={
                     "axis":{"range":[0,100]},
                     "steps":[
@@ -214,56 +224,39 @@ with tab1:
                 }
             ))
 
-            fig.update_layout(height=260)
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2 (MANTIDO)
+# TAB 2
 # ============================================
 with tab2:
     m = metricas_modelo
-    cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
+    cm = m.get("confusion_matrix", {})
 
-    st.markdown(f"""
-    <div class='container-performance'>
-        <br>
-        <p class='titulo-secao'>Métricas Generales</p>
-        <table>
-            <tr><th>Métrica</th><th>Valor</th></tr>
-            <tr><td>Accuracy</td><td>{m['accuracy']:.4f}</td></tr>
-            <tr><td>Precision</td><td>{m['precision']:.4f}</td></tr>
-            <tr><td>Recall</td><td>{m['recall']:.4f}</td></tr>
-            <tr><td>AUC</td><td>{m['auc']:.4f}</td></tr>
-            <tr><td>Gini</td><td>{m['gini']:.4f}</td></tr>
-            <tr><td>KS</td><td>{m['ks']:.4f}</td></tr>
-        </table>
+    st.markdown("### Métricas del Modelo")
+    st.json(m)
 
-        <p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p>
-        <table>
-            <tr><th>Real \ Pred</th><th>Bom (0)</th><th>Ruim (1)</th></tr>
-            <tr><td>Bom (0)</td><td class='val-pos'>{cm['TN']}</td><td class='val-neg'>{cm['FP']}</td></tr>
-            <tr><td>Ruim (1)</td><td class='val-neg'>{cm['FN']}</td><td class='val-pos'>{cm['TP']}</td></tr>
-        </table>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("### Matriz de Confusión")
+
+    st.table(pd.DataFrame({
+        "": ["Bom(0)", "Ruim(1)"],
+        "Pred 0": [cm.get("TN",0), cm.get("FN",0)],
+        "Pred 1": [cm.get("FP",0), cm.get("TP",0)]
+    }))
 
 # ============================================
-# TAB 3 (MANTIDO)
+# TAB 3
 # ============================================
 with tab3:
-    psi_v = metricas_modelo.get("psi", 0.00)
-    psi_c = "#16a34a" if psi_v < 0.1 else "#facc15" if psi_v < 0.25 else "#dc2626"
-    psi_s = "ESTÁVEL" if psi_v < 0.1 else "ALERTA" if psi_v < 0.25 else "INSTÁVEL"
+    psi = metricas_modelo.get("psi", 0)
 
-    st.markdown(f"""
-    <div class='container-performance'>
-        <br><br>
-        <p class='titulo-secao'>Estabilidad del Modelo (PSI)</p><br>
+    st.markdown("### PSI (Estabilidad del Modelo)")
 
-        <div style='text-align:center; border:1px solid #e2e8f0; padding:20px; border-radius:12px; width:280px;'>
-            <p style='font-size:11px; color:#64748b;'>PSI ACUMULADO</p>
-            <h1 style='font-size:42px; color:{psi_c};'>{psi_v:.4f}</h1>
-            <p style='color:{psi_c}; font-weight:800;'>{psi_s}</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.metric("PSI", f"{psi:.4f}")
+
+    if psi < 0.1:
+        st.success("Modelo Estável")
+    elif psi < 0.25:
+        st.warning("Alerta de drift")
+    else:
+        st.error("Modelo instável")
