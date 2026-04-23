@@ -4,9 +4,6 @@ import numpy as np
 # SCORE (PDO - padrão bancário)
 # ============================================
 def get_score(prob_default, score_params):
-    """
-    Converte probabilidade de default em score (PDO)
-    """
 
     prob_default = float(np.clip(prob_default, 0.0001, 0.9999))
 
@@ -25,41 +22,44 @@ def get_score(prob_default, score_params):
 
 
 # ============================================
-# POLICY DE CRÉDITO (DECISÃO FINAL)
+# POLICY DE CRÉDITO (VERSÃO AJUSTADA)
 # ============================================
 def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
-    """
-    Regras de crédito baseadas em:
-    - score (risco)
-    - limite (capacidade de pagamento)
-    """
 
-    reject_cutoff = cutoffs["reject_score"]
-    analysis_cutoff = cutoffs["analysis_score"]
+    reject_cutoff = cutoffs["reject_cutoff"]
+    analysis_cutoff = cutoffs["analysis_cutoff"]
 
     # ============================================
-    # LIMITE SUGERIDO (BASE ESTÁVEL)
-    # ============================================
-    limite_sugerido = int(max(500, (1 - prob_default) * 20000))
-
-    # ============================================
-    # SEGMENTAÇÃO DE RISCO
+    # SEGMENTO (define capacidade estrutural)
     # ============================================
     if score >= 700:
         segmento = "SUPER PRIME"
+        base_limit = 18000
     elif score >= 650:
         segmento = "PRIME"
+        base_limit = 10000
     elif score >= 600:
         segmento = "STANDARD"
+        base_limit = 5000
     elif score >= 520:
         segmento = "NEAR PRIME"
+        base_limit = 2500
     elif score >= 460:
         segmento = "REVIEW"
+        base_limit = 1000
     else:
         segmento = "SUBPRIME"
+        base_limit = 500
 
     # ============================================
-    # REJEIÇÃO AUTOMÁTICA
+    # LIMITE (mais estável e controlado)
+    # ============================================
+    risco_factor = (1 - prob_default)
+
+    limite_sugerido = int(max(500, base_limit * (0.7 + risco_factor * 0.6)))
+
+    # ============================================
+    # DECISÃO 1: REJEIÇÃO DIRETA
     # ============================================
     if score < reject_cutoff:
         return {
@@ -69,11 +69,11 @@ def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
             "status": "RECHAZADO",
             "icon": "❌",
             "cor": "#dc2626",
-            "motivo": "Score abaixo do mínimo de política de crédito"
+            "motivo": "Score abaixo do cutoff mínimo"
         }
 
     # ============================================
-    # ZONA DE ANÁLISE
+    # DECISÃO 2: ANÁLISE
     # ============================================
     if score < analysis_cutoff:
         return {
@@ -83,11 +83,11 @@ def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
             "status": "EN ANÁLISIS",
             "icon": "⚠️",
             "cor": "#facc15",
-            "motivo": f"Perfil em análise. Limite estimado: ${limite_sugerido:,.0f}"
+            "motivo": "Perfil em zona intermediária de risco"
         }
 
     # ============================================
-    # DECISÃO FINAL (APROVAÇÃO POR LIMITE)
+    # DECISÃO 3: APROVAÇÃO OU REPROVAÇÃO POR LIMITE
     # ============================================
     if valor_solicitado <= limite_sugerido:
         return {
@@ -100,9 +100,6 @@ def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
             "motivo": "Dentro do limite aprovado"
         }
 
-    # ============================================
-    # REJEIÇÃO POR EXCESSO DE LIMITE
-    # ============================================
     return {
         "score": score,
         "segmento": segmento,
@@ -110,5 +107,5 @@ def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
         "status": "RECHAZADO",
         "icon": "❌",
         "cor": "#dc2626",
-        "motivo": f"Valor solicitado excede o limite de ${limite_sugerido:,.0f}"
+        "motivo": "Excede o limite permitido"
     }
