@@ -30,11 +30,11 @@ def get_all_assets():
 
 modelo, bins_woe, metricas_modelo, score_params = get_all_assets()
 
-# CUT-OFFS
-cutoffs = score_params.get("cutoffs", {
-    "reject_cutoff": 460,
-    "approve_cutoff": 520
-})
+# NOVOS CUT-OFFS BASEADOS NO KS
+cutoffs = {
+    "reject_cutoff": 490,
+    "approve_cutoff": 540
+}
 
 # ============================================
 # HEADER
@@ -134,7 +134,7 @@ with tab1:
             entrada_woe = entrada_woe.reindex(columns=modelo.feature_names_in_, fill_value=0)
 
         # ============================================
-        # PREDIÇÃO CORRETA (ROBUSTA)
+        # PREDIÇÃO CORRETA
         # ============================================
         probs = modelo.predict_proba(entrada_woe)[0]
         classes = list(modelo.classes_)
@@ -142,7 +142,10 @@ with tab1:
         idx_default = classes.index(0)
         idx_good = classes.index(1)
 
-        prob = float(np.clip(probs[idx_default], 0.0001, 0.9999))
+        prob_default = probs[idx_default]
+        prob_good = probs[idx_good]
+
+        prob = float(np.clip(prob_default, 0.0001, 0.9999))
 
         # ============================================
         # SCORE
@@ -150,24 +153,17 @@ with tab1:
         score_base = get_score(prob, score_params)
 
         # ============================================
-        # POLICY
+        # POLICY (NOVA)
         # ============================================
         res = apply_business_policy(
             score_base,
-            trabalho_idx,
-            habitacao_val,
-            ahorro_val,
-            corriente_val,
-            monto
+            monto  # 🔥 agora só precisa disso
         )
 
         # ============================================
-        # DEBUG COMPLETO
+        # DEBUG
         # ============================================
         with st.expander("🔎 DEBUG MODELO"):
-
-            prob_default = probs[idx_default]
-            prob_good = probs[idx_good]
 
             st.write("Classes do modelo:", classes)
             st.write("Probabilidades:", probs)
@@ -175,12 +171,12 @@ with tab1:
             st.write("Prob GOOD (1 - bom):", prob_good)
             st.write("Prob usada no score:", prob)
 
-            if prob > 0.5 and res["score"] > 600:
-                st.error("⚠️ POSSÍVEL INVERSÃO: alta probabilidade com score alto")
-            elif prob < 0.3 and res["score"] < 500:
-                st.error("⚠️ POSSÍVEL INVERSÃO: baixa probabilidade com score baixo")
+            if prob > 0.5 and score_base > 600:
+                st.error("⚠️ POSSÍVEL INVERSÃO")
+            elif prob < 0.3 and score_base < 500:
+                st.error("⚠️ POSSÍVEL INVERSÃO")
             else:
-                st.success("✅ Probabilidade e score estão coerentes")
+                st.success("✅ Coerente")
 
             st.write("Score Base:", score_base)
             st.write("Score Final:", res["score"])
@@ -200,13 +196,13 @@ with tab1:
             st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{res['segmento']}</p>", unsafe_allow_html=True)
 
             st.markdown(
-                f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p>"
+                f"<p style='text-align:center;'>Probabilidad</p>"
                 f"<p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>",
                 unsafe_allow_html=True
             )
 
             st.markdown(
-                f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite</p>"
+                f"<p style='text-align:center;'>Límite</p>"
                 f"<p style='text-align:center;font-size:22px;font-weight:700;'>${res['limite']:,.0f}</p>",
                 unsafe_allow_html=True
             )
