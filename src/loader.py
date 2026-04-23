@@ -16,12 +16,13 @@ def load_assets():
     with open(os.path.join(model_path, "score_params.json"), "r") as f:
         score_params = json.load(f)
 
-    # cutoffs padronizados
+    # ============================================
+    # POLÍTICA DE CRÉDITO (ALINHADA COM APP)
+    # ============================================
     cutoffs = {
-        "best_prob_cutoff": 0.5304270540931582,
-        "ks_score_cutoff": 490,
-        "reject_cutoff": 460,
-        "approve_cutoff": 520
+        "reject_score": 460,      # abaixo disso reprova direto
+        "analysis_score": 520     # entre 460 e 520 fica em análise
+        # acima de 520 → decisão por limite
     }
 
     return modelo, bins_woe, metricas, score_params, cutoffs

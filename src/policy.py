@@ -1,9 +1,13 @@
 import numpy as np
 
 # ============================================
-# SCORE (PDO)
+# SCORE (PDO - padrão bancário)
 # ============================================
 def get_score(prob_default, score_params):
+    """
+    Converte probabilidade de default em score (PDO)
+    """
+
     prob_default = float(np.clip(prob_default, 0.0001, 0.9999))
 
     pdo = score_params.get("pdo", 20)
@@ -21,20 +25,25 @@ def get_score(prob_default, score_params):
 
 
 # ============================================
-# POLICY (KS + LIMITE)
+# POLICY DE CRÉDITO (DECISÃO FINAL)
 # ============================================
 def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
+    """
+    Regras de crédito baseadas em:
+    - score (risco)
+    - limite (capacidade de pagamento)
+    """
 
-    reject_cutoff = cutoffs["reject_cutoff"]
-    approve_cutoff = cutoffs["approve_cutoff"]
+    reject_cutoff = cutoffs["reject_score"]
+    analysis_cutoff = cutoffs["analysis_score"]
 
     # ============================================
-    # LIMITE (BASEADO NA PROBABILIDADE)
+    # LIMITE SUGERIDO (BASE ESTÁVEL)
     # ============================================
     limite_sugerido = int(max(500, (1 - prob_default) * 20000))
 
     # ============================================
-    # SEGMENTO
+    # SEGMENTAÇÃO DE RISCO
     # ============================================
     if score >= 700:
         segmento = "SUPER PRIME"
@@ -42,53 +51,64 @@ def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
         segmento = "PRIME"
     elif score >= 600:
         segmento = "STANDARD"
-    elif score >= approve_cutoff:
+    elif score >= 520:
         segmento = "NEAR PRIME"
-    elif score >= reject_cutoff:
+    elif score >= 460:
         segmento = "REVIEW"
     else:
         segmento = "SUBPRIME"
 
     # ============================================
-    # DECISÃO FINAL (SEM PENALIDADE)
+    # REJEIÇÃO AUTOMÁTICA
     # ============================================
     if score < reject_cutoff:
-        status = "RECHAZADO"
-        icon = "❌"
-        cor = "#dc2626"
-        motivo = "Score abaixo do cutoff mínimo"
+        return {
+            "score": score,
+            "segmento": segmento,
+            "limite": limite_sugerido,
+            "status": "RECHAZADO",
+            "icon": "❌",
+            "cor": "#dc2626",
+            "motivo": "Score abaixo do mínimo de política de crédito"
+        }
 
-    elif score >= approve_cutoff:
-        if valor_solicitado <= limite_sugerido:
-            status = "APROBADO"
-            icon = "✅"
-            cor = "#16a34a"
-            motivo = "Dentro del límite aprobado"
+    # ============================================
+    # ZONA DE ANÁLISE
+    # ============================================
+    if score < analysis_cutoff:
+        return {
+            "score": score,
+            "segmento": segmento,
+            "limite": limite_sugerido,
+            "status": "EN ANÁLISIS",
+            "icon": "⚠️",
+            "cor": "#facc15",
+            "motivo": f"Perfil em análise. Limite estimado: ${limite_sugerido:,.0f}"
+        }
 
-        elif valor_solicitado <= limite_sugerido * 1.2:
-            status = "EN ANÁLISIS"
-            icon = "⚠️"
-            cor = "#facc15"
-            motivo = "Monto levemente superior al límite"
+    # ============================================
+    # DECISÃO FINAL (APROVAÇÃO POR LIMITE)
+    # ============================================
+    if valor_solicitado <= limite_sugerido:
+        return {
+            "score": score,
+            "segmento": segmento,
+            "limite": limite_sugerido,
+            "status": "APROBADO",
+            "icon": "✅",
+            "cor": "#16a34a",
+            "motivo": "Dentro do limite aprovado"
+        }
 
-        else:
-            status = "RECHAZADO"
-            icon = "❌"
-            cor = "#dc2626"
-            motivo = "Excede límite permitido"
-
-    else:
-        status = "EN ANÁLISIS"
-        icon = "⚠️"
-        cor = "#facc15"
-        motivo = "Zona intermedia (cutoff KS)"
-
+    # ============================================
+    # REJEIÇÃO POR EXCESSO DE LIMITE
+    # ============================================
     return {
         "score": score,
         "segmento": segmento,
         "limite": limite_sugerido,
-        "status": status,
-        "icon": icon,
-        "cor": cor,
-        "motivo": motivo
+        "status": "RECHAZADO",
+        "icon": "❌",
+        "cor": "#dc2626",
+        "motivo": f"Valor solicitado excede o limite de ${limite_sugerido:,.0f}"
     }
