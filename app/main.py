@@ -1,162 +1,85 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import joblib
 import plotly.graph_objects as go
-import scorecardpy as sc
-import sys
 import os
+import json
+import scorecardpy as sc
 
 # ============================================
-# IMPORTS LOCAIS (RESOLVE MODULE ERROR)
-# ============================================
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from loader import load_assets
-from policy import get_score, apply_business_policy
-
-# ============================================
-# CONFIGURAÇÃO
+# CONFIG
 # ============================================
 st.set_page_config(layout="wide", page_title="Credit Score App")
 
 # ============================================
-# LOAD MODELO + REGRAS
+# LOAD
 # ============================================
-modelo, bins_woe, metricas_modelo, score_params, cutoffs = load_assets()
+@st.cache_resource
+def load_data():
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    BASE_PROJECT = os.path.dirname(CURRENT_DIR)
+    MODEL_PATH = os.path.join(BASE_PROJECT, "models")
+    
+    modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
+    bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
+    
+    with open(os.path.join(MODEL_PATH, "metricas.json")) as f:
+        metricas = json.load(f)
+        
+    with open(os.path.join(MODEL_PATH, "score_params.json")) as f:
+        params = json.load(f)
+        
+    return modelo, bins_woe, metricas, params
 
-# ============================================
-# CSS ORIGINAL (MANTIDO)
-# ============================================
-st.markdown("""
-<style>
-.block-container { padding-top: 1rem !important; }
-
-[data-testid="stSidebar"] .stWidgetLabel p {
-    font-size: 10px !important;
-    font-weight: 600 !important;
-    margin-bottom: -15px !important;
-    color: #4b5563;
-}
-
-[data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
-    margin-bottom: -12px !important;
-}
-
-div.stButton > button {
-    background-color: #2563eb !important;
-    color: white !important;
-    font-weight: 600;
-    border-radius: 6px;
-    width: 90% !important;
-    margin-left: 5%;
-    font-size: 11px;
-}
-
-.container-performance {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-}
-
-.titulo-secao {
-    text-align: center;
-    color: #2563eb;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.score {
-    text-align: center;
-    font-size: 40px;
-    font-weight: 700;
-}
-
-table {
-    margin: auto;
-    font-size: 13px;
-    text-align: center;
-    border-collapse: collapse;
-    width: 450px;
-}
-
-th {
-    background-color: #2563eb;
-    color: white;
-    padding: 8px;
-}
-
-td {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.val-pos { color: #16a34a; font-weight: 800; }
-.val-neg { color: #dc2626; font-weight: 800; }
-</style>
-""", unsafe_allow_html=True)
+modelo, bins_woe, metricas_modelo, score_params = load_data()
 
 # ============================================
 # HEADER
 # ============================================
-st.markdown(
-    "<h1 style='text-align:center;color:#2563eb;'>"
-    "Evaluación de Riesgo y Score de Crédito</h1>",
-    unsafe_allow_html=True
-)
+st.markdown("<h1 style='text-align:center;color:#2563eb;'>Evaluación de Riesgo y Score de Crédito</h1>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs([
-    "Simulación de Crédito",
-    "Desempeño del Modelo",
-    "Estabilidad (PSI)"
-])
+tab1, tab2, tab3 = st.tabs(["Simulación", "Modelo", "PSI"])
 
 # ============================================
 # TAB 1
 # ============================================
 with tab1:
-
     with st.sidebar:
-        st.markdown("### Datos del Cliente")
+        st.header("Cliente")
 
         edad = st.slider("Edad", 18, 75, 30)
-        valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
-        duracion = st.slider("Duración (meses)", 4, 72, 24)
+        valor = st.slider("Monto", 250, 20000, 5000, step=250)
+        duracion = st.slider("Meses", 1, 72, 24)
 
-        genero = "male" if st.selectbox("Género", ["Masculino", "Femenino"]) == "Masculino" else "female"
+        genero = "male" if st.selectbox("Género", ["Masculino","Femenino"]) == "Masculino" else "female"
 
-        trabajo = {"Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3}[
-            st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])
-        ]
+        trabalho = {
+            "Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3
+        }[st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])]
 
-        habitacion = {"Propia":"own","Alquilada":"rent","Gratuita":"free"}[
-            st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])
-        ]
+        habitacion = {
+            "Propia":"own","Alquilada":"rent","Gratuita":"free"
+        }[st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])]
 
-        ahorro = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[
-            st.selectbox("Ahorro", ["Bajo","Medio","Alto"])
-        ]
+        ahorro = {
+            "Bajo":"little","Medio":"moderate","Alto":"rich"
+        }[st.selectbox("Ahorro", ["Bajo","Medio","Alto"])]
 
-        corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[
-            st.selectbox("Corriente", ["Bajo","Medio","Alto"])
-        ]
+        corriente = {
+            "Bajo":"little","Medio":"moderate","Alto":"rich"
+        }[st.selectbox("Corriente", ["Bajo","Medio","Alto"])]
 
         finalidad = {
             "Auto":"car","Muebles":"furniture/equipment","Electrónicos":"radio/TV",
             "Negocios":"business","Educación":"education","Reparaciones":"repairs","Otros":"vacation/others"
-        }[
-            st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])
-        ]
+        }[st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])]
 
         btn = st.button("Calcular")
 
     col1, col2 = st.columns(2)
 
     if btn:
-
-        # =========================
-        # INPUT
-        # =========================
         df = pd.DataFrame({
             "Genero":[genero],
             "Trabalho":[trabalho],
@@ -172,48 +95,87 @@ with tab1:
         df_woe = sc.woebin_ply(df, bins_woe)\
             .reindex(columns=modelo.feature_names_in_, fill_value=0)
 
-        prob = modelo.predict_proba(df_woe)[0][1]
+        # segurança (evita mismatch silencioso)
+        assert set(modelo.feature_names_in_) == set(df_woe.columns)
 
-        # =========================
-        # SCORE
-        # =========================
-        score = get_score(prob, score_params)
+        prob = np.clip(modelo.predict_proba(df_woe)[0][1], 0.0001, 0.9999)
 
-        # =========================
-        # POLICY ENGINE
-        # =========================
-        result = apply_business_policy(score, prob, valor, cutoffs)
+        # SCORE BASE
+        factor = score_params["pdo"] / np.log(2)
+        offset = score_params["base_score"] + factor*np.log(score_params["base_odds"])
+        score_base = int(offset + factor*np.log((1-prob)/prob))
 
-        # =========================
+        # ============================================
+        # PENALIDADES (SUAVES)
+        # ============================================
+        penal_score = 0
+        penal_limite = 1.0
+
+        if trabalho == 0:
+            penal_score -= 40
+            penal_limite *= 0.7
+
+        if habitacion == "rent":
+            penal_score -= 15
+            penal_limite *= 0.9
+
+        if duracion > 24:
+            penal_score -= 15
+            penal_limite *= 0.9
+
+        score = max(score_base + penal_score, 300)
+
+        # SEGMENTO
+        if score >= 700: seg, lim_base = "SUPER PRIME", 18000
+        elif score >= 650: seg, lim_base = "PRIME", 10000
+        elif score >= 600: seg, lim_base = "STANDARD", 5000
+        elif score >= 520: seg, lim_base = "NEAR PRIME", 2500
+        elif score >= 460: seg, lim_base = "REVIEW", 1000
+        else: seg, lim_base = "SUBPRIME", 0
+
+        limite = int(lim_base * penal_limite)
+
+        # ============================================
+        # DECISÃO FINAL (CORRIGIDA)
+        # ============================================
+        if trabalho == 0 and duracion > 24:
+            status, cor = "RECHAZADO", "#dc2626"
+            motivo = "Riesgo crítico: desempleado con plazo largo."
+
+        elif score < 460:
+            status, cor = "RECHAZADO", "#dc2626"
+            motivo = "Score bajo política mínima."
+
+        elif score < 520:
+            status, cor = "EN ANÁLISIS", "#facc15"
+            motivo = f"Perfil en evaluación. Monto será validado contra límite estimado de ${limite:,.0f}."
+
+        elif score >= 520 and valor <= limite:
+            status, cor = "APROBADO", "#16a34a"
+            motivo = "Dentro del límite aprobado."
+
+        else:
+            status, cor = "RECHAZADO", "#dc2626"
+            motivo = f"Excede el límite de ${limite:,.0f}."
+
+        icon = "✔" if status=="APROBADO" else "⚠" if status=="EN ANÁLISIS" else "✖"
+
         # RESULTADO
-        # =========================
         with col1:
-            st.markdown("<div class='titulo-secao'>Resultado</div>", unsafe_allow_html=True)
+            st.metric("Score", score)
+            st.metric("Segmento", seg)
+            st.metric("Riesgo", f"{prob:.2%}")
+            st.metric("Límite", f"${limite:,.0f}")
 
-            st.markdown(
-                f"<div class='score' style='color:{result['cor']};'>{score}</div>",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"<h2 style='color:{cor}'>{icon} {status}</h2>", unsafe_allow_html=True)
+            st.caption(motivo)
 
-            st.markdown(f"<h3 style='text-align:center;color:#2563eb;'>{result['segmento']}</h3>", unsafe_allow_html=True)
-
-            st.metric("Probabilidad", f"{prob:.2%}")
-            st.metric("Límite", f"${result['limite']:,.0f}")
-
-            st.markdown(
-                f"<h2 style='text-align:center;color:{result['cor']};'>{result['icon']} {result['status']}</h2>",
-                unsafe_allow_html=True
-            )
-
-            st.caption(result["motivo"])
-
-        # =========================
         # GAUGE
-        # =========================
         with col2:
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
-                value=prob * 100,
+                value=prob*100,
+                number={'suffix': "%"},
                 gauge={
                     "axis":{"range":[0,100]},
                     "steps":[
@@ -223,40 +185,17 @@ with tab1:
                     ]
                 }
             ))
-
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
 # TAB 2
 # ============================================
 with tab2:
-    m = metricas_modelo
-    cm = m.get("confusion_matrix", {})
-
-    st.markdown("### Métricas del Modelo")
-    st.json(m)
-
-    st.markdown("### Matriz de Confusión")
-
-    st.table(pd.DataFrame({
-        "": ["Bom(0)", "Ruim(1)"],
-        "Pred 0": [cm.get("TN",0), cm.get("FN",0)],
-        "Pred 1": [cm.get("FP",0), cm.get("TP",0)]
-    }))
+    st.json(metricas_modelo)
 
 # ============================================
 # TAB 3
 # ============================================
 with tab3:
     psi = metricas_modelo.get("psi", 0)
-
-    st.markdown("### PSI (Estabilidad del Modelo)")
-
     st.metric("PSI", f"{psi:.4f}")
-
-    if psi < 0.1:
-        st.success("Modelo Estável")
-    elif psi < 0.25:
-        st.warning("Alerta de drift")
-    else:
-        st.error("Modelo instável")
