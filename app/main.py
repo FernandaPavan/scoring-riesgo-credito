@@ -30,7 +30,9 @@ def get_all_assets():
 
 modelo, bins_woe, metricas_modelo, score_params = get_all_assets()
 
-# NOVOS CUT-OFFS BASEADOS NO KS
+# ============================================
+# CUT-OFFS (BASEADOS NO KS)
+# ============================================
 cutoffs = {
     "reject_cutoff": 490,
     "approve_cutoff": 540
@@ -55,6 +57,7 @@ tab1, tab2, tab3 = st.tabs([
 # ============================================
 with tab1:
     with st.sidebar:
+
         st.markdown(
             "<div style='text-align:center;color:#2563eb;font-size:12px;font-weight:600;margin-bottom:5px;'>Datos del Cliente</div>",
             unsafe_allow_html=True
@@ -72,25 +75,25 @@ with tab1:
             "Calificado":2,
             "Especialista":3
         }[st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])]
-        
+
         habitacao_val = {
             "Propia":"own",
             "Alquilada":"rent",
             "Gratuita":"free"
         }[st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])]
-        
+
         ahorro_val = {
             "Bajo":"little",
             "Medio":"moderate",
             "Alto":"rich"
         }[st.selectbox("Cuenta de Ahorro", ["Bajo","Medio","Alto"])]
-        
+
         corriente_val = {
             "Bajo":"little",
             "Medio":"moderate",
             "Alto":"rich"
         }[st.selectbox("Cuenta Corriente", ["Bajo","Medio","Alto"])]
-        
+
         finalidade_val = {
             "Auto":"car",
             "Muebles":"furniture/equipment",
@@ -100,12 +103,13 @@ with tab1:
             "Reparaciones":"repairs",
             "Otros":"vacation/others"
         }[st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])]
-        
+
         btn = st.button("Calcular")
 
     col_res, col_graf = st.columns([1, 1])
 
     if btn:
+
         # ============================================
         # INPUT
         # ============================================
@@ -153,11 +157,15 @@ with tab1:
         score_base = get_score(prob, score_params)
 
         # ============================================
-        # POLICY (NOVA)
+        # POLICY (mantendo assinatura antiga)
         # ============================================
         res = apply_business_policy(
             score_base,
-            monto  # 🔥 agora só precisa disso
+            trabalho_idx,
+            habitacao_val,
+            ahorro_val,
+            corriente_val,
+            monto
         )
 
         # ============================================
@@ -165,11 +173,11 @@ with tab1:
         # ============================================
         with st.expander("🔎 DEBUG MODELO"):
 
-            st.write("Classes do modelo:", classes)
-            st.write("Probabilidades:", probs)
-            st.write("Prob DEFAULT (0 - mau):", prob_default)
-            st.write("Prob GOOD (1 - bom):", prob_good)
-            st.write("Prob usada no score:", prob)
+            st.write("Classes:", classes)
+            st.write("Probs:", probs)
+            st.write("Prob DEFAULT:", prob_default)
+            st.write("Prob GOOD:", prob_good)
+            st.write("Prob usada:", prob)
 
             if prob > 0.5 and score_base > 600:
                 st.error("⚠️ POSSÍVEL INVERSÃO")
@@ -180,8 +188,8 @@ with tab1:
 
             st.write("Score Base:", score_base)
             st.write("Score Final:", res["score"])
-            st.write("Cutoff Reject:", cutoffs["reject_cutoff"])
-            st.write("Cutoff Approve:", cutoffs["approve_cutoff"])
+            st.write("Reject:", cutoffs["reject_cutoff"])
+            st.write("Approve:", cutoffs["approve_cutoff"])
             st.write("Status:", res["status"])
             st.write("Limite:", res["limite"])
 
@@ -189,6 +197,7 @@ with tab1:
         # RESULTADO
         # ============================================
         with col_res:
+
             st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
 
             st.markdown(f"<div class='score' style='color:{res['cor']};'>{res['score']}</div>", unsafe_allow_html=True)
@@ -222,6 +231,7 @@ with tab1:
         # GAUGE
         # ============================================
         with col_graf:
+
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob * 100,
