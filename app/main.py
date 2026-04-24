@@ -335,32 +335,55 @@ with tab2:
     """, unsafe_allow_html=True)
 
 # ============================================
+# ============================================
 # TAB 3
 # ============================================
 with tab3:
     psi_val = metricas_modelo.get("psi", 0)
 
-    status, cor = ("ESTABLE","#16a34a") if psi_val < 0.1 else ("ALERTA","#facc15") if psi_val < 0.25 else ("INESTABLE","#dc2626")
+    status, cor = (
+        ("ESTABLE", "#16a34a")
+        if psi_val < 0.1
+        else ("ALERTA", "#facc15")
+        if psi_val < 0.25
+        else ("INESTABLE", "#dc2626")
+    )
 
-    st.markdown("<div style='display:flex; justify-content:center;'><div style='max-width:320px;'>", unsafe_allow_html=True)
+    # CARD PSI
+    st.markdown(
+        "<div style='display:flex; justify-content:center;'>"
+        "<div style='max-width:320px;'>",
+        unsafe_allow_html=True
+    )
 
-    st.markdown(f"""
-    <div class='psi-card'>
-        <p>Índice PSI</p>
-        <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
-        <p style='color:{cor};font-weight:700;'>{status}</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class='psi-card'>
+            <p>Índice PSI</p>
+            <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
+            <p style='color:{cor};font-weight:700;'>{status}</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.markdown("</div></div><br>", unsafe_allow_html=True)
 
-    st.markdown("<div style='display:flex; justify-content:center;'><div style='max-width:520px;'>", unsafe_allow_html=True)
+    # EXPANDER CENTRALIZADO
+    col1, col2, col3 = st.columns([1, 3, 1])
 
-    with st.expander("Ver criterios del PSI"):
-        st.markdown("""
-        - < 0.10 → Estable  
-        - 0.10 – 0.25 → Alerta  
-        - > 0.25 → Inestable  
-        """)
+    with col2:
+        with st.expander("Ver critérios del PSI"):
+            st.markdown("""
+            **Interpretación del Índice PSI (Índice de Estabilidad de la Población):**
 
-    st.markdown("</div></div>", unsafe_allow_html=True)
+            - **< 0.10** → Población estable  
+            - **0.10 – 0.25** → Cambio posible (alerta)  
+            - **> 0.25** → Cambio significativo (inestabilidad)  
+
+            **Lectura:**
+
+            - Un PSI bajo indica que la distribución de la población real es similar a la utilizada en el entrenamiento.
+
+            - Un PSI elevado sugiere un cambio en el perfil de los clientes (*data drift*), lo que puede afectar el desempeño del modelo.
+            """)

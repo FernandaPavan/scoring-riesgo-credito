@@ -4,9 +4,6 @@ def apply_custom_styles():
     st.markdown("""
     <style>
 
-    /* ============================= */
-    /* 🎨 DESIGN SYSTEM (VARIÁVEIS)  */
-    /* ============================= */
     :root {
         --primary: #2563eb;
         --primary-dark: #1d4ed8;
@@ -26,9 +23,6 @@ def apply_custom_styles():
         --shadow-md: 0 6px 12px rgba(0,0,0,0.08);
     }
 
-    /* ============================= */
-    /* 🌐 GLOBAL                     */
-    /* ============================= */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
     .block-container { 
@@ -36,9 +30,6 @@ def apply_custom_styles():
         font-family: 'Inter', sans-serif;
     }
 
-    /* ============================= */
-    /* 📌 SIDEBAR                   */
-    /* ============================= */
     [data-testid="stSidebar"] {
         background-color: #ffffff;
     }
@@ -60,9 +51,6 @@ def apply_custom_styles():
         gap: 0.6rem !important;
     }
 
-    /* ============================= */
-    /* 🔘 BOTÃO PRINCIPAL           */
-    /* ============================= */
     div.stButton > button {
         background-color: var(--primary) !important;
         color: white !important;
@@ -82,9 +70,6 @@ def apply_custom_styles():
         box-shadow: var(--shadow-md);
     }
 
-    /* ============================= */
-    /* 📦 CONTAINERS                */
-    /* ============================= */
     .container-performance {
         display: flex;
         flex-direction: column;
@@ -94,7 +79,6 @@ def apply_custom_styles():
         padding: 12px 0;
     }
 
-    /* 🔵 MESMA COR DO HEADER */
     .titulo-secao { 
         text-align: center; 
         color: var(--primary); 
@@ -111,9 +95,6 @@ def apply_custom_styles():
         line-height: 1;
     }
 
-    /* ============================= */
-    /* 📊 TABELAS GERAIS           */
-    /* ============================= */
     table {
         margin: 10px auto;
         border-collapse: collapse;
@@ -142,10 +123,10 @@ def apply_custom_styles():
         padding: 12px 15px;
         border-bottom: 1px solid #f3f4f6;
         color: #374151;
-        text-align: center;  /* 🔥 centraliza valores */
+        text-align: center;
+        font-size: 14px;
     }
 
-    /* 🔥 centraliza também o nome da métrica */
     table tr td:first-child {
         font-weight: 700;
         color: var(--text-light);
@@ -154,9 +135,7 @@ def apply_custom_styles():
         text-align: center;
     }
 
-    /* ============================= */
-    /* 🔲 MATRIZ DE CONFUSÃO        */
-    /* ============================= */
+    /* MATRIZ DE CONFUSÃO AJUSTADA */
     .cm-table {
         width: 320px !important;
         margin: 20px auto !important;
@@ -172,14 +151,14 @@ def apply_custom_styles():
     .cm-table th {
         background-color: var(--primary);
         color: white !important;
-        padding: 10px;
-        font-size: 12px;
+        padding: 12px 15px;
+        font-size: 11px;
     }
 
     .cm-table td {
         text-align: center;
-        padding: 16px;
-        font-size: 16px;
+        padding: 12px 15px;
+        font-size: 14px;
         border: 1px solid #f1f5f9;
     }
 
@@ -187,32 +166,30 @@ def apply_custom_styles():
         background-color: white !important;
         font-weight: 700;
         color: #374151;
+        font-size: 14px;
     }
 
     .cm-table .val-pos { 
         background-color: #dcfce7 !important;
         color: #166534 !important; 
         font-weight: 800 !important;
-        font-size: 18px;
+        font-size: 14px;
     }
 
     .cm-table .val-neg { 
         background-color: #fee2e2 !important;
         color: #991b1b !important; 
         font-weight: 800 !important;
-        font-size: 18px;
+        font-size: 14px;
     }
 
-    /* ============================= */
-    /* 📈 CARD PSI (MENOR)          */
-    /* ============================= */
     .psi-card {
         text-align: center; 
         border: 1px solid var(--border); 
         padding: 22px; 
         border-radius: 16px; 
         width: 100%;
-        max-width: 300px;  /* 🔥 menor ainda */
+        max-width: 300px;
         background-color: white;
         box-shadow: var(--shadow-md);
         margin: 20px auto;
@@ -224,9 +201,6 @@ def apply_custom_styles():
         box-shadow: 0 12px 20px rgba(0,0,0,0.12);
     }
 
-    /* ============================= */
-    /* 📂 EXPANDER                  */
-    /* ============================= */
     div[data-testid="stExpander"] {
         border: 1px solid var(--border);
         border-radius: 10px;
