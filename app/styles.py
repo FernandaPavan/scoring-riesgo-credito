@@ -5,7 +5,7 @@ def apply_custom_styles():
     <style>
 
     /* ============================= */
-    /* 🎨 DESIGN SYSTEM (VARIÁVEIS)  */
+    /* 🎨 DESIGN SYSTEM              */
     /* ============================= */
     :root {
         --primary: #2563eb;
@@ -61,7 +61,7 @@ def apply_custom_styles():
     }
 
     /* ============================= */
-    /* 🔘 BOTÃO PRINCIPAL           */
+    /* 🔘 BOTÃO                     */
     /* ============================= */
     div.stButton > button {
         background-color: var(--primary) !important;
@@ -83,7 +83,7 @@ def apply_custom_styles():
     }
 
     /* ============================= */
-    /* 📦 CONTAINERS                */
+    /* 📦 CONTAINER CENTRAL         */
     /* ============================= */
     .container-performance {
         display: flex;
@@ -99,7 +99,6 @@ def apply_custom_styles():
         color: var(--secondary); 
         font-size: 18px; 
         font-weight: 700;
-        margin-top: 5px;
     }
 
     .score { 
@@ -107,150 +106,95 @@ def apply_custom_styles():
         font-size: 44px; 
         font-weight: 800;
         color: var(--secondary);
-        line-height: 1;
     }
 
     /* ============================= */
-    /* 📊 TABELAS GERAIS            */
+    /* 📊 TABELAS                   */
     /* ============================= */
     table {
         margin: 10px auto !important;
-        border-collapse: collapse;
         width: 100%;
         max-width: 450px !important;
         font-size: 14px;
         background-color: white;
-        box-shadow: var(--shadow-sm);
         border-radius: var(--radius);
         overflow: hidden;
         border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
     }
 
     th {
         background-color: var(--primary);
         color: white !important;
-        padding: 12px 15px;
-        font-weight: 600;
-        text-transform: uppercase;
+        padding: 12px;
         font-size: 11px;
-        letter-spacing: 0.05em;
     }
 
     td {
-        padding: 10px 15px;
+        padding: 10px;
         border-bottom: 1px solid #f3f4f6;
-        color: #374151;
-    }
-
-    table tr td:first-child {
-        font-weight: 700;
-        color: var(--text-light);
-        background-color: var(--bg-light);
-        width: 50%;
     }
 
     /* ============================= */
-    /* 🔲 MATRIZ DE CONFUSÃO        */
+    /* 🔲 MATRIZ                    */
     /* ============================= */
     .cm-table {
-        width: 100% !important;
         max-width: 360px !important;
         margin: 10px auto !important;
-        border-collapse: collapse !important;
-        text-align: center;
-        background-color: white;
         border-radius: 14px;
-        overflow: hidden;
         box-shadow: var(--shadow-md);
-        border: 1px solid var(--border);
-    }
-
-    .cm-table th {
-        text-align: center;
-        background-color: var(--secondary);
-        color: white !important;
-        padding: 8px;
-        font-size: 11px;
-    }
-
-    .cm-table td {
-        text-align: center;
-        padding: 14px;
-        font-size: 15px;
-        border: 1px solid #f1f5f9;
-    }
-
-    .cm-table tr td:first-child {
-        background-color: white !important;
-        font-weight: 700;
-        color: #374151;
-        width: auto !important;
-    }
-
-    .cm-table .val-pos { 
-        background-color: #dcfce7 !important;
-        color: #166534 !important; 
-        font-weight: 800 !important;
-    }
-
-    .cm-table .val-neg { 
-        background-color: #fee2e2 !important;
-        color: #991b1b !important; 
-        font-weight: 800 !important;
     }
 
     /* ============================= */
     /* 📈 CARD PSI                  */
     /* ============================= */
     .psi-card {
-        text-align: center; 
-        border: 1px solid var(--border); 
-        padding: 25px; 
-        border-radius: 16px; 
-        width: 100%;
         max-width: 360px;
-        background-color: white;
-        box-shadow: var(--shadow-md);
         margin: 10px auto;
-        transition: all 0.2s ease;
+        padding: 25px;
+        border-radius: 16px;
+        background-color: white;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+        text-align: center;
     }
 
-    .psi-card:hover {
-        transform: translateY(-2px);
-    }
-
-    /* ================================= */
-    /* 📂 EXPANDER (LARGURA CONTROLADA)  */
-    /* ================================= */
+    /* ============================= */
+    /* 📂 EXPANDER (PERFEITO)       */
+    /* ============================= */
     div[data-testid="stExpander"] {
-        border: 1px solid var(--border) !important;
+        max-width: 600px !important;   /* 🔥 largura igual da imagem */
+        margin: 25px auto !important;  /* 🔥 centralizado */
         border-radius: 12px !important;
+        border: 1px solid var(--border) !important;
         background-color: white !important;
-        
-        /* Largura não ocupa 100% da tela */
-        width: 100% !important;
-        max-width: 600px !important; 
-        
-        margin: 20px auto !important; /* Centraliza horizontalmente */
         box-shadow: var(--shadow-sm) !important;
     }
 
     div[data-testid="stExpander"] summary {
         font-weight: 600 !important;
         color: var(--secondary) !important;
-        padding: 10px 15px !important;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
     }
 
+    /* Conteúdo interno */
     div[data-testid="stExpander"] .stMarkdown {
-        padding: 10px 20px !important;
+        padding: 15px 22px !important;
     }
 
-    div[data-testid="stExpander"] p, 
+    /* Texto */
+    div[data-testid="stExpander"] p {
+        font-size: 13.5px !important;
+        color: #475569 !important;
+        line-height: 1.6 !important;
+        margin-bottom: 10px !important;
+    }
+
     div[data-testid="stExpander"] li {
         font-size: 13.5px !important;
-        line-height: 1.6 !important;
-        color: #475569 !important;
-        text-align: left !important;
+        margin-bottom: 6px !important;
+        color: #334155 !important;
     }
 
     </style>

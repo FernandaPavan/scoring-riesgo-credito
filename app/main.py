@@ -23,11 +23,10 @@ from app.styles import apply_custom_styles
 # ============================================
 st.set_page_config(layout="wide", page_title="Credit Score App", page_icon="💳")
 
-# Injeção de CSS Customizado
 apply_custom_styles()
 
 # ============================================
-# CARREGAMENTO DE ASSETS
+# CARREGAMENTO
 # ============================================
 @st.cache_resource
 def load_all():
@@ -36,7 +35,7 @@ def load_all():
 modelo, bins_woe, metricas_modelo, score_params, cutoffs = load_all()
 
 # ============================================
-# HEADER PRINCIPAL
+# HEADER
 # ============================================
 st.markdown(
     "<h1 style='text-align:center;color:#2563eb;font-size:26px;font-weight:700;margin-bottom:20px;'>"
@@ -51,12 +50,11 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 # ============================================
-# TAB 1: SIMULACIÓN DE CRÉDITO
+# TAB 1
 # ============================================
 with tab1:
     with st.sidebar:
-        st.markdown("<div style='text-align:center;color:#2563eb;font-size:14px;font-weight:700;margin-bottom:10px;'>"
-                    "DATOS DEL CLIENTE</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;color:#2563eb;font-size:14px;font-weight:700;margin-bottom:10px;'>DATOS DEL CLIENTE</div>", unsafe_allow_html=True)
 
         edad = st.slider("Edad", 18, 75, 30)
         monto = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
@@ -72,11 +70,11 @@ with tab1:
         st.markdown("---")
         btn = st.button("CALCULAR SCORE")
 
-    col_res, col_graf = st.columns([1, 1])
+    col_res, col_graf = st.columns(2)
 
     if btn:
         genero, trabalho, vivienda, ahorro, corriente, finalidad = traduzir_inputs(
-            genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corrente_sel, finalidad_sel
+            genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corriente_sel, finalidad_sel
         )
 
         entrada = montar_entrada(
@@ -90,8 +88,9 @@ with tab1:
         score_base = get_score(prob, score_params)
 
         penalidade = 0
-        if trabalho == 0: penalidade -= 80 
-        if vivienda == "rent": penalidade -= 30 
+        if trabalho == 0: penalidade -= 80
+        if vivienda == "rent": penalidade -= 30
+
         score_final = max(score_base + penalidade, 300)
 
         decision = apply_business_policy(score_final, prob, monto, cutoffs)
@@ -101,68 +100,37 @@ with tab1:
             st.markdown(f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align:center;font-weight:700;font-size:18px;color:#1e40af;'>{decision['segmento']}</p>", unsafe_allow_html=True)
 
-            c1, c2 = st.columns(2)
-            c1.markdown(f"<div style='text-align:center;'><small>Probabilidad</small><br><b>{prob:.2%}</b></div>", unsafe_allow_html=True)
-            c2.markdown(f"<div style='text-align:center;'><small>Límite Sugerido</small><br><b>${decision['limite']:,.0f}</b></div>", unsafe_allow_html=True)
-
-            st.markdown(f"<div style='text-align:center;font-size:26px;margin-top:15px;color:{decision['cor']};'>"
-                        f"<b>{decision['icon']} {decision['status']}</b></div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:13px;color:#64748b;'>{decision['motivo']}</p>", unsafe_allow_html=True)
-
         with col_graf:
-            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div>", unsafe_allow_html=True)
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
-                value=prob * 100,
-                number={'suffix': "%", 'font': {'size': 40}},
-                gauge={
-                    "axis": {"range": [0, 100]},
-                    "bar": {"color": "#1e40af"},
-                    "steps": [
-                        {"range": [0, 30], "color": "#dcfce7"},
-                        {"range": [30, 60], "color": "#fef9c3"},
-                        {"range": [60, 100], "color": "#fee2e2"},
-                    ],
-                }
+                value=prob * 100
             ))
-            fig.update_layout(height=320, margin=dict(l=30, r=30, t=50, b=0))
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: MÉTRICAS DO MODELO
+# TAB 2
 # ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
 
-    st.markdown("<div class='container-performance'><p class='titulo-secao'>Métricas de Performance</p></div>", unsafe_allow_html=True)
+    st.markdown("<div class='container-performance'><p class='titulo-secao'>Métricas</p></div>", unsafe_allow_html=True)
+
     st.markdown(f"""
     <table>
         <tr><th>Métrica</th><th>Valor</th></tr>
         <tr><td>Accuracy</td><td>{m.get('accuracy', 0):.4f}</td></tr>
         <tr><td>Precision</td><td>{m.get('precision', 0):.4f}</td></tr>
         <tr><td>Recall</td><td>{m.get('recall', 0):.4f}</td></tr>
-        <tr><td>AUC (ROC)</td><td>{m.get('auc', 0):.4f}</td></tr>
-        <tr><td>Gini</td><td>{m.get('gini', 0):.4f}</td></tr>
-        <tr><td>KS Statistic</td><td>{m.get('ks', 0):.4f}</td></tr>
-    </table>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<div class='container-performance'><p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p></div>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <table class='cm-table'>
-        <tr><th>Real / Pred</th><th>Bueno (0)</th><th>Malo (1)</th></tr>
-        <tr><td><b>Bueno (0)</b></td><td class='val-pos'>{cm.get('TN', 0)}</td><td class='val-neg'>{cm.get('FP', 0)}</td></tr>
-        <tr><td><b>Malo (1)</b></td><td class='val-neg'>{cm.get('FN', 0)}</td><td class='val-pos'>{cm.get('TP', 0)}</td></tr>
     </table>
     """, unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: PSI (ESTABILIDADE)
+# TAB 3 (PSI)
 # ============================================
 with tab3:
     psi_val = metricas_modelo.get("psi", 0)
-    
+
     if psi_val < 0.1:
         status, cor, icon = "ESTABLE", "#16a34a", "✅"
     elif psi_val < 0.25:
@@ -170,28 +138,31 @@ with tab3:
     else:
         status, cor, icon = "INESTABLE", "#dc2626", "🚨"
 
-    # Bloco do Card (já centralizado pelo container-performance no CSS)
     st.markdown(f"""
     <div class='container-performance'>
         <p class='titulo-secao'>Estabilidad de la Población</p>
         <div class='psi-card'>
-            <p style='font-size:13px; color:#64748b; margin-bottom:5px;'>Índice PSI</p>
+            <p style='font-size:13px; color:#64748b;'>Índice PSI</p>
             <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
-            <p style='color:{cor}; font-weight:700; font-size:20px; margin-top:10px;'>{icon} {status}</p>
+            <p style='color:{cor}; font-weight:700;'>{icon} {status}</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # O expander usará automaticamente as regras de max-width: 600px e margin: auto do CSS
-    with st.expander("Ver critérios del PSI"):
-        st.markdown(f"""
-        **Interpretación del Índice PSI (Índice de Estabilidade da População):**
+    # 🔥 EXPANDER CORRIGIDO
+    with st.expander("Ver criterios del PSI"):
+        st.markdown("""
+        **Interpretación del Índice PSI (Índice de Estabilidad de la Población):**
+
+        **Rangos de evaluación:**
         
-        * **< 0.10** → Población estable
-        * **0.10 – 0.25** → Cambio possível (alerta)
-        * **> 0.25** → Cambio significativo (inestabilidad)
-        
+        • **PSI < 0.10** → Población estable  
+        • **PSI entre 0.10 y 0.25** → Posible cambio (alerta)  
+        • **PSI > 0.25** → Cambio significativo (inestabilidad)  
+
         **Lectura práctica:**
-        * Un **PSI bajo** indica que la distribución de la población real es similar a la utilizada en el entrenamiento.
-        * Un **PSI elevado** sugiere un cambio en el perfil de los clientes (**data drift**), lo que puede afectar el desempeño del modelo.
+        
+        • Un **PSI bajo** indica que la distribución de la población actual es muy similar a la utilizada en el entrenamiento del modelo.  
+        
+        • Un **PSI elevado** sugiere un cambio en el perfil de los clientes (**data drift**), lo que puede impactar negativamente el desempeño del modelo.
         """)
