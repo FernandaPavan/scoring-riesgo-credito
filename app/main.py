@@ -255,22 +255,32 @@ with tab1:
             )
 
             fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=prob * 100,
-                number={
-                    "font": {"size": 24},
-                    "suffix": "%"
-                },
-                gauge={
-                    "axis": {"range": [0, 100]},
-                    "bar": {"thickness": 0.25},
-                    "steps": [
-                        {"range": [0, 40], "color": "#16a34a"},
-                        {"range": [40, 70], "color": "#facc15"},
-                        {"range": [70, 100], "color": "#dc2626"},
-                    ],
-                }
-            ))
+    mode="gauge+number",
+    value=prob * 100,
+    number={
+        "font": {"size": 26},
+        "suffix": "%"
+    },
+    gauge={
+        "axis": {
+            "range": [0, 100],
+            "tickmode": "linear",
+            "tick0": 0,
+            "dtick": 20,
+            "tickwidth": 1,
+            "tickcolor": "gray",
+            "tickfont": {"size": 12}
+        },
+        "bar": {
+            "thickness": 0.25
+        },
+        "steps": [
+            {"range": [0, 40], "color": "#16a34a"},
+            {"range": [40, 70], "color": "#facc15"},
+            {"range": [70, 100], "color": "#dc2626"},
+        ]
+    }
+))
 
             fig.update_layout(
                 width=300,
