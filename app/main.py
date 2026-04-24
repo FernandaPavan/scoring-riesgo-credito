@@ -1,9 +1,12 @@
+import sys
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(BASE_DIR)
+
 import streamlit as st
 import plotly.graph_objects as go
 
-# ============================================
-# IMPORTS MODULARES
-# ============================================
 from src.loader import load_assets
 from src.policy import get_score, apply_business_policy
 from src.features import traduzir_inputs, montar_entrada, preparar_dados
