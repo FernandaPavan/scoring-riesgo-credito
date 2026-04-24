@@ -217,26 +217,33 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
-    # ----- ESPAÇO ENTRE CARD E EXPANDER -----
-    st.markdown("<br>", unsafe_allow_html=True)
+    # ----- ESPAÇO -----
+st.markdown("<br>", unsafe_allow_html=True)
 
-    # ----- CONTAINER CENTRALIZADO -----
-    st.markdown("<div style='display:flex; justify-content:center;'>", unsafe_allow_html=True)
-    st.markdown("<div style='width:100%; max-width:360px;'>", unsafe_allow_html=True)
+# ----- CONTAINER CENTRALIZADO (IGUAL AO CARD) -----
+st.markdown("""
+<div style="
+    display:flex;
+    justify-content:center;
+    width:100%;
+">
+    <div style="
+        width:100%;
+        max-width:360px;
+    ">
+""", unsafe_allow_html=True)
 
-    # ----- EXPANDER (AGORA CORRETO) -----
-    with st.expander("Ver criterios del PSI"):
-        st.markdown("""
-        **Interpretación del Índice PSI (Population Stability Index):**
-        
-        - **< 0.10** → Población estable  
-        - **0.10 – 0.25** → Posible cambio (alerta)  
-        - **> 0.25** → Cambio significativo (inestabilidad)  
-        
-        **Lectura práctica:**
-        - Un PSI bajo indica que la distribución de la población actual es similar a la utilizada en el entrenamiento  
-        - Un PSI elevado sugiere un cambio en el perfil de los clientes (data drift), lo que puede afectar el desempeño del modelo  
-        """)
+with st.expander("Ver criterios del PSI"):
+    st.markdown("""
+    **Interpretación del Índice PSI (Population Stability Index):**
+    
+    - **< 0.10** → Población estable  
+    - **0.10 – 0.25** → Posible cambio (alerta)  
+    - **> 0.25** → Cambio significativo (inestabilidad)  
+    
+    **Lectura práctica:**
+    - Un PSI bajo indica que la distribución de la población actual es similar a la utilizada en el entrenamiento  
+    - Un PSI elevado sugiere un cambio en el perfil de los clientes (data drift), lo que puede afectar el desempeño del modelo  
+    """)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div></div>", unsafe_allow_html=True)

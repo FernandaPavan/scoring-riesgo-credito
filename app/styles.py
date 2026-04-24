@@ -226,16 +226,23 @@ def apply_custom_styles():
     /* ============================= */
     div[data-testid="stExpander"] {
         border: 1px solid var(--border);
-        border-radius: 10px;
+        border-radius: 12px;
         box-shadow: var(--shadow-sm);
         background-color: white;
-        width: 100% !important;  /* 🔥 ESSENCIAL PRA ALINHAR COM O CARD */
+        width: 100% !important;
+        overflow: hidden;
+    }
+
+    /* força o conteúdo interno respeitar largura */
+    div[data-testid="stExpander"] > div {
+        width: 100% !important;
     }
 
     div[data-testid="stExpander"] summary {
         font-weight: 600;
         color: var(--secondary);
         font-size: 14px;
+        padding: 10px 12px;
     }
 
     div[data-testid="stExpander"] p {
