@@ -108,20 +108,88 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2
+# ============================================
+# ============================================
+# TAB 2: DESEMPENHO DO MODELO
 # ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
 
-    st.markdown("<div class='container-performance'><p class='titulo-secao'>Métricas</p></div>", unsafe_allow_html=True)
+    # ----- TÍTULO GERAL -----
+    st.markdown(
+        "<div class='container-performance'>"
+        "<p class='titulo-secao'>Desempeño del Modelo</p>"
+        "</div>",
+        unsafe_allow_html=True
+    )
 
+    # ----- TABELA DE MÉTRICAS -----
     st.markdown(f"""
     <table>
         <tr><th>Métrica</th><th>Valor</th></tr>
         <tr><td>Accuracy</td><td>{m.get('accuracy', 0):.4f}</td></tr>
         <tr><td>Precision</td><td>{m.get('precision', 0):.4f}</td></tr>
         <tr><td>Recall</td><td>{m.get('recall', 0):.4f}</td></tr>
+        <tr><td>AUC (ROC)</td><td>{m.get('auc', 0):.4f}</td></tr>
+        <tr><td>Gini</td><td>{m.get('gini', 0):.4f}</td></tr>
+        <tr><td>KS Statistic</td><td>{m.get('ks', 0):.4f}</td></tr>
+    </table>
+    """, unsafe_allow_html=True)
+
+    # ----- ESPAÇO SUAVE -----
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ----- MATRIZ DE CONFUSÃO -----
+    st.markdown(f"""
+    <table class='cm-table'>
+        <tr>
+            <th>Real / Pred</th>
+            <th>Bueno (0)</th>
+            <th>Malo (1)</th>
+        </tr>
+        <tr>
+            <td><b>Bueno (0)</b></td>
+            <td class='val-pos'>{cm.get('TN', 0)}</td>
+            <td class='val-neg'>{cm.get('FP', 0)}</td>
+        </tr>
+        <tr>
+            <td><b>Malo (1)</b></td>
+            <td class='val-neg'>{cm.get('FN', 0)}</td>
+            <td class='val-pos'>{cm.get('TP', 0)}</td>
+        </tr>
+    </table>
+    """, unsafe_allow_html=True)
+
+    # ----- ESPAÇO ENTRE TABELAS -----
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
+    # ----- TÍTULO MATRIZ -----
+    st.markdown(
+        "<div class='container-performance'>"
+        "<p class='titulo-secao'>Matriz de Confusión</p>"
+        "</div>",
+        unsafe_allow_html=True
+    )
+
+    # ----- MATRIZ DE CONFUSÃO -----
+    st.markdown(f"""
+    <table class='cm-table'>
+        <tr>
+            <th>Real / Pred</th>
+            <th>Bueno (0)</th>
+            <th>Malo (1)</th>
+        </tr>
+        <tr>
+            <td><b>Bueno (0)</b></td>
+            <td class='val-pos'>{cm.get('TN', 0)}</td>
+            <td class='val-neg'>{cm.get('FP', 0)}</td>
+        </tr>
+        <tr>
+            <td><b>Malo (1)</b></td>
+            <td class='val-neg'>{cm.get('FN', 0)}</td>
+            <td class='val-pos'>{cm.get('TP', 0)}</td>
+        </tr>
     </table>
     """, unsafe_allow_html=True)
 
