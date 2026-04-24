@@ -384,6 +384,5 @@ with tab3:
             **Lectura:**
 
             - Un PSI bajo indica que la distribución de la población real es similar a la utilizada en el entrenamiento.
-
             - Un PSI elevado sugiere un cambio en el perfil de los clientes (*data drift*), lo que puede afectar el desempeño del modelo.
             """)
