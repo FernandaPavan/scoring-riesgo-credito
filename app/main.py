@@ -149,7 +149,7 @@ with tab1:
 
         # RESULTADO
         with col_res:
-            st.markdown("<div class='titulo-secao'>Resultado</div>", unsafe_allow_html=True)
+            st.markdown("<div class='titulo-secao'>Resultado</div><br><br>", unsafe_allow_html=True)
 
             st.markdown(
                 f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>",
@@ -186,7 +186,7 @@ with tab1:
 
         # GAUGE
         with col_graf:
-            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div>", unsafe_allow_html=True)
+            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br><br>", unsafe_allow_html=True)
 
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
