@@ -306,17 +306,9 @@ with tab1:
 # ============================================
 with tab2:
     m = metricas_modelo
-    cm = m.get("confusion_matrix", {
-        "TN": 0,
-        "FP": 0,
-        "FN": 0,
-        "TP": 0
-    })
+    cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
 
-    st.markdown(
-        "<div class='titulo-secao'>Desempeño del Modelo</div>",
-        unsafe_allow_html=True
-    )
+    st.markdown("<div class='titulo-secao'>Desempeño del Modelo</div>", unsafe_allow_html=True)
 
     st.markdown(f"""
     <table>
@@ -332,10 +324,7 @@ with tab2:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    st.markdown(
-        "<div class='titulo-secao'>Matriz de Confusión</div>",
-        unsafe_allow_html=True
-    )
+    st.markdown("<div class='titulo-secao'>Matriz de Confusión</div>", unsafe_allow_html=True)
 
     st.markdown(f"""
     <table class='cm-table'>
@@ -351,13 +340,9 @@ with tab2:
 with tab3:
     psi_val = metricas_modelo.get("psi", 0)
 
-    status, cor = (
-        ("ESTABLE", "#16a34a")
-        if psi_val < 0.1
-        else ("ALERTA", "#facc15")
-        if psi_val < 0.25
-        else ("INESTABLE", "#dc2626")
-    )
+    status, cor = ("ESTABLE","#16a34a") if psi_val < 0.1 else ("ALERTA","#facc15") if psi_val < 0.25 else ("INESTABLE","#dc2626")
+
+    st.markdown("<div style='display:flex; justify-content:center;'><div style='max-width:320px;'>", unsafe_allow_html=True)
 
     st.markdown(f"""
     <div class='psi-card'>
@@ -367,9 +352,15 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
+    st.markdown("</div></div><br>", unsafe_allow_html=True)
+
+    st.markdown("<div style='display:flex; justify-content:center;'><div style='max-width:520px;'>", unsafe_allow_html=True)
+
     with st.expander("Ver criterios del PSI"):
         st.markdown("""
         - < 0.10 → Estable  
         - 0.10 – 0.25 → Alerta  
         - > 0.25 → Inestable  
         """)
+
+    st.markdown("</div></div>", unsafe_allow_html=True)
