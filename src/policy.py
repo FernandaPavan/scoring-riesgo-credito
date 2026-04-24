@@ -1,62 +1,26 @@
 import numpy as np
 
-def get_score(prob_default, score_params):
-    prob_default = float(np.clip(prob_default, 0.0001, 0.9999))
+def get_score(prob, params):
+    factor = params["pdo"] / np.log(2)
+    offset = params["base_score"] + factor * np.log(params["base_odds"])
+    prob = min(max(prob, 0.0001), 0.9999)
+    return int(offset + factor * np.log((1 - prob) / prob))
 
-    pdo = score_params.get("pdo", 20)
-    base_score = score_params.get("base_score", 600)
-    base_odds = score_params.get("base_odds", 50)
+def apply_business_policy(score, prob, monto_solicitado, cutoffs):
+    # Definir Segmento
+    if score >= 700: segmento, limite_base = "SUPER PRIME", 18000
+    elif score >= 650: segmento, limite_base = "PRIME", 10000
+    elif score >= 600: segmento, limite_base = "STANDARD", 5000
+    elif score >= 520: segmento, limite_base = "NEAR PRIME", 2500
+    elif score >= 460: segmento, limite_base = "REVIEW", 1000
+    else: segmento, limite_base = "SUBPRIME", 0
 
-    factor = pdo / np.log(2)
-    offset = base_score - factor * np.log(base_odds)
-
-    odds = (1 - prob_default) / prob_default
-
-    score = int(round(offset + factor * np.log(odds)))
-
-    return max(score, 300)
-
-
-def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
-
-    reject_cutoff = cutoffs["reject_cutoff"]
-    analysis_cutoff = cutoffs["analysis_cutoff"]
-
-    if score >= 700:
-        segmento = "SUPER PRIME"; base_limit = 18000
-    elif score >= 650:
-        segmento = "PRIME"; base_limit = 10000
-    elif score >= 600:
-        segmento = "STANDARD"; base_limit = 5000
-    elif score >= 520:
-        segmento = "NEAR PRIME"; base_limit = 2500
-    elif score >= 460:
-        segmento = "REVIEW"; base_limit = 1000
+    # Lógica de Decisão
+    if score < 460:
+        return {"status": "RECHAZADO", "icon": "✖", "cor": "#dc2626", "score": score, "segmento": segmento, "limite": 0, "motivo": "Score bajo política mínima."}
+    elif score < 520:
+        return {"status": "EN ANÁLISIS", "icon": "⚠", "cor": "#facc15", "score": score, "segmento": segmento, "limite": limite_base, "motivo": "Zona intermedia de riesgo."}
+    elif monto_solicitado <= limite_base:
+        return {"status": "APROBADO", "icon": "✔", "cor": "#16a34a", "score": score, "segmento": segmento, "limite": limite_base, "motivo": "Dentro del límite aprobado."}
     else:
-        segmento = "SUBPRIME"; base_limit = 500
-
-    risco_factor = (1 - prob_default)
-    limite_sugerido = int(max(500, base_limit * (0.7 + risco_factor * 0.6)))
-
-    if score < reject_cutoff:
-        return build_response(score, segmento, limite_sugerido, "RECHAZADO", "❌", "#dc2626", "Score abaixo do cutoff mínimo")
-
-    if score < analysis_cutoff:
-        return build_response(score, segmento, limite_sugerido, "EN ANÁLISIS", "⚠️", "#facc15", "Perfil intermediário")
-
-    if valor_solicitado <= limite_sugerido:
-        return build_response(score, segmento, limite_sugerido, "APROBADO", "✅", "#16a34a", "Dentro do limite")
-
-    return build_response(score, segmento, limite_sugerido, "RECHAZADO", "❌", "#dc2626", "Excede limite")
-
-
-def build_response(score, segmento, limite, status, icon, cor, motivo):
-    return {
-        "score": score,
-        "segmento": segmento,
-        "limite": limite,
-        "status": status,
-        "icon": icon,
-        "cor": cor,
-        "motivo": motivo
-    }
+        return {"status": "RECHAZADO", "icon": "✖", "cor": "#dc2626", "score": score, "segmento": segmento, "limite": limite_base, "motivo": "Excede limite permitido."}
