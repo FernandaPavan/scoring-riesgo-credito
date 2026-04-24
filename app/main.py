@@ -131,30 +131,48 @@ with tab1:
             st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;'>{motivo}</p>", unsafe_allow_html=True)
 
         # GAUGE
-        with col_graf:
-            st.markdown("<div class='titulo-secao' style='text-align:center;'>Indicador de Riesgo</div><br><br>", unsafe_allow_html=True)
+with col_graf:
+    st.markdown(
+        "<div style='text-align:center;'>"
+        "<div class='titulo-secao'>Indicador de Riesgo</div>"
+        "</div><br>",
+        unsafe_allow_html=True
+    )
 
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=prob * 100,
-                number={'font': {'size': 36}, 'suffix': "%"},
-                gauge={
-                    "axis": {"range": [0, 100]},
-                    "bar": {"thickness": 0.35},
-                    "steps": [
-                        {"range": [0, 40], "color": "#16a34a"},
-                        {"range": [40, 70], "color": "#facc15"},
-                        {"range": [70, 100], "color": "#dc2626"},
-                    ],
-                }
-            ))
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=prob * 100,
+        number={'font': {'size': 36}, 'suffix': "%"},
+        gauge={
+            "axis": {"range": [0, 100]},
+            "bar": {"thickness": 0.35},
+            "steps": [
+                {"range": [0, 40], "color": "#16a34a"},
+                {"range": [40, 70], "color": "#facc15"},
+                {"range": [70, 100], "color": "#dc2626"},
+            ],
+        }
+    ))
 
-            fig.update_traces(domain={'x':[0.15,0.85],'y':[0.2,0.9]})
-            fig.update_layout(height=220, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor="rgba(0,0,0,0)")
+    fig.update_layout(
+        height=260,
+        margin=dict(l=10, r=10, t=10, b=10),
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(size=14)
+    )
 
-            col_left = st.columns([2,1])
-            with col_left[0]:
-                st.plotly_chart(fig, use_container_width=False)
+    # CENTRALIZAÇÃO REAL
+    st.markdown(
+        "<div style='display:flex; justify-content:center;'>",
+        unsafe_allow_html=True
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=False
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================
 # TAB 2
