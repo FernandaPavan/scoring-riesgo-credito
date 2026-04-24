@@ -190,6 +190,7 @@ with tab2:
 
 # ============================================
 # ============================================
+# ============================================
 # TAB 3: PSI (ESTABILIDADE)
 # ============================================
 with tab3:
@@ -202,7 +203,7 @@ with tab3:
     else:
         status, cor, icon = "INESTABLE", "#dc2626", "🚨"
 
-    # ----- CARD PRINCIPAL (LIMPO) -----
+    # ----- CARD PRINCIPAL -----
     st.markdown(f"""
     <div class='container-performance'>
         <p class='titulo-secao'>Estabilidad de la Población</p>
@@ -216,16 +217,22 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
-    # ----- GUIA (SOB DEMANDA) -----
-    with st.expander("Ver critérios do PSI"):
-        st.markdown("""
-        **Interpretação do PSI:**
-        
-        - **< 0.10** → Estável  
-        - **0.10 – 0.25** → Alerta  
-        - **> 0.25** → Instável  
-        
-        **Leitura prática:**
-        - Valores baixos indicam que a população atual é semelhante à de treino  
-        - Valores altos indicam mudança de perfil (drift) e possível perda de performance do modelo
-        """)
+    # ----- ESPAÇO ENTRE CARD E EXPANDER -----
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ----- EXPANDER CENTRALIZADO -----
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        with st.expander("Ver critérios do PSI"):
+            st.markdown("""
+            **Interpretação do PSI:**
+            
+            - **< 0.10** → Estável  
+            - **0.10 – 0.25** → Alerta  
+            - **> 0.25** → Instável  
+            
+            **Leitura prática:**
+            - Valores baixos indicam que a população atual é semelhante à de treino  
+            - Valores altos indicam mudança de perfil (drift) e possível perda de performance do modelo
+            """)
