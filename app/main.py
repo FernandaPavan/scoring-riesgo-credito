@@ -224,15 +224,15 @@ with tab3:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        with st.expander("Ver critérios do PSI"):
-            st.markdown("""
-            **Interpretação do PSI:**
-            
-            - **< 0.10** → Estável  
-            - **0.10 – 0.25** → Alerta  
-            - **> 0.25** → Instável  
-            
-            **Leitura prática:**
-            - Valores baixos indicam que a população atual é semelhante à de treino  
-            - Valores altos indicam mudança de perfil (drift) e possível perda de performance do modelo
-            """)
+    with st.expander("Ver criterios del PSI"):
+        st.markdown("""
+        **Interpretación del Índice PSI (Population Stability Index):**
+        
+        - **< 0.10** → Población estable  
+        - **0.10 – 0.25** → Posible cambio (alerta)  
+        - **> 0.25** → Cambio significativo (inestabilidad)  
+        
+        **Lectura práctica:**
+        - Un PSI bajo indica que la distribución de la población actual es similar a la utilizada en el entrenamiento  
+        - Un PSI elevado sugiere un cambio en el perfil de los clientes (data drift), lo que puede afectar el desempeño del modelo  
+        """)

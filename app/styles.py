@@ -46,7 +46,7 @@ def apply_custom_styles():
     [data-testid="stSidebar"] .stWidgetLabel p {
         font-size: 11px !important;
         font-weight: 700 !important;
-        margin-bottom: -12px !important; 
+        margin-bottom: -10px !important; 
         color: var(--text-light);
     }
 
@@ -219,6 +219,28 @@ def apply_custom_styles():
     .psi-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 12px 20px rgba(0,0,0,0.12);
+    }
+
+    /* ============================= */
+    /* 📂 EXPANDER (NOVO)           */
+    /* ============================= */
+    div[data-testid="stExpander"] {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow-sm);
+        background-color: white;
+    }
+
+    div[data-testid="stExpander"] summary {
+        font-weight: 600;
+        color: var(--secondary);
+        font-size: 14px;
+    }
+
+    div[data-testid="stExpander"] p {
+        font-size: 13px;
+        color: var(--text-light);
+        line-height: 1.5;
     }
 
     </style>
