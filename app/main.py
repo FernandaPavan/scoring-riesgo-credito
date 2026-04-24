@@ -6,28 +6,27 @@ import pandas as pd
 import scorecardpy as sc
 
 # ============================================
-# PATH (garante import da pasta src e app)
+# PATH
 # ============================================
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
 # ============================================
-# IMPORTS MODULARES
+# IMPORTS
 # ============================================
 from src.loader import load_assets
 from src.policy import get_score, apply_business_policy
 from app.styles import apply_custom_styles
 
 # ============================================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIG
 # ============================================
 st.set_page_config(layout="wide", page_title="Credit Score App", page_icon="💳")
-
 apply_custom_styles()
 
 # ============================================
-# CARREGAMENTO
+# LOAD
 # ============================================
 @st.cache_resource
 def load_all():
@@ -51,12 +50,12 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 # ============================================
-# TAB 1: SIMULAÇÃO
+# TAB 1
 # ============================================
 with tab1:
     with st.sidebar:
         st.markdown(
-            "<div style='text-align:center;color:#2563eb;font-size:12px;font-weight:600;margin-bottom:5px;'>Datos del Cliente</div>",
+            "<div style='text-align:center;color:#2563eb;font-size:12px;font-weight:600;'>Datos del Cliente</div>",
             unsafe_allow_html=True
         )
 
@@ -64,34 +63,38 @@ with tab1:
         valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
         duracion = st.slider("Duración (meses)", 4, 72, 24)
 
-        genero_sel = st.selectbox("Género", ["Masculino","Femenino"])
-        genero = "male" if genero_sel == "Masculino" else "female"
+        genero = "male" if st.selectbox("Género", ["Masculino","Femenino"]) == "Masculino" else "female"
 
-        trabalho_sel = st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])
-        trabalho = {"Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3}[trabalho_sel]
+        trabalho = {"Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3}[
+            st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])
+        ]
 
-        habitacion_sel = st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])
-        habitacion = {"Propia":"own","Alquilada":"rent","Gratuita":"free"}[habitacion_sel]
+        habitacion = {"Propia":"own","Alquilada":"rent","Gratuita":"free"}[
+            st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])
+        ]
 
-        ahorro_sel = st.selectbox("Cuenta de Ahorro", ["Bajo","Medio","Alto"])
-        cuenta_ahorro = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[ahorro_sel]
+        cuenta_ahorro = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[
+            st.selectbox("Cuenta de Ahorro", ["Bajo","Medio","Alto"])
+        ]
 
-        corriente_sel = st.selectbox("Cuenta Corriente", ["Bajo","Medio","Alto"])
-        cuenta_corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[corriente_sel]
+        cuenta_corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[
+            st.selectbox("Cuenta Corriente", ["Bajo","Medio","Alto"])
+        ]
 
-        finalidad_sel = st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])
         finalidad = {
             "Auto":"car","Muebles":"furniture/equipment","Electrónicos":"radio/TV",
             "Negocios":"business","Educación":"education",
             "Reparaciones":"repairs","Otros":"vacation/others"
-        }[finalidad_sel]
+        }[
+            st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])
+        ]
 
         btn = st.button("Calcular")
 
     col_res, col_graf = st.columns([1, 1])
 
     if btn:
-        # INPUT → WOE
+        # INPUT
         entrada = pd.DataFrame({
             "Genero":[genero],
             "Trabalho":[trabalho],
@@ -113,33 +116,27 @@ with tab1:
         # SCORE
         score_base = get_score(prob, score_params)
 
-        # PENALIDADES
         penalidade = 0
         flags = []
 
         if trabalho == 0:
             penalidade -= 80
             flags.append("Sin empleo")
-
         if habitacion == "rent":
             penalidade -= 30
             flags.append("Vivienda alquilada")
-
         if cuenta_ahorro == "little":
             penalidade -= 20
             flags.append("Bajo ahorro")
-
         if cuenta_corriente == "little":
             penalidade -= 20
             flags.append("Baja liquidez")
 
         score_final = max(score_base + penalidade, 300)
 
-        # POLICY
         decision = apply_business_policy(score_final, prob, valor, cutoffs)
 
         limite = decision["limite"]
-
         if duracion > 48:
             limite = int(limite * 0.85)
 
@@ -151,52 +148,26 @@ with tab1:
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br><br>", unsafe_allow_html=True)
 
-            st.markdown(
-                f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-weight:700;color:#2563eb;'>{decision['segmento']}</p>", unsafe_allow_html=True)
 
-            st.markdown(
-                f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{decision['segmento']}</p>",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"<p style='text-align:center;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;'>Límite Sugerido</p><p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>", unsafe_allow_html=True)
 
-            st.markdown(
-                f"<p style='text-align:center;'>Probabilidad</p>"
-                f"<p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"<div style='text-align:center;font-size:28px;color:{decision['cor']};font-weight:900;'>{decision['icon']} {decision['status']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;'>{motivo}</p>", unsafe_allow_html=True)
 
-            st.markdown(
-                f"<p style='text-align:center;'>Límite Sugerido</p>"
-                f"<p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>",
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f"<div style='text-align:center;font-size:28px;color:{decision['cor']};font-weight:900;'>"
-                f"{decision['icon']} {decision['status']}</div>",
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f"<p style='text-align:center;font-size:12px;color:#64748b;'>{motivo}</p>",
-                unsafe_allow_html=True
-            )
-
-                # GAUGE
+        # GAUGE
         with col_graf:
             st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br><br>", unsafe_allow_html=True)
 
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob * 100,
-                number={
-                    'font': {'size': 36},
-                    'suffix': "%"
-                },
+                number={'font': {'size': 34}, 'suffix': "%"},
                 gauge={
                     "axis": {"range": [0, 100]},
+                    "bar": {"thickness": 0.35},
                     "steps": [
                         {"range": [0, 40], "color": "#16a34a"},
                         {"range": [40, 70], "color": "#facc15"},
@@ -205,19 +176,15 @@ with tab1:
                 }
             ))
 
-            fig.update_layout(
-                height=220,
-                margin=dict(l=0, r=0, t=0, b=0),
-                paper_bgcolor="rgba(0,0,0,0)"
-            )
+            fig.update_traces(domain={'x': [0.25, 0.75], 'y': [0.25, 0.85]})
+            fig.update_layout(height=210, margin=dict(l=0, r=0, t=0, b=0))
 
-            # 🔥 CENTRALIZA E REDUZ LARGURA
-            col_center = st.columns([1, 2, 1])
-            with col_center[1]:
+            col_right = st.columns([1, 2])
+            with col_right[1]:
                 st.plotly_chart(fig, use_container_width=False)
 
 # ============================================
-# TAB 2: DESEMPENHO
+# TAB 2
 # ============================================
 with tab2:
     m = metricas_modelo
@@ -243,27 +210,14 @@ with tab2:
 
     st.markdown(f"""
     <table class='cm-table'>
-        <tr>
-            <th>Real / Pred</th>
-            <th>Bueno</th>
-            <th>Malo</th>
-        </tr>
-        <tr>
-            <td>Bueno</td>
-            <td class='val-pos'>{cm.get('TN', 0)}</td>
-            <td class='val-neg'>{cm.get('FP', 0)}</td>
-        </tr>
-        <tr>
-            <td>Malo</td>
-            <td class='val-neg'>{cm.get('FN', 0)}</td>
-            <td class='val-pos'>{cm.get('TP', 0)}</td>
-        </tr>
+        <tr><th>Real / Pred</th><th>Bueno</th><th>Malo</th></tr>
+        <tr><td>Bueno</td><td class='val-pos'>{cm.get('TN',0)}</td><td class='val-neg'>{cm.get('FP',0)}</td></tr>
+        <tr><td>Malo</td><td class='val-neg'>{cm.get('FN',0)}</td><td class='val-pos'>{cm.get('TP',0)}</td></tr>
     </table>
     """, unsafe_allow_html=True)
 
 # ============================================
-# ============================================
-# TAB 3: PSI
+# TAB 3
 # ============================================
 with tab3:
     psi_val = metricas_modelo.get("psi", 0)
@@ -275,42 +229,26 @@ with tab3:
     else:
         status, cor, icon = "INESTABLE", "#dc2626", "🚨"
 
-    # ===== CARD (ESTREITO) =====
-    st.markdown("<div style='display:flex; justify-content:center;'>", unsafe_allow_html=True)
-    st.markdown("<div style='width:100%; max-width:320px;'>", unsafe_allow_html=True)
-
     st.markdown(f"""
-    <div class='psi-card'>
-        <p style='font-size:13px; color:#64748b;'>Índice PSI</p>
-        <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
-        <p style='color:{cor}; font-weight:700; font-size:18px;'>
-            {icon} {status}
-        </p>
+    <div style='display:flex; justify-content:center;'>
+        <div class='psi-card' style='max-width:320px;'>
+            <p>Índice PSI</p>
+            <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
+            <p style='color:{cor}; font-weight:700;'>{icon} {status}</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # ===== ESPAÇO =====
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ===== EXPANDER (MAIOR, MAS NÃO FULL) =====
     st.markdown("<div style='display:flex; justify-content:center;'>", unsafe_allow_html=True)
-    st.markdown("<div style='width:100%; max-width:520px;'>", unsafe_allow_html=True)
+    st.markdown("<div style='max-width:520px; width:100%;'>", unsafe_allow_html=True)
 
     with st.expander("Ver criterios del PSI"):
         st.markdown("""
-        **Interpretación del Índice PSI (Population Stability Index):**
-        
-        - **< 0.10** → Población estable  
-        - **0.10 – 0.25** → Posible cambio (alerta)  
-        - **> 0.25** → Cambio significativo (inestabilidad)  
-        
-        **Lectura práctica:**
-        - PSI bajo → dados consistentes com o treino  
-        - PSI alto → possível data drift (mudança de perfil)  
+        - < 0.10 → Estable  
+        - 0.10 – 0.25 → Alerta  
+        - > 0.25 → Inestable  
         """)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div></div>", unsafe_allow_html=True)
