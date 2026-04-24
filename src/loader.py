@@ -1,28 +1,26 @@
 import os
-import json
 import joblib
+import json
+import streamlit as st
 
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_PROJECT = os.path.dirname(CURRENT_DIR)
+MODEL_PATH = os.path.join(BASE_PROJECT, "models")
+
+@st.cache_resource
 def load_assets():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    base_project = os.path.dirname(current_dir)
-    model_path = os.path.join(base_project, "models")
+    try:
+        modelo = joblib.load(os.path.join(MODEL_PATH, "modelo.pkl"))
+        bins_woe = joblib.load(os.path.join(MODEL_PATH, "woe_bins.pkl"))
 
-    modelo = joblib.load(os.path.join(model_path, "modelo.pkl"))
-    bins_woe = joblib.load(os.path.join(model_path, "woe_bins.pkl"))
+        with open(os.path.join(MODEL_PATH, "metricas.json"), "r") as f:
+            metricas = json.load(f)
 
-    with open(os.path.join(model_path, "metricas.json"), "r") as f:
-        metricas = json.load(f)
+        with open(os.path.join(MODEL_PATH, "score_params.json"), "r") as f:
+            params = json.load(f)
 
-    with open(os.path.join(model_path, "score_params.json"), "r") as f:
-        score_params = json.load(f)
+        return modelo, bins_woe, metricas, params
 
-    # ============================================
-    # CUTOFFS PADRONIZADOS (ALINHADO COM POLICY.PY)
-    # ============================================
-    cutoffs = {
-        "reject_cutoff": 460,     # reprova direto
-        "analysis_cutoff": 520,   # zona de análise
-        "approve_cutoff": 520     # acima disso depende do limite
-    }
-
-    return modelo, bins_woe, metricas, score_params, cutoffs
+    except Exception as e:
+        st.error(f"Erro ao carregar modelos: {e}")
+        st.stop()
