@@ -139,23 +139,17 @@ def criar_faixas(X):
 # ============================================
 
 def preparar_dados(df, bins_woe, modelo):
-    """
-    Pipeline completo:
-    1. Feature engineering
-    2. WOE
-    3. Alinhamento com modelo
-    """
 
-    # 1. Feature engineering
     df = criar_faixas(df)
 
-    # 2. WOE
     df_woe = sc.woebin_ply(df, bins_woe)
 
-    # 3. Garantir mesmas colunas do modelo
     df_woe = df_woe.reindex(
         columns=modelo.feature_names_in_,
         fill_value=0
     )
+
+    # 🔥 ESSENCIAL
+    df_woe = df_woe.fillna(0)
 
     return df_woe
