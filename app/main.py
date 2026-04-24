@@ -322,7 +322,7 @@ with tab2:
     </table>
     """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    #st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("<div class='titulo-secao'>Matriz de Confusión</div>", unsafe_allow_html=True)
 
