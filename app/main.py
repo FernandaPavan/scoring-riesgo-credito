@@ -251,22 +251,55 @@ with tab2:
     """, unsafe_allow_html=True)
 
 # ============================================
+# ============================================
 # TAB 3: PSI
 # ============================================
 with tab3:
     psi_val = metricas_modelo.get("psi", 0)
 
     if psi_val < 0.1:
-        status, cor = "ESTABLE", "#16a34a"
+        status, cor, icon = "ESTABLE", "#16a34a", "✅"
     elif psi_val < 0.25:
-        status, cor = "ALERTA", "#facc15"
+        status, cor, icon = "ALERTA", "#facc15", "⚠️"
     else:
-        status, cor = "INESTABLE", "#dc2626"
+        status, cor, icon = "INESTABLE", "#dc2626", "🚨"
+
+    # ===== CARD (ESTREITO) =====
+    st.markdown("<div style='display:flex; justify-content:center;'>", unsafe_allow_html=True)
+    st.markdown("<div style='width:100%; max-width:320px;'>", unsafe_allow_html=True)
 
     st.markdown(f"""
     <div class='psi-card'>
-        <p>Índice PSI</p>
+        <p style='font-size:13px; color:#64748b;'>Índice PSI</p>
         <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
-        <p style='color:{cor}; font-weight:700;'>{status}</p>
+        <p style='color:{cor}; font-weight:700; font-size:18px;'>
+            {icon} {status}
+        </p>
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ===== ESPAÇO =====
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ===== EXPANDER (MAIOR, MAS NÃO FULL) =====
+    st.markdown("<div style='display:flex; justify-content:center;'>", unsafe_allow_html=True)
+    st.markdown("<div style='width:100%; max-width:520px;'>", unsafe_allow_html=True)
+
+    with st.expander("Ver criterios del PSI"):
+        st.markdown("""
+        **Interpretación del Índice PSI (Population Stability Index):**
+        
+        - **< 0.10** → Población estable  
+        - **0.10 – 0.25** → Posible cambio (alerta)  
+        - **> 0.25** → Cambio significativo (inestabilidad)  
+        
+        **Lectura práctica:**
+        - PSI bajo → dados consistentes com o treino  
+        - PSI alto → possível data drift (mudança de perfil)  
+        """)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
