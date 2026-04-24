@@ -94,7 +94,7 @@ def apply_custom_styles():
         padding: 12px 0;
     }
 
-    /* 🔵 AGORA MESMA COR DO HEADER */
+    /* 🔵 MESMA COR DO HEADER */
     .titulo-secao { 
         text-align: center; 
         color: var(--primary); 
@@ -118,7 +118,7 @@ def apply_custom_styles():
         margin: 10px auto;
         border-collapse: collapse;
         width: 100%;
-        max-width: 500px !important;
+        max-width: 420px !important;  /* 🔥 mais compacto */
         font-size: 14px;
         background-color: white;
         box-shadow: var(--shadow-sm);
@@ -127,7 +127,6 @@ def apply_custom_styles():
         border: 1px solid var(--border);
     }
 
-    /* 🔵 CABEÇALHO AZUL PADRÃO */
     th {
         background-color: var(--primary);
         color: white !important;
@@ -143,26 +142,22 @@ def apply_custom_styles():
         padding: 12px 15px;
         border-bottom: 1px solid #f3f4f6;
         color: #374151;
-    }
-
-    /* 🔥 CENTRALIZA VALORES (coluna direita) */
-    table td:last-child {
-        text-align: center;
-        font-weight: 600;
+        text-align: center;  /* 🔥 centraliza tudo */
     }
 
     table tr td:first-child {
         font-weight: 700;
         color: var(--text-light);
         background-color: var(--bg-light);
-        width: 40%;
+        width: 50%;
+        text-align: center;  /* 🔥 centraliza nome da métrica */
     }
 
     /* ============================= */
     /* 🔲 MATRIZ DE CONFUSÃO        */
     /* ============================= */
     .cm-table {
-        width: 340px !important;
+        width: 320px !important;
         margin: 20px auto !important;
         border-collapse: collapse !important;
         text-align: center;
@@ -173,7 +168,6 @@ def apply_custom_styles():
         border: 1px solid var(--border);
     }
 
-    /* 🔵 CABEÇALHO IGUAL AO PADRÃO */
     .cm-table th {
         background-color: var(--primary);
         color: white !important;
@@ -217,7 +211,7 @@ def apply_custom_styles():
         padding: 25px; 
         border-radius: 16px; 
         width: 100%;
-        max-width: 360px;
+        max-width: 340px;  /* 🔥 levemente menor */
         background-color: white;
         box-shadow: var(--shadow-md);
         margin: 20px auto;
