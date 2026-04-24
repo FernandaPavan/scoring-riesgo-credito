@@ -189,6 +189,7 @@ with tab2:
     """, unsafe_allow_html=True)
 
 # ============================================
+# ============================================
 # TAB 3: PSI (ESTABILIDADE)
 # ============================================
 with tab3:
@@ -201,21 +202,30 @@ with tab3:
     else:
         status, cor, icon = "INESTABLE", "#dc2626", "🚨"
 
+    # ----- CARD PRINCIPAL (LIMPO) -----
     st.markdown(f"""
     <div class='container-performance'>
         <p class='titulo-secao'>Estabilidad de la Población</p>
         <div class='psi-card'>
             <p style='font-size:13px; color:#64748b; margin-bottom:5px;'>Índice PSI</p>
             <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
-            <p style='color:{cor}; font-weight:700; font-size:20px; margin-top:10px;'>{icon} {status}</p>
-            <div style='margin-top:20px; padding:10px; background:#f8fafc; border-radius:8px;'>
-                <p style='font-size:11px; color:#475569; line-height:1.4;'>
-                    <b>Guía:</b><br>
-                    • < 0.10: Estable<br>
-                    • 0.10 - 0.25: Alerta<br>
-                    • > 0.25: Inestable
-                </p>
-            </div>
+            <p style='color:{cor}; font-weight:700; font-size:20px; margin-top:10px;'>
+                {icon} {status}
+            </p>
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # ----- GUIA (SOB DEMANDA) -----
+    with st.expander("Ver critérios do PSI"):
+        st.markdown("""
+        **Interpretação do PSI:**
+        
+        - **< 0.10** → Estável  
+        - **0.10 – 0.25** → Alerta  
+        - **> 0.25** → Instável  
+        
+        **Leitura prática:**
+        - Valores baixos indicam que a população atual é semelhante à de treino  
+        - Valores altos indicam mudança de perfil (drift) e possível perda de performance do modelo
+        """)
