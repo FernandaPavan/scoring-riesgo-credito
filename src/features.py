@@ -54,7 +54,7 @@ def montar_entrada(genero, trabalho, vivienda, ahorro, corriente, finalidad, eda
     return df
 
 # ============================================
-# FEATURE ENGINEERING
+# FEATURE ENGINEERING (CRIAR FAIXAS)
 # ============================================
 def criar_faixas(X):
     X = X.copy()
@@ -64,15 +64,15 @@ def criar_faixas(X):
     X["Duracao"] = X["Duracao"].clip(4, 80)
     X["Valor_credito"] = X["Valor_credito"].clip(250, 100000)
 
-    # Faixa Etária
+    # Binning manual: Transforma números em categorias de texto (Labels)
+    # Importante: Os labels devem ser idênticos aos usados no treinamento do WOE
     X['Faixa_Etaria'] = pd.cut(
         X['Idade'],
-        bins=[0, 25, 35, 45, 60, 120], # Exemplo de bins comuns, ajuste se necessário
+        bins=[0, 25, 35, 45, 60, 120],
         labels=["[0,25]", "(25,35]", "(35,45]", "(45,60]", "(60,120]"],
         include_lowest=True
     ).astype(str)
 
-    # Faixa Duração
     X['Faixa_Duracao'] = pd.cut(
         X['Duracao'],
         bins=[0, 12, 24, 36, 48, 120],
@@ -80,7 +80,6 @@ def criar_faixas(X):
         include_lowest=True
     ).astype(str)
 
-    # Faixa Crédito
     X['Faixa_Credito'] = pd.cut(
         X['Valor_credito'],
         bins=[0, 2000, 5000, 10000, 20000, 1000000],
@@ -88,7 +87,7 @@ def criar_faixas(X):
         include_lowest=True
     ).astype(str)
 
-    # Remove originais para evitar duplicidade ou confusão no WOE
+    # Remove colunas numéricas originais (Essencial para o scorecardpy não duplicar vars)
     X = X.drop(columns=['Idade', 'Duracao', 'Valor_credito'], errors='ignore')
 
     return X
@@ -97,29 +96,27 @@ def criar_faixas(X):
 # PIPELINE COMPLETO
 # ============================================
 def preparar_dados(df, bins_woe, modelo):
-    # 1. Feature engineering (Cria faixas e remove numéricas originais)
+    # 1. Aplica a criação de faixas (Feature Engineering)
     df_feat = criar_faixas(df)
 
-    # 2. Tratamento pré-woe (Garante que strings não sejam nulas)
+    # 2. Tratamento de nulos preventivo
     df_feat = df_feat.fillna("missing")
 
-    # 3. Aplicação do WOE
+    # 3. Aplicação do WOE (scorecardpy)
     try:
-        # Nota: woebin_ply espera que os nomes das colunas em df_feat 
-        # coincidam com as chaves no dicionário bins_woe
+        # Transforma os nomes das faixas/categorias nos seus valores numéricos WOE
         df_woe = sc.woebin_ply(df_feat, bins_woe)
     except Exception as e:
-        raise ValueError(f"Erro ao aplicar WOE: {e}. Verifique se os bins carregados condizem com as faixas criadas.")
+        raise ValueError(f"Erro ao aplicar WOE: {e}. Verifique se os bins_woe contêm as chaves: {df_feat.columns.tolist()}")
 
     # 4. Alinhamento com o Modelo
-    # Reindex garante a ordem das colunas e adiciona zeros se faltar algo
+    # Garante a ordem das colunas exigida pelo Scikit-Learn
     df_final = df_woe.reindex(
         columns=modelo.feature_names_in_,
         fill_value=0
     )
 
-    # 5. Limpeza Final (Segurança absoluta para o sklearn)
-    df_final = df_final.replace([np.inf, -np.inf], 0)
-    df_final = df_final.fillna(0)
+    # 5. Limpeza Final
+    df_final = df_final.replace([np.inf, -np.inf], 0).fillna(0)
 
     return df_final
