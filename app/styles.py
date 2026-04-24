@@ -3,52 +3,81 @@ import streamlit as st
 def apply_custom_styles():
     st.markdown("""
     <style>
-    /* Estilos anteriores mantidos... */
     .block-container { padding-top: 1rem !important; }
 
-    .titulo-azul-centrado {
-        text-align: center;
-        color: #2563eb;
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 20px;
+    /* SIDEBAR ULTRA COMPACTA */
+    [data-testid="stSidebar"] .stWidgetLabel p {
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        margin-bottom: -15px !important; 
+        padding-bottom: 0px !important;
+        color: #4b5563;
     }
 
-    /* Centralização de Tabelas e Conteúdo */
-    .centrar-conteudo {
+    [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div,
+    [data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMin"],
+    [data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMax"],
+    [data-testid="stSidebar"] .stSlider div[role="slider"] {
+        font-size: 12px !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+        margin-bottom: -12px !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stSlider"] {
+        padding-top: 0px !important;
+        margin-top: -10px !important;
+    }
+
+    div.stButton > button {
+        background-color: #2563eb !important;
+        color: white !important;
+        font-weight: 600;
+        border-radius: 6px;
+        height: 30px;
+        width: 90% !important;
+        margin-left: 5%;
+        margin-top: 15px;
+        font-size: 11px;
+    }
+
+    /* RESULTADOS E TABELAS CENTRALIZADAS */
+    .container-performance {
         display: flex;
-        justify-content: center;
-        align-items: center;
         flex-direction: column;
+        align-items: center;
         width: 100%;
     }
 
-    /* Cards de Estabilidade (PSI) */
-    .card-psi {
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        width: 300px;
-        margin: 0 auto;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
+    .titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
+    .score { text-align: center; font-size: 40px; font-weight: 700; }
 
-    .estavel { background-color: #dcfce7; border: 1px solid #166534; color: #166534; }
-    .alerta { background-color: #fef9c3; border: 1px solid #854d0e; color: #854d0e; }
-    .instavel { background-color: #fee2e2; border: 1px solid #991b1b; color: #991b1b; }
-
-    /* Ajuste de Tabelas */
-    .table-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-    }
+    table { margin-left: auto; margin-right: auto; font-size: 13px; text-align: center; border-collapse: collapse; width: 450px; }
+    th { background-color: #2563eb; color: white; padding: 8px; }
+    td { padding: 8px; border-bottom: 1px solid #eee; }
     
-    table {
-        margin-left: auto;
-        margin-right: auto;
-        border-collapse: collapse;
-        width: 500px;
+    .val-pos { 
+        color: #16a34a !important; 
+        font-weight: 800; 
+        background-color: #dcfce7 !important;
+    }
+    .val-neg { 
+        color: #dc2626 !important; 
+        font-weight: 800; 
+        background-color: #fee2e2 !important;
+    }
+
+    /* CARD DE PSI */
+    .psi-card {
+        text-align: center; 
+        border: 1px solid #e2e8f0; 
+        padding: 20px; 
+        border-radius: 12px; 
+        width: 280px;
+        background-color: white;
     }
     </style>
     """, unsafe_allow_html=True)
