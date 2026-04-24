@@ -1,111 +1,64 @@
 import numpy as np
 
-# ============================================
-# SCORE (PDO - padrão bancário)
-# ============================================
-def get_score(prob_default, score_params):
+def calcular_score(prob, params):
+    prob = min(max(prob, 0.0001), 0.9999)
 
-    prob_default = float(np.clip(prob_default, 0.0001, 0.9999))
+    factor = params["pdo"] / np.log(2)
+    offset = params["base_score"] + factor * np.log(params["base_odds"])
 
-    pdo = score_params.get("pdo", 20)
-    base_score = score_params.get("base_score", 600)
-    base_odds = score_params.get("base_odds", 50)
-
-    factor = pdo / np.log(2)
-    offset = base_score - factor * np.log(base_odds)
-
-    odds = (1 - prob_default) / prob_default
-
-    score = int(round(offset + factor * np.log(odds)))
-
-    return max(score, 300)
+    score = int(offset + factor * np.log((1 - prob) / prob))
+    return score
 
 
-# ============================================
-# POLICY DE CRÉDITO (VERSÃO AJUSTADA)
-# ============================================
-def apply_business_policy(score, prob_default, valor_solicitado, cutoffs):
+def aplicar_penalidades(score, trabalho, habitacao, poupanca, corrente):
+    penalidade_score = 0
+    penalidade_limite = 1.0
 
-    reject_cutoff = cutoffs["reject_cutoff"]
-    analysis_cutoff = cutoffs["analysis_cutoff"]
+    if trabalho == 0:
+        penalidade_score -= 80
+        penalidade_limite *= 0.5
 
-    # ============================================
-    # SEGMENTO (define capacidade estrutural)
-    # ============================================
+    if habitacao == "rent":
+        penalidade_score -= 30
+        penalidade_limite *= 0.85
+
+    if poupanca == "little":
+        penalidade_score -= 20
+        penalidade_limite *= 0.9
+
+    if corrente == "little":
+        penalidade_score -= 20
+        penalidade_limite *= 0.9
+
+    return score + penalidade_score, penalidade_limite
+
+
+def classificar(score):
     if score >= 700:
-        segmento = "SUPER PRIME"
-        base_limit = 18000
+        return "SUPER PRIME", 18000
     elif score >= 650:
-        segmento = "PRIME"
-        base_limit = 10000
+        return "PRIME", 10000
     elif score >= 600:
-        segmento = "STANDARD"
-        base_limit = 5000
+        return "STANDARD", 5000
     elif score >= 520:
-        segmento = "NEAR PRIME"
-        base_limit = 2500
+        return "NEAR PRIME", 2500
     elif score >= 460:
-        segmento = "REVIEW"
-        base_limit = 1000
+        return "REVIEW", 1000
     else:
-        segmento = "SUBPRIME"
-        base_limit = 500
+        return "SUBPRIME", 0
 
-    # ============================================
-    # LIMITE (mais estável e controlado)
-    # ============================================
-    risco_factor = (1 - prob_default)
 
-    limite_sugerido = int(max(500, base_limit * (0.7 + risco_factor * 0.6)))
+def decisao_final(score, limite, valor, trabalho, corrente):
+    if trabalho == 0 and corrente == "little":
+        return "RECHAZADO", "✖", "#dc2626", "Riesgo crítico"
 
-    # ============================================
-    # DECISÃO 1: REJEIÇÃO DIRETA
-    # ============================================
-    if score < reject_cutoff:
-        return {
-            "score": score,
-            "segmento": segmento,
-            "limite": limite_sugerido,
-            "status": "RECHAZADO",
-            "icon": "❌",
-            "cor": "#dc2626",
-            "motivo": "Score abaixo do cutoff mínimo"
-        }
+    if score < 460:
+        return "RECHAZADO", "✖", "#dc2626", "Score bajo"
 
-    # ============================================
-    # DECISÃO 2: ANÁLISE
-    # ============================================
-    if score < analysis_cutoff:
-        return {
-            "score": score,
-            "segmento": segmento,
-            "limite": limite_sugerido,
-            "status": "EN ANÁLISIS",
-            "icon": "⚠️",
-            "cor": "#facc15",
-            "motivo": "Perfil em zona intermediária de risco"
-        }
+    if score < 520:
+        return "EN ANÁLISIS", "⚠", "#facc15", "Zona intermedia"
 
-    # ============================================
-    # DECISÃO 3: APROVAÇÃO OU REPROVAÇÃO POR LIMITE
-    # ============================================
-    if valor_solicitado <= limite_sugerido:
-        return {
-            "score": score,
-            "segmento": segmento,
-            "limite": limite_sugerido,
-            "status": "APROBADO",
-            "icon": "✅",
-            "cor": "#16a34a",
-            "motivo": "Dentro do limite aprovado"
-        }
+    if valor <= limite:
+        return "APROBADO", "✔", "#16a34a", "Dentro del límite"
 
-    return {
-        "score": score,
-        "segmento": segmento,
-        "limite": limite_sugerido,
-        "status": "RECHAZADO",
-        "icon": "❌",
-        "cor": "#dc2626",
-        "motivo": "Excede o limite permitido"
-    }
+    return "RECHAZADO", "✖", "#dc2626", "Excede límite"
