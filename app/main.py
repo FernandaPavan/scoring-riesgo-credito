@@ -184,14 +184,17 @@ with tab1:
                 unsafe_allow_html=True
             )
 
-        # GAUGE
+                # GAUGE
         with col_graf:
             st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br><br>", unsafe_allow_html=True)
 
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob * 100,
-                number={'font': {'size': 45}, 'suffix': "%"},
+                number={
+                    'font': {'size': 36},
+                    'suffix': "%"
+                },
                 gauge={
                     "axis": {"range": [0, 100]},
                     "steps": [
@@ -202,8 +205,16 @@ with tab1:
                 }
             ))
 
-            fig.update_layout(height=240, margin=dict(l=10, r=10, t=0, b=0))
-            st.plotly_chart(fig, use_container_width=True)
+            fig.update_layout(
+                height=220,
+                margin=dict(l=0, r=0, t=0, b=0),
+                paper_bgcolor="rgba(0,0,0,0)"
+            )
+
+            # 🔥 CENTRALIZA E REDUZ LARGURA
+            col_center = st.columns([1, 2, 1])
+            with col_center[1]:
+                st.plotly_chart(fig, use_container_width=False)
 
 # ============================================
 # TAB 2: DESEMPENHO
