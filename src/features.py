@@ -25,6 +25,7 @@ MAP_FINALIDAD = {
 # ============================================
 def traduzir_inputs(genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corriente_sel, finalidad_sel):
     try:
+        # Retornamos 'corriente' para manter o padrão hispânico da sua UI
         return (
             MAP_GENERO.get(genero_sel, "male"),
             MAP_TRABAJO.get(trabalho_sel, 0),
@@ -40,12 +41,14 @@ def traduzir_inputs(genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corrient
 # DATAFRAME INICIAL
 # ============================================
 def montar_entrada(genero, trabalho, vivienda, ahorro, corriente, finalidad, edad, duracion, monto):
+    # IMPORTANTE: O nome do argumento aqui deve ser 'corriente' 
+    # para bater com o que o main.py envia.
     df = pd.DataFrame({
         "Genero": [genero],
         "Trabalho": [trabalho],
         "Habitacao": [vivienda],
         "Conta_poupanca": [ahorro],
-        "Conta_corrente": [corriente],
+        "Conta_corrente": [corriente], # Variável interna ajustada
         "Finalidade": [finalidad],
         "Idade": [int(edad)],
         "Duracao": [int(duracion)],
@@ -59,13 +62,12 @@ def montar_entrada(genero, trabalho, vivienda, ahorro, corriente, finalidad, eda
 def criar_faixas(X):
     X = X.copy()
 
-    # Proteção contra valores fora do range original do treino
+    # Proteção contra valores fora do range
     X["Idade"] = X["Idade"].clip(18, 80)
     X["Duracao"] = X["Duracao"].clip(4, 80)
     X["Valor_credito"] = X["Valor_credito"].clip(250, 100000)
 
-    # Binning manual: Transforma números em categorias de texto (Labels)
-    # Importante: Os labels devem ser idênticos aos usados no treinamento do WOE
+    # Binning manual
     X['Faixa_Etaria'] = pd.cut(
         X['Idade'],
         bins=[0, 25, 35, 45, 60, 120],
@@ -87,36 +89,25 @@ def criar_faixas(X):
         include_lowest=True
     ).astype(str)
 
-    # Remove colunas numéricas originais (Essencial para o scorecardpy não duplicar vars)
     X = X.drop(columns=['Idade', 'Duracao', 'Valor_credito'], errors='ignore')
-
     return X
 
 # ============================================
 # PIPELINE COMPLETO
 # ============================================
 def preparar_dados(df, bins_woe, modelo):
-    # 1. Aplica a criação de faixas (Feature Engineering)
     df_feat = criar_faixas(df)
-
-    # 2. Tratamento de nulos preventivo
     df_feat = df_feat.fillna("missing")
 
-    # 3. Aplicação do WOE (scorecardpy)
     try:
-        # Transforma os nomes das faixas/categorias nos seus valores numéricos WOE
         df_woe = sc.woebin_ply(df_feat, bins_woe)
     except Exception as e:
-        raise ValueError(f"Erro ao aplicar WOE: {e}. Verifique se os bins_woe contêm as chaves: {df_feat.columns.tolist()}")
+        raise ValueError(f"Erro ao aplicar WOE: {e}")
 
-    # 4. Alinhamento com o Modelo
-    # Garante a ordem das colunas exigida pelo Scikit-Learn
     df_final = df_woe.reindex(
         columns=modelo.feature_names_in_,
         fill_value=0
     )
 
-    # 5. Limpeza Final
     df_final = df_final.replace([np.inf, -np.inf], 0).fillna(0)
-
     return df_final

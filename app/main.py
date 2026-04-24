@@ -82,7 +82,7 @@ with tab1:
 
         # 2. MONTAGEM DO DATAFRAME
         entrada = montar_entrada(
-            genero, trabalho, vivienda, ahorro, corriente, finalidad,
+            genero, trabalho, vivienda, ahorro, corrente, finalidad,
             edad, duracion, monto
         )
 
@@ -95,20 +95,18 @@ with tab1:
 
         # 5. REGRAS DE NEGÓCIO (Penalizações)
         penalidade = 0
-        if trabalho == 0: penalidade -= 80 # Desempregado
-        if vivienda == "rent": penalidade -= 30 # Aluguel
+        if trabalho == 0: penalidade -= 80 
+        if vivienda == "rent": penalidade -= 30 
         score_final = max(score_base + penalidade, 300)
 
         # 6. DECISÃO FINAL
         decision = apply_business_policy(score_final, prob, monto, cutoffs)
 
-        # EXIBIÇÃO DE RESULTADOS
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado del Análisis</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align:center;font-weight:700;font-size:18px;color:#1e40af;'>{decision['segmento']}</p>", unsafe_allow_html=True)
 
-            # Grid de métricas rápidas
             c1, c2 = st.columns(2)
             c1.markdown(f"<div style='text-align:center;'><small>Probabilidad</small><br><b>{prob:.2%}</b></div>", unsafe_allow_html=True)
             c2.markdown(f"<div style='text-align:center;'><small>Límite Sugerido</small><br><b>${decision['limite']:,.0f}</b></div>", unsafe_allow_html=True)
@@ -137,12 +135,13 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: MÉTRICAS DO MODELO
+# TAB 2: MÉTRICAS DO MODELO (AJUSTADA)
 # ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
 
+    # Usamos f-string bruta (fr) ou escapamos a barra para não quebrar o HTML
     st.markdown(f"""
     <div class='container-performance'>
         <p class='titulo-secao'>Métricas de Performance</p>
@@ -151,15 +150,15 @@ with tab2:
             <tr><td>Accuracy</td><td>{m.get('accuracy', 0):.4f}</td></tr>
             <tr><td>Precision</td><td>{m.get('precision', 0):.4f}</td></tr>
             <tr><td>Recall</td><td>{m.get('recall', 0):.4f}</td></tr>
-            <tr><td>AUC (Area under ROC)</td><td>{m.get('auc', 0):.4f}</td></tr>
-            <tr><td>Gini Coefficient</td><td>{m.get('gini', 0):.4f}</td></tr>
-            <tr><td>KS Statistic</td><td>{m.get('ks', 0):.4f}</td></tr>
+            <tr><td>AUC</td><td>{m.get('auc', 0):.4f}</td></tr>
+            <tr><td>Gini</td><td>{m.get('gini', 0):.4f}</td></tr>
+            <tr><td>KS</td><td>{m.get('ks', 0):.4f}</td></tr>
         </table>
 
         <p class='titulo-secao' style='margin-top:30px;'>Matriz de Confusión</p>
         <table>
             <tr>
-                <th>Real \ Pred</th>
+                <th>Real / Pred</th>
                 <th>Bueno (0)</th>
                 <th>Malo (1)</th>
             </tr>
@@ -178,12 +177,11 @@ with tab2:
     """, unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: PSI (ESTABILIDADE)
+# TAB 3: PSI
 # ============================================
 with tab3:
     psi_val = metricas_modelo.get("psi", 0)
     
-    # Lógica de status baseada no valor do PSI
     if psi_val < 0.1:
         status, cor, icon = "ESTABLE", "#16a34a", "✅"
     elif psi_val < 0.25:
@@ -198,14 +196,6 @@ with tab3:
             <p style='font-size:13px; color:#64748b; margin-bottom:5px;'>Índice PSI</p>
             <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
             <p style='color:{cor}; font-weight:700; font-size:20px; margin-top:10px;'>{icon} {status}</p>
-            <div style='margin-top:20px; padding:10px; background:#f8fafc; border-radius:8px;'>
-                <p style='font-size:11px; color:#475569; line-height:1.4;'>
-                    <b>Guía de Interpretación:</b><br>
-                    • < 0.10: Sin cambios significativos.<br>
-                    • 0.10 - 0.25: Cambio moderado detectado.<br>
-                    • > 0.25: Cambio significativo en la población.
-                </p>
-            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
