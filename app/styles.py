@@ -94,9 +94,10 @@ def apply_custom_styles():
         padding: 12px 0;
     }
 
+    /* 🔵 AGORA MESMA COR DO HEADER */
     .titulo-secao { 
         text-align: center; 
-        color: var(--secondary); 
+        color: var(--primary); 
         font-size: 18px; 
         font-weight: 700;
         margin-top: 5px;
@@ -126,6 +127,7 @@ def apply_custom_styles():
         border: 1px solid var(--border);
     }
 
+    /* 🔵 CABEÇALHO AZUL PADRÃO */
     th {
         background-color: var(--primary);
         color: white !important;
@@ -134,12 +136,19 @@ def apply_custom_styles():
         text-transform: uppercase;
         font-size: 11px;
         letter-spacing: 0.05em;
+        text-align: center;
     }
 
     td {
         padding: 12px 15px;
         border-bottom: 1px solid #f3f4f6;
         color: #374151;
+    }
+
+    /* 🔥 CENTRALIZA VALORES (coluna direita) */
+    table td:last-child {
+        text-align: center;
+        font-weight: 600;
     }
 
     table tr td:first-child {
@@ -164,9 +173,9 @@ def apply_custom_styles():
         border: 1px solid var(--border);
     }
 
+    /* 🔵 CABEÇALHO IGUAL AO PADRÃO */
     .cm-table th {
-        text-align: center;
-        background-color: var(--secondary);
+        background-color: var(--primary);
         color: white !important;
         padding: 10px;
         font-size: 12px;
@@ -183,7 +192,6 @@ def apply_custom_styles():
         background-color: white !important;
         font-weight: 700;
         color: #374151;
-        width: auto !important;
     }
 
     .cm-table .val-pos { 
@@ -229,7 +237,7 @@ def apply_custom_styles():
         border-radius: 10px;
         box-shadow: var(--shadow-sm);
         background-color: white;
-        width: 100% !important;  /* 🔥 ESSENCIAL PRA ALINHAR COM O CARD */
+        width: 100% !important;
     }
 
     div[data-testid="stExpander"] summary {
