@@ -1,6 +1,6 @@
 import streamlit as st
 
-def apply_styles():
+def apply_custom_styles():
     st.markdown("""
     <style>
     .block-container { padding-top: 1rem !important; }
@@ -28,8 +28,18 @@ def apply_styles():
         font-size: 12px;
     }
 
-    .titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
-    .score { text-align: center; font-size: 40px; font-weight: 700; }
+    .titulo-secao {
+        text-align: center;
+        color: #2563eb;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .score {
+        text-align: center;
+        font-size: 40px;
+        font-weight: 700;
+    }
 
     table {
         margin-left: auto;
@@ -40,10 +50,25 @@ def apply_styles():
         width: 450px;
     }
 
-    th { background-color: #2563eb; color: white; padding: 8px; }
-    td { padding: 8px; border-bottom: 1px solid #eee; }
+    th {
+        background-color: #2563eb;
+        color: white;
+        padding: 8px;
+    }
 
-    .val-pos { color: #16a34a; font-weight: 800; }
-    .val-neg { color: #dc2626; font-weight: 800; }
+    td {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .val-pos {
+        color: #16a34a;
+        font-weight: 800;
+    }
+
+    .val-neg {
+        color: #dc2626;
+        font-weight: 800;
+    }
     </style>
     """, unsafe_allow_html=True)
