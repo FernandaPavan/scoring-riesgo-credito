@@ -118,7 +118,7 @@ def apply_custom_styles():
         margin: 10px auto;
         border-collapse: collapse;
         width: 100%;
-        max-width: 420px !important;  /* 🔥 mais compacto */
+        max-width: 420px !important;
         font-size: 14px;
         background-color: white;
         box-shadow: var(--shadow-sm);
@@ -142,15 +142,16 @@ def apply_custom_styles():
         padding: 12px 15px;
         border-bottom: 1px solid #f3f4f6;
         color: #374151;
-        text-align: center;  /* 🔥 centraliza tudo */
+        text-align: center;  /* 🔥 centraliza valores */
     }
 
+    /* 🔥 centraliza também o nome da métrica */
     table tr td:first-child {
         font-weight: 700;
         color: var(--text-light);
         background-color: var(--bg-light);
         width: 50%;
-        text-align: center;  /* 🔥 centraliza nome da métrica */
+        text-align: center;
     }
 
     /* ============================= */
@@ -203,15 +204,15 @@ def apply_custom_styles():
     }
 
     /* ============================= */
-    /* 📈 CARD PSI                  */
+    /* 📈 CARD PSI (MENOR)          */
     /* ============================= */
     .psi-card {
         text-align: center; 
         border: 1px solid var(--border); 
-        padding: 25px; 
+        padding: 22px; 
         border-radius: 16px; 
         width: 100%;
-        max-width: 340px;  /* 🔥 levemente menor */
+        max-width: 300px;  /* 🔥 menor ainda */
         background-color: white;
         box-shadow: var(--shadow-md);
         margin: 20px auto;
