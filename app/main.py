@@ -98,18 +98,18 @@ with tab1:
 # Abas de métricas seguem conforme o código anterior...
 
 # ============================================
-# TAB 2 - MÉTRICAS (CORRIGIDA)
+# ============================================
+# TAB 2 - MÉTRICAS (DESEMPEÑO)
 # ============================================
 with tab2:
-
+    st.markdown("<p class='titulo-azul-centrado'>Desempeño del Modelo</p>", unsafe_allow_html=True)
+    
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
 
+    # Centralizando as tabelas
     st.markdown(f"""
-    <div class='container-performance'>
-
-        <p class='titulo-secao'>Métricas del Modelo</p>
-
+    <div class='centrar-conteudo'>
         <table>
             <tr><th>Métrica</th><th>Valor</th></tr>
             <tr><td>Accuracy</td><td>{m['accuracy']:.4f}</td></tr>
@@ -120,7 +120,7 @@ with tab2:
             <tr><td>KS</td><td>{m['ks']:.4f}</td></tr>
         </table>
 
-        <p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p>
+        <p class='titulo-secao' style='margin-top:30px;'>Matriz de Confusión</p>
 
         <table>
             <tr>
@@ -139,18 +139,35 @@ with tab2:
                 <td class='val-pos'>{cm['TP']}</td>
             </tr>
         </table>
-
     </div>
     """, unsafe_allow_html=True)
 
 # ============================================
-# TAB 3 - PSI
+# TAB 3 - PSI (ESTABILIDAD)
 # ============================================
 with tab3:
-
+    st.markdown("<p class='titulo-azul-centrado'>Estabilidad del Modelo</p>", unsafe_allow_html=True)
+    
     psi = metricas_modelo.get("psi", 0)
 
-    status = "ESTABLE" if psi < 0.1 else "ALERTA" if psi < 0.25 else "INESTABLE"
+    # Lógica de Cores e Labels
+    if psi < 0.1:
+        classe_card = "estavel"
+        status_texto = "ESTABLE"
+    elif psi < 0.25:
+        classe_card = "alerta"
+        status_texto = "ALERTA"
+    else:
+        classe_card = "instavel"
+        status_texto = "INESTABLE"
 
-    st.markdown("### Estabilidad del Modelo")
-    st.metric("PSI", f"{psi:.4f}", status)
+    # Renderização do Card Centralizado
+    st.markdown(f"""
+    <div class='centrar-conteudo'>
+        <div class='card-psi {classe_card}'>
+            <p style='margin:0; font-size:14px; font-weight:bold;'>PSI</p>
+            <p style='margin:10px 0; font-size:48px; font-weight:800;'>{psi:.4f}</p>
+            <p style='margin:0; font-size:18px; font-weight:700;'>↑ {status_texto}</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)

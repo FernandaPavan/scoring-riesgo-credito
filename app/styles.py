@@ -3,75 +3,52 @@ import streamlit as st
 def apply_custom_styles():
     st.markdown("""
     <style>
+    /* Estilos anteriores mantidos... */
     .block-container { padding-top: 1rem !important; }
 
-    [data-testid="stSidebar"] .stWidgetLabel p {
-        font-size: 10px !important;
-        font-weight: 600 !important;
-        margin-bottom: -15px !important;
-        color: #4b5563;
-    }
-
-    [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div {
-        font-size: 11px !important;
-    }
-
-    [data-testid="stSidebar"] .stSlider div {
-        font-size: 11px !important;
-    }
-
-    div.stButton > button {
-        background-color: #2563eb !important;
-        color: white !important;
-        border-radius: 6px;
-        width: 100%;
-        font-size: 12px;
-    }
-
-    .titulo-secao {
+    .titulo-azul-centrado {
         text-align: center;
         color: #2563eb;
-        font-size: 18px;
+        font-size: 24px;
         font-weight: 700;
+        margin-bottom: 20px;
     }
 
-    .score {
+    /* Centralização de Tabelas e Conteúdo */
+    .centrar-conteudo {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    /* Cards de Estabilidade (PSI) */
+    .card-psi {
+        padding: 20px;
+        border-radius: 10px;
         text-align: center;
-        font-size: 40px;
-        font-weight: 700;
+        width: 300px;
+        margin: 0 auto;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
+    .estavel { background-color: #dcfce7; border: 1px solid #166534; color: #166534; }
+    .alerta { background-color: #fef9c3; border: 1px solid #854d0e; color: #854d0e; }
+    .instavel { background-color: #fee2e2; border: 1px solid #991b1b; color: #991b1b; }
+
+    /* Ajuste de Tabelas */
+    .table-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    
     table {
         margin-left: auto;
         margin-right: auto;
-        font-size: 13px;
-        text-align: center;
         border-collapse: collapse;
-        width: 450px;
+        width: 500px;
     }
-
-    th {
-        background-color: #2563eb;
-        color: white;
-        padding: 8px;
-    }
-
-    td {
-        padding: 8px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .val-pos {
-        color: #166534;
-        font-weight: 800;
-        background-color: #dcfce7;
-    }
-
-    .val-neg {
-        color: #991b1b;
-        font-weight: 800;
-        background-color: #fee2e2;
-    }
-
     </style>
     """, unsafe_allow_html=True)
