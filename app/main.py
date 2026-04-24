@@ -247,6 +247,7 @@ with tab1:
             )
 
                 # GAUGE
+                # GAUGE
         with col_graf:
             # título centralizado
             st.markdown(
@@ -255,33 +256,34 @@ with tab1:
             )
 
             fig = go.Figure(go.Indicator(
-    mode="gauge+number",
-    value=prob * 100,
-    number={
-        "font": {"size": 26},
-        "suffix": "%"
-    },
-    gauge={
-        "axis": {
-            "range": [0, 100],
-            "tickmode": "linear",
-            "tick0": 0,
-            "dtick": 20,
-            "tickwidth": 1,
-            "tickcolor": "gray",
-            "tickfont": {"size": 12}
-        },
-        "bar": {
-            "thickness": 0.25
-        },
-        "steps": [
-            {"range": [0, 40], "color": "#16a34a"},
-            {"range": [40, 70], "color": "#facc15"},
-            {"range": [70, 100], "color": "#dc2626"},
-        ]
-    }
-))
+                mode="gauge+number",
+                value=prob * 100,
+                number={
+                    "font": {"size": 26},
+                    "suffix": "%"
+                },
+                gauge={
+                    "axis": {
+                        "range": [0, 100],
+                        "tickmode": "linear",
+                        "tick0": 0,
+                        "dtick": 20,
+                        "tickwidth": 1,
+                        "tickcolor": "gray",
+                        "tickfont": {"size": 12}
+                    },
+                    "bar": {
+                        "thickness": 0.25
+                    },
+                    "steps": [
+                        {"range": [0, 40], "color": "#16a34a"},
+                        {"range": [40, 70], "color": "#facc15"},
+                        {"range": [70, 100], "color": "#dc2626"},
+                    ]
+                }
+            ))
 
+            # mantém o tamanho solicitado
             fig.update_layout(
                 width=380,
                 height=280,
@@ -289,10 +291,10 @@ with tab1:
                 paper_bgcolor="rgba(0,0,0,0)"
             )
 
-            # gráfico centralizado com o título
-            col_left, col_mid, col_right = st.columns([1, 2, 1])
+            # força centralização perfeita
+            col_esq, col_centro, col_dir = st.columns([1, 3, 1])
 
-            with col_mid:
+            with col_centro:
                 st.plotly_chart(
                     fig,
                     use_container_width=False,
