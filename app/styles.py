@@ -62,13 +62,16 @@ def apply_custom_styles():
     }
 
     .val-pos {
-        color: #16a34a;
+        color: #166534;
         font-weight: 800;
+        background-color: #dcfce7;
     }
 
     .val-neg {
-        color: #dc2626;
+        color: #991b1b;
         font-weight: 800;
+        background-color: #fee2e2;
     }
+
     </style>
     """, unsafe_allow_html=True)

@@ -73,61 +73,24 @@ with tab1:
 
     if btn:
 
-        # ============================================
-        # TRADUÇÃO INPUTS
-        # ============================================
         genero, trabajo, vivienda, ahorro, corriente, finalidad = traduzir_inputs(
-            genero_sel,
-            trabajo_sel,
-            vivienda_sel,
-            ahorro_sel,
-            corriente_sel,
-            finalidad_sel
+            genero_sel, trabajo_sel, vivienda_sel,
+            ahorro_sel, corriente_sel, finalidade_sel
         )
 
-        # ============================================
-        # MONTA DATAFRAME
-        # ============================================
         entrada = montar_entrada(
-            genero,
-            trabajo,
-            vivienda,
-            ahorro,
-            corriente,
-            finalidad,
-            edad,
-            duracion,
-            monto
+            genero, trabajo, vivienda, ahorro, corrente,
+            finalidade, edad, duracion, monto
         )
 
-        # ============================================
-        # PIPE (features + WOE)
-        # ============================================
         entrada_woe = preparar_dados(entrada, bins_woe, modelo)
 
-        # ============================================
-        # PROBABILIDADE
-        # ============================================
         prob = modelo.predict_proba(entrada_woe)[0][1]
 
-        # ============================================
-        # SCORE
-        # ============================================
         score = get_score(prob, score_params)
 
-        # ============================================
-        # POLICY
-        # ============================================
-        decision = apply_business_policy(
-            score,
-            prob,
-            monto,
-            cutoffs
-        )
+        decision = apply_business_policy(score, prob, monto, cutoffs)
 
-        # ============================================
-        # RESULTADOS
-        # ============================================
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div>", unsafe_allow_html=True)
 
@@ -165,9 +128,6 @@ with tab1:
                 unsafe_allow_html=True
             )
 
-        # ============================================
-        # GAUGE
-        # ============================================
         with col_graf:
             st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div>", unsafe_allow_html=True)
 
@@ -189,27 +149,50 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2 - MÉTRICAS
+# TAB 2 - MÉTRICAS (CORRIGIDA)
 # ============================================
 with tab2:
 
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
 
-    st.markdown("### Métricas del Modelo")
+    st.markdown(f"""
+    <div class='container-performance'>
 
-    st.write({
-        "Accuracy": m["accuracy"],
-        "Precision": m["precision"],
-        "Recall": m["recall"],
-        "AUC": m["auc"],
-        "Gini": m["gini"],
-        "KS": m["ks"]
-    })
+        <p class='titulo-secao'>Métricas del Modelo</p>
 
-    st.markdown("### Matriz de Confusión")
+        <table>
+            <tr><th>Métrica</th><th>Valor</th></tr>
+            <tr><td>Accuracy</td><td>{m['accuracy']:.4f}</td></tr>
+            <tr><td>Precision</td><td>{m['precision']:.4f}</td></tr>
+            <tr><td>Recall</td><td>{m['recall']:.4f}</td></tr>
+            <tr><td>AUC</td><td>{m['auc']:.4f}</td></tr>
+            <tr><td>Gini</td><td>{m['gini']:.4f}</td></tr>
+            <tr><td>KS</td><td>{m['ks']:.4f}</td></tr>
+        </table>
 
-    st.write(cm)
+        <p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p>
+
+        <table>
+            <tr>
+                <th>Real \\ Pred</th>
+                <th>Bueno (0)</th>
+                <th>Malo (1)</th>
+            </tr>
+            <tr>
+                <td>Bueno (0)</td>
+                <td class='val-pos'>{cm['TN']}</td>
+                <td class='val-neg'>{cm['FP']}</td>
+            </tr>
+            <tr>
+                <td>Malo (1)</td>
+                <td class='val-neg'>{cm['FN']}</td>
+                <td class='val-pos'>{cm['TP']}</td>
+            </tr>
+        </table>
+
+    </div>
+    """, unsafe_allow_html=True)
 
 # ============================================
 # TAB 3 - PSI
@@ -218,8 +201,7 @@ with tab3:
 
     psi = metricas_modelo.get("psi", 0)
 
-    status = "ESTABLE" if psi < 0.1 else "ALERTA" if psi < 0.25 else "INestable"
+    status = "ESTABLE" if psi < 0.1 else "ALERTA" if psi < 0.25 else "INESTABLE"
 
     st.markdown("### Estabilidad del Modelo")
-
     st.metric("PSI", f"{psi:.4f}", status)
