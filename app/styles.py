@@ -3,46 +3,47 @@ import streamlit as st
 def apply_custom_styles():
     st.markdown("""
     <style>
-    /* Configuração Geral */
-    .block-container { padding-top: 1rem !important; }
+    /* Configuração Geral e Fontes */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    
+    .block-container { 
+        padding-top: 1.5rem !important; 
+        font-family: 'Inter', sans-serif;
+    }
 
     /* SIDEBAR ULTRA COMPACTA */
     [data-testid="stSidebar"] .stWidgetLabel p {
-        font-size: 10px !important;
-        font-weight: 600 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
         margin-bottom: -15px !important; 
-        padding-bottom: 0px !important;
         color: #4b5563;
     }
 
-    [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div,
-    [data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMin"],
-    [data-testid="stSidebar"] .stSlider div[data-testid="stTickBarMax"],
-    [data-testid="stSidebar"] .stSlider div[role="slider"] {
-        font-size: 12px !important;
+    [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div {
+        min-height: 30px !important;
+        font-size: 13px !important;
     }
 
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
-        padding-top: 0px !important;
-        padding-bottom: 0px !important;
-        margin-bottom: -12px !important;
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        gap: 0.5rem !important;
     }
 
-    [data-testid="stSidebar"] [data-testid="stSlider"] {
-        padding-top: 0px !important;
-        margin-top: -10px !important;
-    }
-
+    /* Botão Principal */
     div.stButton > button {
         background-color: #2563eb !important;
         color: white !important;
-        font-weight: 600;
-        border-radius: 6px;
-        height: 30px;
-        width: 90% !important;
-        margin-left: 5%;
-        margin-top: 15px;
-        font-size: 11px;
+        font-weight: 700;
+        border-radius: 8px;
+        height: 35px;
+        width: 100% !important;
+        margin-top: 10px;
+        border: none;
+        transition: all 0.2s;
+    }
+    
+    div.stButton > button:hover {
+        background-color: #1d4ed8 !important;
+        transform: translateY(-1px);
     }
 
     /* CONTAINER CENTRAL */
@@ -51,83 +52,87 @@ def apply_custom_styles():
         flex-direction: column;
         align-items: center;
         width: 100%;
-        gap: 15px;
+        gap: 10px;
+        padding: 10px 0;
     }
 
     .titulo-secao { 
         text-align: center; 
-        color: #2563eb; 
+        color: #1e40af; 
         font-size: 18px; 
         font-weight: 700;
-        margin-bottom: 10px;
+        margin-top: 5px;
     }
 
     .score { 
         text-align: center; 
-        font-size: 40px; 
-        font-weight: 700;
+        font-size: 42px; 
+        font-weight: 800;
         color: #1e40af;
+        line-height: 1;
     }
 
-    /* 🔥 TABELA PADRÃO - Melhorado para Streamlit */
+    /* 🔥 TABELAS ESTILIZADAS */
     table {
-        margin-left: auto;
-        margin-right: auto;
+        margin: 10px auto;
         border-collapse: collapse;
-        width: 450px !important;
+        width: 100%;
+        max-width: 480px !important;
         font-size: 14px;
         background-color: white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
         overflow: hidden;
+        border: 1px solid #e5e7eb;
     }
 
     th {
         background-color: #2563eb;
         color: white !important;
-        padding: 12px;
-        font-weight: 700;
-        text-align: center;
+        padding: 12px 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.05em;
     }
 
     td {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        font-weight: 600;
-        text-align: center;
+        padding: 12px 15px;
+        border-bottom: 1px solid #f3f4f6;
         color: #374151;
     }
 
-    /* Alinhamento da primeira coluna de métricas */
     table tr td:first-child {
-        text-align: left;
-        padding-left: 20px;
+        font-weight: 700;
         color: #4b5563;
+        background-color: #f9fafb;
+        width: 40%;
     }
 
-    /* 🔥 MATRIZ DE CONFUSÃO (DESTAQUE REAL) */
+    /* MATRIZ DE CONFUSÃO - CORES */
     .val-pos { 
         background-color: #dcfce7 !important;
         color: #166534 !important; 
-        font-weight: 900 !important;
+        font-weight: 800 !important;
     }
 
     .val-neg { 
         background-color: #fee2e2 !important;
         color: #991b1b !important; 
-        font-weight: 900 !important;
+        font-weight: 800 !important;
     }
 
     /* CARD PSI */
     .psi-card {
         text-align: center; 
-        border: 1px solid #e2e8f0; 
-        padding: 20px; 
-        border-radius: 12px; 
-        width: 320px;
+        border: 1px solid #e5e7eb; 
+        padding: 25px; 
+        border-radius: 16px; 
+        width: 100%;
+        max-width: 350px;
         background-color: white;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        margin: 10px auto;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        margin: 20px auto;
     }
 
     </style>

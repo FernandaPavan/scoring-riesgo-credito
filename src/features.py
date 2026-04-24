@@ -31,7 +31,7 @@ def traduzir_inputs(genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corrient
             MAP_VIVIENDA.get(vivienda_sel, "rent"),
             MAP_AHORRO.get(ahorro_sel, "little"),
             MAP_CORRIENTE.get(corriente_sel, "little"),
-            MAP_FINALIDAD.get(finalidad_sel, "other")
+            MAP_FINALIDAD.get(finalidad_sel, "vacation/others")
         )
     except Exception as e:
         raise ValueError(f"Erro na tradução de inputs: {e}")
@@ -39,11 +39,10 @@ def traduzir_inputs(genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corrient
 # ============================================
 # DATAFRAME INICIAL
 # ============================================
-def montar_entrada(genero, trabajo, vivienda, ahorro, corriente, finalidad, edad, duracion, monto):
-
+def montar_entrada(genero, trabalho, vivienda, ahorro, corriente, finalidad, edad, duracion, monto):
     df = pd.DataFrame({
         "Genero": [genero],
-        "Trabalho": [trabajo],
+        "Trabalho": [trabalho],
         "Habitacao": [vivienda],
         "Conta_poupanca": [ahorro],
         "Conta_corrente": [corriente],
@@ -52,7 +51,6 @@ def montar_entrada(genero, trabajo, vivienda, ahorro, corriente, finalidad, edad
         "Duracao": [int(duracion)],
         "Valor_credito": [float(monto)]
     })
-
     return df
 
 # ============================================
@@ -61,7 +59,7 @@ def montar_entrada(genero, trabajo, vivienda, ahorro, corriente, finalidad, edad
 def criar_faixas(X):
     X = X.copy()
 
-    # Proteção contra valores fora do range
+    # Proteção contra valores fora do range original do treino
     X["Idade"] = X["Idade"].clip(18, 80)
     X["Duracao"] = X["Duracao"].clip(4, 80)
     X["Valor_credito"] = X["Valor_credito"].clip(250, 100000)
@@ -69,25 +67,28 @@ def criar_faixas(X):
     # Faixa Etária
     X['Faixa_Etaria'] = pd.cut(
         X['Idade'],
-        bins=[18, 29, 39, 49, 59, 69, 80],
+        bins=[0, 25, 35, 45, 60, 120], # Exemplo de bins comuns, ajuste se necessário
+        labels=["[0,25]", "(25,35]", "(35,45]", "(45,60]", "(60,120]"],
         include_lowest=True
     ).astype(str)
 
     # Faixa Duração
     X['Faixa_Duracao'] = pd.cut(
         X['Duracao'],
-        bins=[4, 16, 28, 40, 52, 64, 80],
+        bins=[0, 12, 24, 36, 48, 120],
+        labels=["[0,12]", "(12,24]", "(24,36]", "(36,48]", "(48,120]"],
         include_lowest=True
     ).astype(str)
 
     # Faixa Crédito
     X['Faixa_Credito'] = pd.cut(
         X['Valor_credito'],
-        bins=[250, 1250, 2250, 3250, 4250, 5250, 100000],
+        bins=[0, 2000, 5000, 10000, 20000, 1000000],
+        labels=["[0,2000]", "(2000,5000]", "(5000,10000]", "(10000,20000]", "(20000,inf]"],
         include_lowest=True
     ).astype(str)
 
-    # Remove originais
+    # Remove originais para evitar duplicidade ou confusão no WOE
     X = X.drop(columns=['Idade', 'Duracao', 'Valor_credito'], errors='ignore')
 
     return X
@@ -96,27 +97,29 @@ def criar_faixas(X):
 # PIPELINE COMPLETO
 # ============================================
 def preparar_dados(df, bins_woe, modelo):
+    # 1. Feature engineering (Cria faixas e remove numéricas originais)
+    df_feat = criar_faixas(df)
 
-    # 1. Feature engineering
-    df = criar_faixas(df)
+    # 2. Tratamento pré-woe (Garante que strings não sejam nulas)
+    df_feat = df_feat.fillna("missing")
 
-    # 2. Tratamento pré-woe (segurança)
-    df = df.fillna("missing")
-
-    # 3. WOE
+    # 3. Aplicação do WOE
     try:
-        df_woe = sc.woebin_ply(df, bins_woe)
+        # Nota: woebin_ply espera que os nomes das colunas em df_feat 
+        # coincidam com as chaves no dicionário bins_woe
+        df_woe = sc.woebin_ply(df_feat, bins_woe)
     except Exception as e:
-        raise ValueError(f"Erro no WOE: {e}")
+        raise ValueError(f"Erro ao aplicar WOE: {e}. Verifique se os bins carregados condizem com as faixas criadas.")
 
-    # 4. Garantir colunas do modelo
-    df_woe = df_woe.reindex(
+    # 4. Alinhamento com o Modelo
+    # Reindex garante a ordem das colunas e adiciona zeros se faltar algo
+    df_final = df_woe.reindex(
         columns=modelo.feature_names_in_,
         fill_value=0
     )
 
-    # 5. 🔥 CRÍTICO: remover NaN final
-    df_woe = df_woe.replace([np.inf, -np.inf], 0)
-    df_woe = df_woe.fillna(0)
+    # 5. Limpeza Final (Segurança absoluta para o sklearn)
+    df_final = df_final.replace([np.inf, -np.inf], 0)
+    df_final = df_final.fillna(0)
 
-    return df_woe
+    return df_final
