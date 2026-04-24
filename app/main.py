@@ -221,9 +221,9 @@ with tab3:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ----- EXPANDER CENTRALIZADO -----
-    col1, col2, col3 = st.columns([1, 2, 1])
+col1, col2, col3 = st.columns([1, 2, 1])
 
-    with col2:
+with col2:
     with st.expander("Ver criterios del PSI"):
         st.markdown("""
         **Interpretación del Índice PSI (Population Stability Index):**
