@@ -133,7 +133,7 @@ with tab1:
         # GAUGE
 with col_graf:
     st.markdown(
-        "<div style='text-align:center;'>"
+        "<div style='text-align:right;'>"
         "<div class='titulo-secao'>Indicador de Riesgo</div>"
         "</div><br>",
         unsafe_allow_html=True
