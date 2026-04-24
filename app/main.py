@@ -283,8 +283,8 @@ with tab1:
 ))
 
             fig.update_layout(
-                width=300,
-                height=240,
+                width=380,
+                height=280,
                 margin=dict(l=0, r=0, t=10, b=0),
                 paper_bgcolor="rgba(0,0,0,0)"
             )
