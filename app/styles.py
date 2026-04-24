@@ -5,7 +5,7 @@ def apply_custom_styles():
     <style>
 
     /* ============================= */
-    /* 🎨 DESIGN SYSTEM              */
+    /* 🎨 DESIGN SYSTEM (VARIÁVEIS)  */
     /* ============================= */
     :root {
         --primary: #2563eb;
@@ -61,7 +61,7 @@ def apply_custom_styles():
     }
 
     /* ============================= */
-    /* 🔘 BOTÃO                     */
+    /* 🔘 BOTÃO PRINCIPAL           */
     /* ============================= */
     div.stButton > button {
         background-color: var(--primary) !important;
@@ -83,7 +83,7 @@ def apply_custom_styles():
     }
 
     /* ============================= */
-    /* 📦 CONTAINER CENTRAL         */
+    /* 📦 CONTAINERS                */
     /* ============================= */
     .container-performance {
         display: flex;
@@ -99,6 +99,7 @@ def apply_custom_styles():
         color: var(--secondary); 
         font-size: 18px; 
         font-weight: 700;
+        margin-top: 5px;
     }
 
     .score { 
@@ -106,95 +107,141 @@ def apply_custom_styles():
         font-size: 44px; 
         font-weight: 800;
         color: var(--secondary);
+        line-height: 1;
     }
 
     /* ============================= */
-    /* 📊 TABELAS                   */
+    /* 📊 TABELAS GERAIS           */
     /* ============================= */
     table {
-        margin: 10px auto !important;
+        margin: 10px auto;
+        border-collapse: collapse;
         width: 100%;
-        max-width: 450px !important;
+        max-width: 500px !important;
         font-size: 14px;
         background-color: white;
+        box-shadow: var(--shadow-sm);
         border-radius: var(--radius);
         overflow: hidden;
         border: 1px solid var(--border);
-        box-shadow: var(--shadow-sm);
     }
 
     th {
         background-color: var(--primary);
         color: white !important;
-        padding: 12px;
+        padding: 12px 15px;
+        font-weight: 600;
+        text-transform: uppercase;
         font-size: 11px;
+        letter-spacing: 0.05em;
     }
 
     td {
-        padding: 10px;
+        padding: 12px 15px;
         border-bottom: 1px solid #f3f4f6;
+        color: #374151;
+    }
+
+    table tr td:first-child {
+        font-weight: 700;
+        color: var(--text-light);
+        background-color: var(--bg-light);
+        width: 40%;
     }
 
     /* ============================= */
-    /* 🔲 MATRIZ                    */
+    /* 🔲 MATRIZ DE CONFUSÃO        */
     /* ============================= */
     .cm-table {
-        max-width: 360px !important;
-        margin: 10px auto !important;
+        width: 340px !important;
+        margin: 20px auto !important;
+        border-collapse: collapse !important;
+        text-align: center;
+        background-color: white;
         border-radius: 14px;
+        overflow: hidden;
         box-shadow: var(--shadow-md);
+        border: 1px solid var(--border);
+    }
+
+    .cm-table th {
+        text-align: center;
+        background-color: var(--secondary);
+        color: white !important;
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .cm-table td {
+        text-align: center;
+        padding: 16px;
+        font-size: 16px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .cm-table tr td:first-child {
+        background-color: white !important;
+        font-weight: 700;
+        color: #374151;
+        width: auto !important;
+    }
+
+    .cm-table .val-pos { 
+        background-color: #dcfce7 !important;
+        color: #166534 !important; 
+        font-weight: 800 !important;
+        font-size: 18px;
+    }
+
+    .cm-table .val-neg { 
+        background-color: #fee2e2 !important;
+        color: #991b1b !important; 
+        font-weight: 800 !important;
+        font-size: 18px;
     }
 
     /* ============================= */
     /* 📈 CARD PSI                  */
     /* ============================= */
     .psi-card {
+        text-align: center; 
+        border: 1px solid var(--border); 
+        padding: 25px; 
+        border-radius: 16px; 
+        width: 100%;
         max-width: 360px;
-        margin: 10px auto;
-        padding: 25px;
-        border-radius: 16px;
         background-color: white;
-        border: 1px solid var(--border);
         box-shadow: var(--shadow-md);
-        text-align: center;
+        margin: 20px auto;
+        transition: all 0.2s ease;
+    }
+
+    .psi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px rgba(0,0,0,0.12);
     }
 
     /* ============================= */
-    /* 📂 EXPANDER (PERFEITO)       */
+    /* 📂 EXPANDER                  */
     /* ============================= */
     div[data-testid="stExpander"] {
-        max-width: 600px !important;   /* 🔥 largura igual da imagem */
-        margin: 25px auto !important;  /* 🔥 centralizado */
-        border-radius: 12px !important;
-        border: 1px solid var(--border) !important;
-        background-color: white !important;
-        box-shadow: var(--shadow-sm) !important;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow-sm);
+        background-color: white;
+        width: 100% !important;  /* 🔥 ESSENCIAL PRA ALINHAR COM O CARD */
     }
 
     div[data-testid="stExpander"] summary {
-        font-weight: 600 !important;
-        color: var(--secondary) !important;
-        padding: 12px 16px !important;
-        font-size: 14px !important;
+        font-weight: 600;
+        color: var(--secondary);
+        font-size: 14px;
     }
 
-    /* Conteúdo interno */
-    div[data-testid="stExpander"] .stMarkdown {
-        padding: 15px 22px !important;
-    }
-
-    /* Texto */
     div[data-testid="stExpander"] p {
-        font-size: 13.5px !important;
-        color: #475569 !important;
-        line-height: 1.6 !important;
-        margin-bottom: 10px !important;
-    }
-
-    div[data-testid="stExpander"] li {
-        font-size: 13.5px !important;
-        margin-bottom: 6px !important;
-        color: #334155 !important;
+        font-size: 13px;
+        color: var(--text-light);
+        line-height: 1.5;
     }
 
     </style>
