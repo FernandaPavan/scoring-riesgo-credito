@@ -222,13 +222,14 @@ def apply_custom_styles():
     }
 
     /* ============================= */
-    /* 📂 EXPANDER (NOVO)           */
+    /* 📂 EXPANDER                  */
     /* ============================= */
     div[data-testid="stExpander"] {
         border: 1px solid var(--border);
         border-radius: 10px;
         box-shadow: var(--shadow-sm);
         background-color: white;
+        width: 100% !important;  /* 🔥 ESSENCIAL PRA ALINHAR COM O CARD */
     }
 
     div[data-testid="stExpander"] summary {
