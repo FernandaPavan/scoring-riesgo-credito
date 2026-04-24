@@ -189,6 +189,7 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
+# ============================================
 # TAB 2 (MÉTRICAS)
 # ============================================
 with tab2:
@@ -198,8 +199,10 @@ with tab2:
 
     st.markdown(f"""
     <div class='container-performance'>
+
         <p class='titulo-secao'>Métricas del Modelo</p>
-        <table>
+
+        <table class='table-center'>
             <tr><th>Métrica</th><th>Valor</th></tr>
             <tr><td>Accuracy</td><td>{m['accuracy']:.4f}</td></tr>
             <tr><td>Precision</td><td>{m['precision']:.4f}</td></tr>
@@ -209,13 +212,26 @@ with tab2:
             <tr><td>KS</td><td>{m['ks']:.4f}</td></tr>
         </table>
 
-        <p class='titulo-secao' style='margin-top:20px;'>Matriz de Confusión</p>
+        <p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p>
 
-        <table>
-            <tr><th>Real \\ Pred</th><th>Bueno (0)</th><th>Malo (1)</th></tr>
-            <tr><td>Bueno (0)</td><td class='val-pos'>{cm['TN']}</td><td class='val-neg'>{cm['FP']}</td></tr>
-            <tr><td>Malo (1)</td><td class='val-neg'>{cm['FN']}</td><td class='val-pos'>{cm['TP']}</td></tr>
+        <table class='table-center'>
+            <tr>
+                <th>Real \\ Pred</th>
+                <th>Bueno (0)</th>
+                <th>Malo (1)</th>
+            </tr>
+            <tr>
+                <td>Bueno (0)</td>
+                <td class='val-pos'>{cm['TN']}</td>
+                <td class='val-neg'>{cm['FP']}</td>
+            </tr>
+            <tr>
+                <td>Malo (1)</td>
+                <td class='val-neg'>{cm['FN']}</td>
+                <td class='val-pos'>{cm['TP']}</td>
+            </tr>
         </table>
+
     </div>
     """, unsafe_allow_html=True)
 

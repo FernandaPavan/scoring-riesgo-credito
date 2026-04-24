@@ -44,7 +44,7 @@ def apply_custom_styles():
         font-size: 11px;
     }
 
-    /* RESULTADOS E TABELAS CENTRALIZADAS */
+    /* CONTAINER CENTRAL */
     .container-performance {
         display: flex;
         flex-direction: column;
@@ -52,25 +52,64 @@ def apply_custom_styles():
         width: 100%;
     }
 
-    .titulo-secao { text-align: center; color: #2563eb; font-size: 18px; font-weight: 700; }
-    .score { text-align: center; font-size: 40px; font-weight: 700; }
+    .titulo-secao { 
+        text-align: center; 
+        color: #2563eb; 
+        font-size: 18px; 
+        font-weight: 700; 
+    }
 
-    table { margin-left: auto; margin-right: auto; font-size: 13px; text-align: center; border-collapse: collapse; width: 450px; }
-    th { background-color: #2563eb; color: white; padding: 8px; }
-    td { padding: 8px; border-bottom: 1px solid #eee; }
-    
+    .score { 
+        text-align: center; 
+        font-size: 40px; 
+        font-weight: 700; 
+    }
+
+    /* 🔥 TABELA PADRÃO */
+    table {
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+        border-collapse: collapse;
+        width: 420px;
+        font-size: 13px;
+    }
+
+    th {
+        background-color: #2563eb;
+        color: white;
+        padding: 8px;
+        font-weight: 700;
+    }
+
+    td {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        font-weight: 600;
+    }
+
+    /* 🔥 MATRIZ DE CONFUSÃO (DESTAQUE REAL) */
     .val-pos { 
-        color: #16a34a !important; 
-        font-weight: 800; 
+        color: #166534 !important; 
         background-color: #dcfce7 !important;
-    }
-    .val-neg { 
-        color: #dc2626 !important; 
-        font-weight: 800; 
-        background-color: #fee2e2 !important;
+        font-weight: 900;
+        border-radius: 6px;
     }
 
-    /* CARD DE PSI */
+    .val-neg { 
+        color: #991b1b !important; 
+        background-color: #fee2e2 !important;
+        font-weight: 900;
+        border-radius: 6px;
+    }
+
+    /* 🔥 ALINHAMENTO EXTRA (GARANTE CENTRALIZAÇÃO TOTAL) */
+    table tr td:first-child {
+        font-weight: 700;
+        color: #374151;
+    }
+
+    /* CARD PSI */
     .psi-card {
         text-align: center; 
         border: 1px solid #e2e8f0; 
@@ -79,5 +118,6 @@ def apply_custom_styles():
         width: 280px;
         background-color: white;
     }
+
     </style>
     """, unsafe_allow_html=True)
