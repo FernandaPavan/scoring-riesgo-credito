@@ -111,13 +111,13 @@ def apply_custom_styles():
     }
 
     /* ============================= */
-    /* 📊 TABELAS GERAIS           */
+    /* 📊 TABELAS GERAIS            */
     /* ============================= */
     table {
-        margin: 10px auto;
+        margin: 10px auto !important;
         border-collapse: collapse;
         width: 100%;
-        max-width: 450px !important; /* Reduzi levemente para alinhar com o card */
+        max-width: 450px !important;
         font-size: 14px;
         background-color: white;
         box-shadow: var(--shadow-sm);
@@ -146,7 +146,7 @@ def apply_custom_styles():
         font-weight: 700;
         color: var(--text-light);
         background-color: var(--bg-light);
-        width: 50%; /* Ajustado para melhor equilíbrio */
+        width: 50%;
     }
 
     /* ============================= */
@@ -154,7 +154,7 @@ def apply_custom_styles():
     /* ============================= */
     .cm-table {
         width: 100% !important;
-        max-width: 360px !important; /* Mesma largura do PSI Card */
+        max-width: 360px !important;
         margin: 10px auto !important;
         border-collapse: collapse !important;
         text-align: center;
@@ -219,30 +219,38 @@ def apply_custom_styles():
         transform: translateY(-2px);
     }
 
-    /* ============================= */
-    /* 📂 EXPANDER (CUSTOMIZADO)    */
-    /* ============================= */
-    /* Garante que o expander não exceda a largura do card */
+    /* ================================= */
+    /* 📂 EXPANDER (LARGURA CONTROLADA)  */
+    /* ================================= */
     div[data-testid="stExpander"] {
         border: 1px solid var(--border) !important;
         border-radius: 12px !important;
-        box-shadow: var(--shadow-sm) !important;
         background-color: white !important;
+        
+        /* Largura não ocupa 100% da tela */
         width: 100% !important;
-        max-width: 360px !important; /* MATCH COM O PSI CARD */
-        margin: 0 auto !important; /* CENTRALIZA */
+        max-width: 600px !important; 
+        
+        margin: 20px auto !important; /* Centraliza horizontalmente */
+        box-shadow: var(--shadow-sm) !important;
     }
 
     div[data-testid="stExpander"] summary {
         font-weight: 600 !important;
         color: var(--secondary) !important;
-        font-size: 14px !important;
+        padding: 10px 15px !important;
     }
 
-    div[data-testid="stExpander"] p, div[data-testid="stExpander"] li {
-        font-size: 13px !important;
-        color: var(--text-light) !important;
-        line-height: 1.4 !important;
+    div[data-testid="stExpander"] .stMarkdown {
+        padding: 10px 20px !important;
+    }
+
+    div[data-testid="stExpander"] p, 
+    div[data-testid="stExpander"] li {
+        font-size: 13.5px !important;
+        line-height: 1.6 !important;
+        color: #475569 !important;
+        text-align: left !important;
     }
 
     </style>

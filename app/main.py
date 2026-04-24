@@ -76,7 +76,7 @@ with tab1:
 
     if btn:
         genero, trabalho, vivienda, ahorro, corriente, finalidad = traduzir_inputs(
-            genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corriente_sel, finalidad_sel
+            genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corrente_sel, finalidad_sel
         )
 
         entrada = montar_entrada(
@@ -170,7 +170,7 @@ with tab3:
     else:
         status, cor, icon = "INESTABLE", "#dc2626", "🚨"
 
-    # Centralização do Card
+    # Bloco do Card (já centralizado pelo container-performance no CSS)
     st.markdown(f"""
     <div class='container-performance'>
         <p class='titulo-secao'>Estabilidad de la Población</p>
@@ -182,20 +182,16 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
-    # Espaço de 1 linha
-    st.write("") 
-
-    # Colunas para centralizar o expander com a mesma largura do card (max-width do CSS costuma ser ~360-400px)
-    col_left, col_center, col_right = st.columns([1.5, 1, 1.5])
-    
-    with col_center:
-        with st.expander("Ver criterios del PSI"):
-            st.markdown("""
-            **Interpretación del Índice PSI:**
-            
-            - **< 0.10** → Población estable  
-            - **0.10 – 0.25** → Posible cambio (alerta)  
-            - **> 0.25** → Cambio significativo (inestabilidad)  
-            
-            **Lectura práctica:** Un PSI baixo indica que la distribución actual es similar al entrenamiento. Un PSI elevado sugiere um cambio en el perfil de los clientes.
-            """)
+    # O expander usará automaticamente as regras de max-width: 600px e margin: auto do CSS
+    with st.expander("Ver critérios del PSI"):
+        st.markdown(f"""
+        **Interpretación del Índice PSI (Índice de Estabilidade da População):**
+        
+        * **< 0.10** → Población estable
+        * **0.10 – 0.25** → Cambio possível (alerta)
+        * **> 0.25** → Cambio significativo (inestabilidad)
+        
+        **Lectura práctica:**
+        * Un **PSI bajo** indica que la distribución de la población real es similar a la utilizada en el entrenamiento.
+        * Un **PSI elevado** sugiere un cambio en el perfil de los clientes (**data drift**), lo que puede afectar el desempeño del modelo.
+        """)
