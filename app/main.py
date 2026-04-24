@@ -75,31 +75,25 @@ with tab1:
     col_res, col_graf = st.columns([1, 1])
 
     if btn:
-        # 1. TRADUÇÃO (Sincronizado com features.py)
         genero, trabalho, vivienda, ahorro, corriente, finalidad = traduzir_inputs(
             genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corriente_sel, finalidad_sel
         )
 
-        # 2. MONTAGEM DO DATAFRAME (Variável 'corriente' corrigida)
         entrada = montar_entrada(
             genero, trabalho, vivienda, ahorro, corriente, finalidad,
             edad, duracion, monto
         )
 
-        # 3. PREPARAÇÃO (Feature Engineering + WOE)
         entrada_woe = preparar_dados(entrada, bins_woe, modelo)
 
-        # 4. PREDIÇÃO E SCORE
         prob = modelo.predict_proba(entrada_woe)[0][1]
         score_base = get_score(prob, score_params)
 
-        # 5. REGRAS DE NEGÓCIO (Penalizações)
         penalidade = 0
         if trabalho == 0: penalidade -= 80 
         if vivienda == "rent": penalidade -= 30 
         score_final = max(score_base + penalidade, 300)
 
-        # 6. DECISÃO FINAL
         decision = apply_business_policy(score_final, prob, monto, cutoffs)
 
         with col_res:
@@ -135,20 +129,13 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# ============================================
 # TAB 2: MÉTRICAS DO MODELO
 # ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
 
-    # ----- MÉTRICAS -----
-    st.markdown("""
-    <div class='container-performance'>
-        <p class='titulo-secao'>Métricas de Performance</p>
-    </div>
-    """, unsafe_allow_html=True)
-
+    st.markdown("<div class='container-performance'><p class='titulo-secao'>Métricas de Performance</p></div>", unsafe_allow_html=True)
     st.markdown(f"""
     <table>
         <tr><th>Métrica</th><th>Valor</th></tr>
@@ -161,35 +148,15 @@ with tab2:
     </table>
     """, unsafe_allow_html=True)
 
-    # ----- MATRIZ DE CONFUSÃO -----
-    st.markdown("""
-    <div class='container-performance'>
-        <p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p>
-    </div>
-    """, unsafe_allow_html=True)
-
+    st.markdown("<div class='container-performance'><p class='titulo-secao' style='margin-top:25px;'>Matriz de Confusión</p></div>", unsafe_allow_html=True)
     st.markdown(f"""
     <table class='cm-table'>
-        <tr>
-            <th>Real / Pred</th>
-            <th>Bueno (0)</th>
-            <th>Malo (1)</th>
-        </tr>
-        <tr>
-            <td><b>Bueno (0)</b></td>
-            <td class='val-pos'>{cm.get('TN', 0)}</td>
-            <td class='val-neg'>{cm.get('FP', 0)}</td>
-        </tr>
-        <tr>
-            <td><b>Malo (1)</b></td>
-            <td class='val-neg'>{cm.get('FN', 0)}</td>
-            <td class='val-pos'>{cm.get('TP', 0)}</td>
-        </tr>
+        <tr><th>Real / Pred</th><th>Bueno (0)</th><th>Malo (1)</th></tr>
+        <tr><td><b>Bueno (0)</b></td><td class='val-pos'>{cm.get('TN', 0)}</td><td class='val-neg'>{cm.get('FP', 0)}</td></tr>
+        <tr><td><b>Malo (1)</b></td><td class='val-neg'>{cm.get('FN', 0)}</td><td class='val-pos'>{cm.get('TP', 0)}</td></tr>
     </table>
     """, unsafe_allow_html=True)
 
-# ============================================
-# ============================================
 # ============================================
 # TAB 3: PSI (ESTABILIDADE)
 # ============================================
@@ -203,47 +170,32 @@ with tab3:
     else:
         status, cor, icon = "INESTABLE", "#dc2626", "🚨"
 
-    # ----- CARD PRINCIPAL -----
+    # Centralização do Card
     st.markdown(f"""
     <div class='container-performance'>
         <p class='titulo-secao'>Estabilidad de la Población</p>
         <div class='psi-card'>
             <p style='font-size:13px; color:#64748b; margin-bottom:5px;'>Índice PSI</p>
             <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
-            <p style='color:{cor}; font-weight:700; font-size:20px; margin-top:10px;'>
-                {icon} {status}
-            </p>
+            <p style='color:{cor}; font-weight:700; font-size:20px; margin-top:10px;'>{icon} {status}</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # ----- ESPAÇO -----
-st.markdown("<br>", unsafe_allow_html=True)
+    # Espaço de 1 linha
+    st.write("") 
 
-# ----- CONTAINER CENTRALIZADO (IGUAL AO CARD) -----
-st.markdown("""
-<div style="
-    display:flex;
-    justify-content:center;
-    width:100%;
-">
-    <div style="
-        width:100%;
-        max-width:360px;
-    ">
-""", unsafe_allow_html=True)
-
-with st.expander("Ver criterios del PSI"):
-    st.markdown("""
-    **Interpretación del Índice PSI (Population Stability Index):**
+    # Colunas para centralizar o expander com a mesma largura do card (max-width do CSS costuma ser ~360-400px)
+    col_left, col_center, col_right = st.columns([1.5, 1, 1.5])
     
-    - **< 0.10** → Población estable  
-    - **0.10 – 0.25** → Posible cambio (alerta)  
-    - **> 0.25** → Cambio significativo (inestabilidad)  
-    
-    **Lectura práctica:**
-    - Un PSI bajo indica que la distribución de la población actual es similar a la utilizada en el entrenamiento  
-    - Un PSI elevado sugiere un cambio en el perfil de los clientes (data drift), lo que puede afectar el desempeño del modelo  
-    """)
-
-st.markdown("</div></div>", unsafe_allow_html=True)
+    with col_center:
+        with st.expander("Ver criterios del PSI"):
+            st.markdown("""
+            **Interpretación del Índice PSI:**
+            
+            - **< 0.10** → Población estable  
+            - **0.10 – 0.25** → Posible cambio (alerta)  
+            - **> 0.25** → Cambio significativo (inestabilidad)  
+            
+            **Lectura práctica:** Un PSI baixo indica que la distribución actual es similar al entrenamiento. Un PSI elevado sugiere um cambio en el perfil de los clientes.
+            """)

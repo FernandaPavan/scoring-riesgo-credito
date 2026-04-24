@@ -117,7 +117,7 @@ def apply_custom_styles():
         margin: 10px auto;
         border-collapse: collapse;
         width: 100%;
-        max-width: 500px !important;
+        max-width: 450px !important; /* Reduzi levemente para alinhar com o card */
         font-size: 14px;
         background-color: white;
         box-shadow: var(--shadow-sm);
@@ -137,7 +137,7 @@ def apply_custom_styles():
     }
 
     td {
-        padding: 12px 15px;
+        padding: 10px 15px;
         border-bottom: 1px solid #f3f4f6;
         color: #374151;
     }
@@ -146,15 +146,16 @@ def apply_custom_styles():
         font-weight: 700;
         color: var(--text-light);
         background-color: var(--bg-light);
-        width: 40%;
+        width: 50%; /* Ajustado para melhor equilíbrio */
     }
 
     /* ============================= */
     /* 🔲 MATRIZ DE CONFUSÃO        */
     /* ============================= */
     .cm-table {
-        width: 340px !important;
-        margin: 20px auto !important;
+        width: 100% !important;
+        max-width: 360px !important; /* Mesma largura do PSI Card */
+        margin: 10px auto !important;
         border-collapse: collapse !important;
         text-align: center;
         background-color: white;
@@ -168,14 +169,14 @@ def apply_custom_styles():
         text-align: center;
         background-color: var(--secondary);
         color: white !important;
-        padding: 10px;
-        font-size: 12px;
+        padding: 8px;
+        font-size: 11px;
     }
 
     .cm-table td {
         text-align: center;
-        padding: 16px;
-        font-size: 16px;
+        padding: 14px;
+        font-size: 15px;
         border: 1px solid #f1f5f9;
     }
 
@@ -190,14 +191,12 @@ def apply_custom_styles():
         background-color: #dcfce7 !important;
         color: #166534 !important; 
         font-weight: 800 !important;
-        font-size: 18px;
     }
 
     .cm-table .val-neg { 
         background-color: #fee2e2 !important;
         color: #991b1b !important; 
         font-weight: 800 !important;
-        font-size: 18px;
     }
 
     /* ============================= */
@@ -212,43 +211,38 @@ def apply_custom_styles():
         max-width: 360px;
         background-color: white;
         box-shadow: var(--shadow-md);
-        margin: 20px auto;
+        margin: 10px auto;
         transition: all 0.2s ease;
     }
 
     .psi-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 20px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
     }
 
     /* ============================= */
-    /* 📂 EXPANDER                  */
+    /* 📂 EXPANDER (CUSTOMIZADO)    */
     /* ============================= */
+    /* Garante que o expander não exceda a largura do card */
     div[data-testid="stExpander"] {
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        background-color: white;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        box-shadow: var(--shadow-sm) !important;
+        background-color: white !important;
         width: 100% !important;
-        overflow: hidden;
-    }
-
-    /* força o conteúdo interno respeitar largura */
-    div[data-testid="stExpander"] > div {
-        width: 100% !important;
+        max-width: 360px !important; /* MATCH COM O PSI CARD */
+        margin: 0 auto !important; /* CENTRALIZA */
     }
 
     div[data-testid="stExpander"] summary {
-        font-weight: 600;
-        color: var(--secondary);
-        font-size: 14px;
-        padding: 10px 12px;
+        font-weight: 600 !important;
+        color: var(--secondary) !important;
+        font-size: 14px !important;
     }
 
-    div[data-testid="stExpander"] p {
-        font-size: 13px;
-        color: var(--text-light);
-        line-height: 1.5;
+    div[data-testid="stExpander"] p, div[data-testid="stExpander"] li {
+        font-size: 13px !important;
+        color: var(--text-light) !important;
+        line-height: 1.4 !important;
     }
 
     </style>
