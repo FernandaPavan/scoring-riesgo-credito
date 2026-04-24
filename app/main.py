@@ -75,14 +75,14 @@ with tab1:
     col_res, col_graf = st.columns([1, 1])
 
     if btn:
-        # 1. TRADUÇÃO (Espanhol -> Técnico)
+        # 1. TRADUÇÃO (Sincronizado com features.py)
         genero, trabalho, vivienda, ahorro, corriente, finalidad = traduzir_inputs(
             genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corriente_sel, finalidad_sel
         )
 
-        # 2. MONTAGEM DO DATAFRAME
+        # 2. MONTAGEM DO DATAFRAME (Variável 'corriente' corrigida)
         entrada = montar_entrada(
-            genero, trabalho, vivienda, ahorro, corrente, finalidad,
+            genero, trabalho, vivienda, ahorro, corriente, finalidad,
             edad, duracion, monto
         )
 
@@ -135,13 +135,12 @@ with tab1:
             st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
-# TAB 2: MÉTRICAS DO MODELO (AJUSTADA)
+# TAB 2: MÉTRICAS DO MODELO
 # ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
 
-    # Usamos f-string bruta (fr) ou escapamos a barra para não quebrar o HTML
     st.markdown(f"""
     <div class='container-performance'>
         <p class='titulo-secao'>Métricas de Performance</p>
@@ -150,9 +149,9 @@ with tab2:
             <tr><td>Accuracy</td><td>{m.get('accuracy', 0):.4f}</td></tr>
             <tr><td>Precision</td><td>{m.get('precision', 0):.4f}</td></tr>
             <tr><td>Recall</td><td>{m.get('recall', 0):.4f}</td></tr>
-            <tr><td>AUC</td><td>{m.get('auc', 0):.4f}</td></tr>
+            <tr><td>AUC (ROC)</td><td>{m.get('auc', 0):.4f}</td></tr>
             <tr><td>Gini</td><td>{m.get('gini', 0):.4f}</td></tr>
-            <tr><td>KS</td><td>{m.get('ks', 0):.4f}</td></tr>
+            <tr><td>KS Statistic</td><td>{m.get('ks', 0):.4f}</td></tr>
         </table>
 
         <p class='titulo-secao' style='margin-top:30px;'>Matriz de Confusión</p>
@@ -177,7 +176,7 @@ with tab2:
     """, unsafe_allow_html=True)
 
 # ============================================
-# TAB 3: PSI
+# TAB 3: PSI (ESTABILIDADE)
 # ============================================
 with tab3:
     psi_val = metricas_modelo.get("psi", 0)
@@ -196,6 +195,14 @@ with tab3:
             <p style='font-size:13px; color:#64748b; margin-bottom:5px;'>Índice PSI</p>
             <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
             <p style='color:{cor}; font-weight:700; font-size:20px; margin-top:10px;'>{icon} {status}</p>
+            <div style='margin-top:20px; padding:10px; background:#f8fafc; border-radius:8px;'>
+                <p style='font-size:11px; color:#475569; line-height:1.4;'>
+                    <b>Guía:</b><br>
+                    • < 0.10: Estable<br>
+                    • 0.10 - 0.25: Alerta<br>
+                    • > 0.25: Inestable
+                </p>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
