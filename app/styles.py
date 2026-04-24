@@ -72,7 +72,7 @@ def apply_custom_styles():
         line-height: 1;
     }
 
-    /* 🔥 TABELAS ESTILIZADAS */
+    /* 🔥 TABELAS GERAIS (MÉTRICAS) */
     table {
         margin: 10px auto;
         border-collapse: collapse;
@@ -109,17 +109,58 @@ def apply_custom_styles():
         width: 40%;
     }
 
-    /* MATRIZ DE CONFUSÃO - CORES */
-    .val-pos { 
+    /* ============================= */
+    /* ✅ MATRIZ DE CONFUSÃO (ISOLADA) */
+    /* ============================= */
+
+    .cm-table {
+        width: 320px !important;
+        margin: 20px auto !important;
+        border-collapse: collapse !important;
+        text-align: center;
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+    }
+
+    .cm-table th {
+        text-align: center;
+        background-color: #1e40af;
+        color: white !important;
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .cm-table td {
+        text-align: center;
+        padding: 14px;
+        font-size: 16px;
+        border: 1px solid #f1f5f9;
+    }
+
+    /* Remove estilo global da primeira coluna */
+    .cm-table tr td:first-child {
+        background-color: white !important;
+        font-weight: 700;
+        color: #374151;
+        width: auto !important;
+    }
+
+    /* Destaque visual */
+    .cm-table .val-pos { 
         background-color: #dcfce7 !important;
         color: #166534 !important; 
         font-weight: 800 !important;
+        font-size: 18px;
     }
 
-    .val-neg { 
+    .cm-table .val-neg { 
         background-color: #fee2e2 !important;
         color: #991b1b !important; 
         font-weight: 800 !important;
+        font-size: 18px;
     }
 
     /* CARD PSI */
