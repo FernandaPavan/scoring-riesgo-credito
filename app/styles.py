@@ -3,6 +3,7 @@ import streamlit as st
 def apply_custom_styles():
     st.markdown("""
     <style>
+    /* Configuração Geral */
     .block-container { padding-top: 1rem !important; }
 
     /* SIDEBAR ULTRA COMPACTA */
@@ -50,63 +51,71 @@ def apply_custom_styles():
         flex-direction: column;
         align-items: center;
         width: 100%;
+        gap: 15px;
     }
 
     .titulo-secao { 
         text-align: center; 
         color: #2563eb; 
         font-size: 18px; 
-        font-weight: 700; 
+        font-weight: 700;
+        margin-bottom: 10px;
     }
 
     .score { 
         text-align: center; 
         font-size: 40px; 
-        font-weight: 700; 
+        font-weight: 700;
+        color: #1e40af;
     }
 
-    /* 🔥 TABELA PADRÃO */
+    /* 🔥 TABELA PADRÃO - Melhorado para Streamlit */
     table {
         margin-left: auto;
         margin-right: auto;
-        text-align: center;
         border-collapse: collapse;
-        width: 420px;
-        font-size: 13px;
+        width: 450px !important;
+        font-size: 14px;
+        background-color: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
     }
 
     th {
         background-color: #2563eb;
-        color: white;
-        padding: 8px;
+        color: white !important;
+        padding: 12px;
         font-weight: 700;
+        text-align: center;
     }
 
     td {
         padding: 10px;
         border-bottom: 1px solid #eee;
         font-weight: 600;
+        text-align: center;
+        color: #374151;
+    }
+
+    /* Alinhamento da primeira coluna de métricas */
+    table tr td:first-child {
+        text-align: left;
+        padding-left: 20px;
+        color: #4b5563;
     }
 
     /* 🔥 MATRIZ DE CONFUSÃO (DESTAQUE REAL) */
     .val-pos { 
-        color: #166534 !important; 
         background-color: #dcfce7 !important;
-        font-weight: 900;
-        border-radius: 6px;
+        color: #166534 !important; 
+        font-weight: 900 !important;
     }
 
     .val-neg { 
-        color: #991b1b !important; 
         background-color: #fee2e2 !important;
-        font-weight: 900;
-        border-radius: 6px;
-    }
-
-    /* 🔥 ALINHAMENTO EXTRA (GARANTE CENTRALIZAÇÃO TOTAL) */
-    table tr td:first-child {
-        font-weight: 700;
-        color: #374151;
+        color: #991b1b !important; 
+        font-weight: 900 !important;
     }
 
     /* CARD PSI */
@@ -115,8 +124,10 @@ def apply_custom_styles():
         border: 1px solid #e2e8f0; 
         padding: 20px; 
         border-radius: 12px; 
-        width: 280px;
+        width: 320px;
         background-color: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin: 10px auto;
     }
 
     </style>
