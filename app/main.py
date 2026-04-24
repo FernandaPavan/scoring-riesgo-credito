@@ -3,61 +3,115 @@ import os
 import streamlit as st
 import plotly.graph_objects as go
 
-# Garante importação dos módulos locais
+# 1. AJUSTE DE PATH (Garante que o Python localize a pasta 'src')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if BASE_DIR not in sys.path: sys.path.append(BASE_DIR)
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
 
+# 2. IMPORTAÇÃO DOS MÓDULOS MODULARIZADOS
 from src.loader import load_assets
 from src.policy import get_score, apply_business_policy
 from src.features import traduzir_inputs, montar_entrada, preparar_dados
 from app.styles import apply_custom_styles
 
-# Setup
+# ============================================
+# CONFIGURACIÓN E CARREGAMENTO
+# ============================================
 st.set_page_config(layout="wide", page_title="Credit Score App")
+
+# Carrega modelo, bins, métricas e parâmetros
 modelo, bins_woe, metricas_modelo, score_params, cutoffs = load_assets()
+
+# Aplica os estilos visuais (Sidebar, tabelas e cores)
 apply_custom_styles()
 
-st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weight:700;'>Evaluación de Riesgo e Score de Crédito</h1>", unsafe_allow_html=True)
+# Título Principal da Aplicação
+st.markdown("<h1 style='text-align:center;color:#2563eb;font-size:24px;font-weight:700;'>Evaluación de Riesgo y Score de Crédito</h1>", unsafe_allow_html=True)
+
+# Definição das Abas
 tab1, tab2, tab3 = st.tabs(["Simulación de Crédito", "Desempeño del Modelo", "Estabilidad (PSI)"])
 
+# ============================================
+# TAB 1: SIMULACIÓN DE CRÉDITO
+# ============================================
 with tab1:
     with st.sidebar:
-        st.markdown("<div style='text-align:center;color:#2563eb;font-size:12px;font-weight:600;'>Datos del Cliente</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;color:#2563eb;font-size:12px;font-weight:600;margin-bottom:5px;'>Datos del Cliente</div>", unsafe_allow_html=True)
+        
+        # Sliders de entrada numérica
         edad = st.slider("Edad", 18, 75, 30)
         monto = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
         duracion = st.slider("Duración (meses)", 4, 72, 24)
+
+        # Selectboxes (Interface em Espanhol)
+        # Os nomes das variáveis terminam em '_sel' para indicar que é a seleção bruta da UI
         genero_sel = st.selectbox("Género", ["Masculino", "Femenino"])
         trabalho_sel = st.selectbox("Ocupación", ["Desempleado", "Básico", "Calificado", "Especialista"])
         vivienda_sel = st.selectbox("Vivienda", ["Propia", "Alquilada", "Gratuita"])
         ahorro_sel = st.selectbox("Cuenta de Ahorro", ["Bajo", "Medio", "Alto"])
         corriente_sel = st.selectbox("Cuenta Corriente", ["Bajo", "Medio", "Alto"])
         finalidad_sel = st.selectbox("Finalidad", ["Auto", "Muebles", "Electrónicos", "Negocios", "Educación", "Reparaciones", "Otros"])
+
         btn = st.button("Calcular")
 
+    # Colunas para exibir o resultado e o gráfico lado a lado
+    col_res, col_graf = st.columns([1, 1])
+
     if btn:
-        # Orquestração das chamadas
-        g, t, v, a, c, f = traduzir_inputs(genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corrente_sel, finalidad_sel)
-        entrada = montar_entrada(g, t, v, a, c, f, edad, duracion, monto)
-        entrada_woe = preparar_dados(entrada, bins_woe, modelo)
+        # 1. Tradução: Converte "Masculino" -> "male", "Básico" -> 1, etc.
+        genero, trabajo, vivienda, ahorro, corriente, finalidad = traduzir_inputs(
+            genero_sel, trabalho_sel, vivienda_sel, ahorro_sel, corrente_sel, finalidad_sel
+        )
         
+        # 2. DataFrame: Monta os dados no formato que o modelo espera
+        entrada = montar_entrada(
+            genero, trabajo, vivienda, ahorro, corriente, finalidad, 
+            edad, duracion, monto
+        )
+        
+        # 3. Pré-processamento: Aplica Faixas e transformação WOE
+        entrada_woe = preparar_dados(entrada, bins_woe, modelo)
+
+        # 4. Predição: Calcula probabilidade e Score final
         prob = modelo.predict_proba(entrada_woe)[0][1]
         score = get_score(prob, score_params)
+        
+        # 5. Política: Aplica regras de aprovação e limite
         res = apply_business_policy(score, prob, monto, cutoffs)
 
-        col1, col2 = st.columns(2)
-        with col1:
+        # --- EXIBIÇÃO DOS RESULTADOS ---
+        with col_res:
+            st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
             st.markdown(f"<div class='score' style='color:{res['cor']};'>{res['score']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-weight:bold;'>{res['segmento']}</p>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:center;font-size:28px;color:{res['cor']};'>{res['icon']} {res['status']}</div>", unsafe_allow_html=True)
-            st.info(res['motivo'])
-        with col2:
-            fig = go.Figure(go.Indicator(mode="gauge+number", value=prob*100, number={'suffix': "%"},
-                gauge={"axis":{"range":[0,100]},"steps":[{"range":[0,40],"color":"#16a34a"},{"range":[40,70],"color":"#facc15"},{"range":[70,100],"color":"#dc2626"}]}))
+            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{res['segmento']}</p>", unsafe_allow_html=True)
+            
+            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;margin-bottom:0;font-size:14px;'>Límite Sugerido</p><p style='text-align:center;font-size:22px;font-weight:700;'>${res['limite']:,.0f}</p>", unsafe_allow_html=True)
+            
+            st.markdown(f"<div style='text-align:center;font-size:28px;color:{res['cor']};font-weight:900;'>{res['icon']} {res['status']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;padding:0 20px;'>{res['motivo']}</p>", unsafe_allow_html=True)
+
+        with col_graf:
+            st.markdown("<div class='titulo-secao'>Indicador de Riesgo</div><br>", unsafe_allow_html=True)
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number", 
+                value=prob*100, 
+                number={'font': {'size': 45}, 'suffix': "%"},
+                gauge={
+                    "axis": {"range": [0, 100]},
+                    "steps": [
+                        {"range": [0, 40], "color": "#16a34a"},
+                        {"range": [40, 70], "color": "#facc15"},
+                        {"range": [70, 100], "color": "#dc2626"}
+                    ]
+                }
+            ))
+            fig.update_layout(height=260, margin=dict(l=30, r=30, t=0, b=0), paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig, use_container_width=True)
 
-
-
-# --- TAB 2: DESEMPEÑO ---
+# ============================================
+# TAB 2: DESEMPEÑO DEL MODELO
+# ============================================
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
@@ -81,11 +135,14 @@ with tab2:
         </table>
     </div>""", unsafe_allow_html=True)
 
-# --- TAB 3: ESTABILIDADE ---
+# ============================================
+# TAB 3: ESTABILIDAD (PSI)
+# ============================================
 with tab3:
     psi_v = metricas_modelo.get("psi", 0.00)
     psi_c = "#16a34a" if psi_v < 0.1 else "#facc15" if psi_v < 0.25 else "#dc2626"
     psi_s = "ESTABLE" if psi_v < 0.1 else "ALERTA" if psi_v < 0.25 else "INESTABLE"
+    
     st.markdown(f"""
     <div class='container-performance'>
         <br><br><p class='titulo-secao'>Estabilidad del Modelo (PSI)</p><br>
