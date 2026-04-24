@@ -1,92 +1,28 @@
 import pandas as pd
 import scorecardpy as sc
 
-# ============================================
-# DICIONÁRIOS DE TRADUÇÃO (UI → MODELO)
-# ============================================
-
-MAP_GENERO = {
-    "Masculino": "male",
-    "Femenino": "female"
-}
-
-MAP_TRABAJO = {
-    "Desempleado": 0,
-    "Básico": 1,
-    "Calificado": 2,
-    "Especialista": 3
-}
-
-MAP_VIVIENDA = {
-    "Propia": "own",
-    "Alquilada": "rent",
-    "Gratuita": "free"
-}
-
-MAP_AHORRO = {
-    "Bajo": "little",
-    "Medio": "moderate",
-    "Alto": "rich"
-}
-
-MAP_CORRIENTE = {
-    "Bajo": "little",
-    "Medio": "moderate",
-    "Alto": "rich"
-}
-
+# Dicionários: Chave em Espanhol (UI) -> Valor que o Modelo conhece
+MAP_GENERO = {"Masculino": "male", "Femenino": "female"}
+MAP_TRABAJO = {"Desempleado": 0, "Básico": 1, "Calificado": 2, "Especialista":3}
+MAP_VIVIENDA = {"Propia": "own", "Alquilada": "rent", "Gratuita": "free"}
+MAP_AHORRO = {"Bajo": "little", "Medio": "moderate", "Alto": "rich"}
+MAP_CORRIENTE = {"Bajo": "little", "Medio": "moderate", "Alto": "rich"}
 MAP_FINALIDAD = {
-    "Auto": "car",
-    "Muebles": "furniture/equipment",
-    "Electrónicos": "radio/TV",
-    "Negocios": "business",
-    "Educación": "education",
-    "Reparaciones": "repairs",
-    "Otros": "vacation/others"
+    "Auto": "car", "Muebles": "furniture/equipment", "Electrónicos": "radio/TV",
+    "Negocios": "business", "Educación": "education", "Reparaciones": "repairs", "Otros": "vacation/others"
 }
 
-
-# ============================================
-# TRADUÇÃO DE INPUTS (UI → MODELO)
-# ============================================
-
-def traduzir_inputs(
-    genero_sel,
-    trabajo_sel,
-    vivienda_sel,
-    ahorro_sel,
-    corriente_sel,
-    finalidad_sel
-):
+def traduzir_inputs(genero_sel, trabajo_sel, vivienda_sel, ahorro_sel, corriente_sel, finalidad_sel):
     try:
-        genero = MAP_GENERO[genero_sel]
-        trabajo = MAP_TRABAJO[trabajo_sel]
-        vivienda = MAP_VIVIENDA[vivienda_sel]
-        ahorro = MAP_AHORRO[ahorro_sel]
-        corriente = MAP_CORRIENTE[corriente_sel]
-        finalidad = MAP_FINALIDAD[finalidad_sel]
-
-        return genero, trabajo, vivienda, ahorro, corriente, finalidad
-
+        return (
+            MAP_GENERO[genero_sel], MAP_TRABAJO[trabajo_sel], MAP_VIVIENDA[vivienda_sel],
+            MAP_AHORRO[ahorro_sel], MAP_CORRIENTE[corriente_sel], MAP_FINALIDAD[finalidad_sel]
+        )
     except KeyError as e:
-        raise ValueError(f"Valor inválido no input: {e}")
+        raise ValueError(f"Valor inválido: {e}")
 
-
-# ============================================
-# MONTA DATAFRAME (mantém nomes do modelo)
-# ============================================
-
-def montar_entrada(
-    genero,
-    trabajo,
-    vivienda,
-    ahorro,
-    corriente,
-    finalidad,
-    edad,
-    duracion,
-    monto
-):
+def montar_entrada(genero, trabajo, vivienda, ahorro, corriente, finalidad, edad, duracion, monto):
+    # Nomes das colunas em Português conforme seu modelo pkl
     return pd.DataFrame({
         "Genero": [genero],
         "Trabalho": [trabajo],
@@ -98,6 +34,7 @@ def montar_entrada(
         "Duracao": [duracion],
         "Valor_credito": [monto]
     })
+
 
 
 # ============================================
