@@ -109,7 +109,6 @@ with tab1:
 
 # ============================================
 # ============================================
-# ============================================
 # TAB 2: DESEMPENHO DO MODELO
 # ============================================
 with tab2:
@@ -137,32 +136,8 @@ with tab2:
     </table>
     """, unsafe_allow_html=True)
 
-    # ----- ESPAÇO SUAVE -----
+    # ----- ESPAÇO -----
     st.markdown("<br>", unsafe_allow_html=True)
-
-    # ----- MATRIZ DE CONFUSÃO -----
-    st.markdown(f"""
-    <table class='cm-table'>
-        <tr>
-            <th>Real / Pred</th>
-            <th>Bueno (0)</th>
-            <th>Malo (1)</th>
-        </tr>
-        <tr>
-            <td><b>Bueno (0)</b></td>
-            <td class='val-pos'>{cm.get('TN', 0)}</td>
-            <td class='val-neg'>{cm.get('FP', 0)}</td>
-        </tr>
-        <tr>
-            <td><b>Malo (1)</b></td>
-            <td class='val-neg'>{cm.get('FN', 0)}</td>
-            <td class='val-pos'>{cm.get('TP', 0)}</td>
-        </tr>
-    </table>
-    """, unsafe_allow_html=True)
-
-    # ----- ESPAÇO ENTRE TABELAS -----
-    st.markdown("<br><br>", unsafe_allow_html=True)
 
     # ----- TÍTULO MATRIZ -----
     st.markdown(
@@ -172,7 +147,7 @@ with tab2:
         unsafe_allow_html=True
     )
 
-    # ----- MATRIZ DE CONFUSÃO -----
+    # ----- MATRIZ DE CONFUSÃO (APENAS UMA VEZ) -----
     st.markdown(f"""
     <table class='cm-table'>
         <tr>
