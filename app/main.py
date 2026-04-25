@@ -66,56 +66,38 @@ tab1, tab2, tab3 = st.tabs([
 # ============================================
 with tab1:
     with st.sidebar:
-        st.markdown(
-            "<div class='titulo-secao'>Datos del Cliente</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("<div class='titulo-secao'>Datos del Cliente</div>", unsafe_allow_html=True)
 
         edad = st.slider("Edad", 18, 75, 30)
         valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
         duracion = st.slider("Duración (meses)", 4, 72, 24)
 
-        genero = "male" if st.selectbox(
-            "Género",
-            ["Masculino", "Femenino"]
-        ) == "Masculino" else "female"
+        genero = "male" if st.selectbox("Género", ["Masculino", "Femenino"]) == "Masculino" else "female"
 
         trabalho = {
             "Desempleado": 0,
             "Básico": 1,
             "Calificado": 2,
             "Especialista": 3
-        }[st.selectbox(
-            "Ocupación",
-            ["Desempleado", "Básico", "Calificado", "Especialista"]
-        )]
+        }[st.selectbox("Ocupación", ["Desempleado", "Básico", "Calificado", "Especialista"])]
 
         habitacion = {
             "Propia": "own",
             "Alquilada": "rent",
             "Gratuita": "free"
-        }[st.selectbox(
-            "Vivienda",
-            ["Propia", "Alquilada", "Gratuita"]
-        )]
+        }[st.selectbox("Vivienda", ["Propia", "Alquilada", "Gratuita"])]
 
         cuenta_ahorro = {
             "Bajo": "little",
             "Medio": "moderate",
             "Alto": "rich"
-        }[st.selectbox(
-            "Cuenta de Ahorro",
-            ["Bajo", "Medio", "Alto"]
-        )]
+        }[st.selectbox("Cuenta de Ahorro", ["Bajo", "Medio", "Alto"])]
 
         cuenta_corriente = {
             "Bajo": "little",
             "Medio": "moderate",
             "Alto": "rich"
-        }[st.selectbox(
-            "Cuenta Corriente",
-            ["Bajo", "Medio", "Alto"]
-        )]
+        }[st.selectbox("Cuenta Corriente", ["Bajo", "Medio", "Alto"])]
 
         finalidad = {
             "Auto": "car",
@@ -127,15 +109,7 @@ with tab1:
             "Otros": "vacation/others"
         }[st.selectbox(
             "Finalidad",
-            [
-                "Auto",
-                "Muebles",
-                "Electrónicos",
-                "Negocios",
-                "Educación",
-                "Reparaciones",
-                "Otros"
-            ]
+            ["Auto", "Muebles", "Electrónicos", "Negocios", "Educación", "Reparaciones", "Otros"]
         )]
 
         btn = st.button("Calcular")
@@ -143,6 +117,7 @@ with tab1:
     col_res, col_graf = st.columns([1, 1])
 
     if btn:
+
         entrada = pd.DataFrame({
             "Genero": [genero],
             "Trabalho": [trabalho],
@@ -163,11 +138,18 @@ with tab1:
             fill_value=0
         )
 
+        # ============================================
+        # PROBABILIDADE (modelo)
+        # ============================================
         prob = modelo.predict_proba(entrada_woe)[0][1]
         prob = min(max(prob, 0.0001), 0.9999)
 
+        # SCORE
         score_base = get_score(prob, score_params)
 
+        # ============================================
+        # REGRAS DE NEGÓCIO (APENAS RISCO EXTRA)
+        # ============================================
         penalidade = 0
         flags = []
 
@@ -189,6 +171,9 @@ with tab1:
 
         score_final = max(score_base + penalidade, 300)
 
+        # ============================================
+        # DECISÃO (nova policy corrigida)
+        # ============================================
         decision = apply_business_policy(
             score_final,
             prob,
@@ -198,6 +183,7 @@ with tab1:
 
         limite = decision["limite"]
 
+        # ajuste por prazo (mantido)
         if duracion > 48:
             limite = int(limite * 0.85)
 
@@ -206,12 +192,11 @@ with tab1:
         if flags:
             motivo += " | Riesgos: " + ", ".join(flags)
 
-        # RESULTADO
+        # ============================================
+        # RESULTADO (SEM ALTERAÇÃO VISUAL)
+        # ============================================
         with col_res:
-            st.markdown(
-                "<div class='titulo-secao'>Resultado</div><br>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
 
             st.markdown(
                 f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>",
@@ -246,10 +231,11 @@ with tab1:
                 unsafe_allow_html=True
             )
 
-                # GAUGE
-                # GAUGE
+        # ============================================
+        # GAUGE (SEM ALTERAÇÃO)
+        # ============================================
         with col_graf:
-            # título centralizado
+
             st.markdown(
                 "<div class='titulo-secao' style='text-align:center;'>Indicador de Riesgo</div>",
                 unsafe_allow_html=True
@@ -258,23 +244,10 @@ with tab1:
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob * 100,
-                number={
-                    "font": {"size": 26},
-                    "suffix": "%"
-                },
+                number={"font": {"size": 26}, "suffix": "%"},
                 gauge={
-                    "axis": {
-                        "range": [0, 100],
-                        "tickmode": "linear",
-                        "tick0": 0,
-                        "dtick": 20,
-                        "tickwidth": 1,
-                        "tickcolor": "gray",
-                        "tickfont": {"size": 12}
-                    },
-                    "bar": {
-                        "thickness": 0.25
-                    },
+                    "axis": {"range": [0, 100]},
+                    "bar": {"thickness": 0.25},
                     "steps": [
                         {"range": [0, 40], "color": "#16a34a"},
                         {"range": [40, 70], "color": "#facc15"},
@@ -283,7 +256,6 @@ with tab1:
                 }
             ))
 
-            # mantém o tamanho solicitado
             fig.update_layout(
                 width=380,
                 height=280,
@@ -291,98 +263,7 @@ with tab1:
                 paper_bgcolor="rgba(0,0,0,0)"
             )
 
-            # força centralização perfeita
             col_esq, col_centro, col_dir = st.columns([1, 3, 1])
 
             with col_centro:
-                st.plotly_chart(
-                    fig,
-                    use_container_width=False,
-                    config={"displayModeBar": False}
-                )
-
-# ============================================
-# TAB 2
-# ============================================
-with tab2:
-    m = metricas_modelo
-    cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
-
-    st.markdown("<div class='titulo-secao'>Desempeño del Modelo</div>", unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <table>
-        <tr><th>Métrica</th><th>Valor</th></tr>
-        <tr><td>Accuracy</td><td>{m.get('accuracy',0):.4f}</td></tr>
-        <tr><td>Precision</td><td>{m.get('precision',0):.4f}</td></tr>
-        <tr><td>Recall</td><td>{m.get('recall',0):.4f}</td></tr>
-        <tr><td>AUC</td><td>{m.get('auc',0):.4f}</td></tr>
-        <tr><td>Gini</td><td>{m.get('gini',0):.4f}</td></tr>
-        <tr><td>KS</td><td>{m.get('ks',0):.4f}</td></tr>
-    </table>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown("<div class='titulo-secao'>Matriz de Confusión</div>", unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <table class='cm-table'>
-        <tr><th>Real / Pred</th><th>Bueno</th><th>Malo</th></tr>
-        <tr><td>Bueno</td><td class='val-pos'>{cm['TN']}</td><td class='val-neg'>{cm['FP']}</td></tr>
-        <tr><td>Malo</td><td class='val-neg'>{cm['FN']}</td><td class='val-pos'>{cm['TP']}</td></tr>
-    </table>
-    """, unsafe_allow_html=True)
-
-# ============================================
-# ============================================
-# TAB 3
-# ============================================
-with tab3:
-    psi_val = metricas_modelo.get("psi", 0)
-
-    status, cor = (
-        ("ESTABLE", "#16a34a")
-        if psi_val < 0.1
-        else ("ALERTA", "#facc15")
-        if psi_val < 0.25
-        else ("INESTABLE", "#dc2626")
-    )
-
-    # CARD PSI
-    st.markdown(
-        "<div style='display:flex; justify-content:center;'>"
-        "<div style='max-width:320px;'>",
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        f"""
-        <div class='psi-card'>
-            <p>Índice PSI</p>
-            <div class='score' style='color:{cor};'>{psi_val:.4f}</div>
-            <p style='color:{cor};font-weight:700;'>{status}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.markdown("</div></div><br>", unsafe_allow_html=True)
-
-    # EXPANDER CENTRALIZADO
-    col1, col2, col3 = st.columns([1, 3, 1])
-
-    with col2:
-        with st.expander("Ver critérios del PSI"):
-            st.markdown("""
-            **Interpretación del Índice PSI (Índice de Estabilidad de la Población):**
-
-            - **< 0.10** → Población estable  
-            - **0.10 – 0.25** → Cambio posible (alerta)  
-            - **> 0.25** → Cambio significativo (inestabilidad)  
-
-            **Lectura:**
-
-            - Un PSI bajo indica que la distribución de la población real es similar a la utilizada en el entrenamiento.
-            - Un PSI elevado sugiere un cambio en el perfil de los clientes (*data drift*), lo que puede afectar el desempeño del modelo.
-            """)
+                st.plotly_chart(fig, use_container_width=False, config={"displayModeBar": False})
