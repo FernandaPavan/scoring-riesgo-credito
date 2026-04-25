@@ -329,9 +329,8 @@ with tab1:
                 st.plotly_chart(fig, use_container_width=False, config={"displayModeBar": False})
 
 # ============================================
-# TAB 2 (SEM ALTERAÇÃO)
+# TAB 2
 # ============================================
-
 with tab2:
     m = metricas_modelo
     cm = m.get("confusion_matrix", {"TN":0,"FP":0,"FN":0,"TP":0})
@@ -349,6 +348,19 @@ with tab2:
         <tr><td>KS</td><td>{m.get('ks',0):.4f}</td></tr>
     </table>
     """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    st.markdown("<div class='titulo-secao'>Matriz de Confusión</div>", unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <table class='cm-table'>
+        <tr><th>Real / Pred</th><th>Bueno</th><th>Malo</th></tr>
+        <tr><td>Bueno</td><td class='val-pos'>{cm['TN']}</td><td class='val-neg'>{cm['FP']}</td></tr>
+        <tr><td>Malo</td><td class='val-neg'>{cm['FN']}</td><td class='val-pos'>{cm['TP']}</td></tr>
+    </table>
+    """, unsafe_allow_html=True)
+
 
 # ============================================
 # TAB 3
