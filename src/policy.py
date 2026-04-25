@@ -1,22 +1,22 @@
-import numpy as np
+import pandas as pd
 
-# ============================================
-# SCORE (mantém igual ao seu)
-# ============================================
-def get_score(prob, params):
-    factor = params["pdo"] / np.log(2)
-    offset = params["base_score"] + factor * np.log(params["base_odds"])
-    prob = min(max(prob, 0.0001), 0.9999)
-    return int(offset + factor * np.log((1 - prob) / prob))
+def get_score(prob, score_params):
+    """
+    Calcula o score de crédito baseado na probabilidade de default.
+    Equação: Score = Offset + Factor * ln(odds)
+    """
+    odds = (1 - prob) / prob
+    score = score_params['offset'] + score_params['factor'] * pd.np.log(odds)
+    return int(score)
 
-
-# ============================================
-# BUSINESS POLICY EQUILIBRADA
-# ============================================
-def apply_business_policy(score, prob, monto_solicitado, cutoffs):
-
+def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
+    """
+    Aplica as regras de decisão de negócio baseadas no score e probabilidade.
+    Retorna um dicionário com o status, cor, ícone e limite sugerido.
+    """
+    
     # ============================================
-    # PARÂMETROS EQUILIBRADOS
+    # CALIBRAÇÃO DE PARÂMETROS
     # ============================================
     reject_score_cut = 490
     auto_approve_score = 640
@@ -24,7 +24,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs):
     prob_safe_cut = 0.40
 
     # ============================================
-    # SEGMENTAÇÃO
+    # SEGMENTAÇÃO POR FAIXA DE SCORE
     # ============================================
     if score >= 750:
         segmento, teto = "TOP PRIME", 18000
@@ -42,10 +42,11 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs):
         segmento, teto = "SUBPRIME", 0
 
     # ============================================
-    # 1. RECHAZO DIRECTO (RIESGO ALTO)
+    # LÓGICA DE DECISÃO (STATUS)
     # ============================================
+    
+    # 1. REPROVAÇÃO DIRETA (RISCO ALTO)
     if prob >= prob_reject_cut or score < reject_score_cut:
-
         return {
             "status": "RECHAZADO",
             "icon": "✖",
@@ -56,42 +57,24 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs):
             "motivo": "Riesgo elevado según política de crédito."
         }
 
-    # ============================================
-    # 2. APROBACIÓN AUTOMÁTICA (PERFIL FUERTE)
-    # ============================================
+    # 2. APROVAÇÃO AUTOMÁTICA (PERFIL EXCELENTE)
     elif score >= auto_approve_score and prob <= prob_safe_cut:
-
         risk_factor = 1 - prob
         limite = int(teto * risk_factor)
-
-        # proteção
         limite = max(min(limite, teto), 300)
 
-        status = "APROBADO"
-        motivo = "Perfil sólido para aprobación automática."
-
-        # ============================================
-        # CONTRAPROPOSTA AUTOMÁTICA
-        # ============================================
-        if monto_solicitado > limite:
-            status = "EN ANÁLISIS"
-            motivo = f"Monto superior al límite automático: R$ {limite}"
-
         return {
-            "status": status,
-            "icon": "✔" if status == "APROBADO" else "⚠",
-            "cor": "#16a34a" if status == "APROBADO" else "#facc15",
+            "status": "APROBADO",
+            "icon": "✔",
+            "cor": "#16a34a",
             "score": score,
             "segmento": segmento,
             "limite": limite,
-            "motivo": motivo
+            "motivo": "Aprobación automática por perfil sólido."
         }
 
-    # ============================================
-    # 3. ZONA PRINCIPAL (ANÁLISIS)
-    # ============================================
+    # 3. ZONA DE ANÁLISE (CASOS INTERMEDIÁRIOS)
     else:
-
         risk_factor = 1 - prob
         limite = int(teto * risk_factor * 0.5)
 
@@ -104,3 +87,13 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs):
             "limite": max(limite, 250),
             "motivo": "Perfil en zona intermedia. Requiere evaluación."
         }
+
+def calculate_final_adjustments(limite, duracion, flags):
+    """
+    Aplica ajustes finais ao limite baseados em variáveis externas (prazo e flags).
+    """
+    # Penalidade por prazo longo
+    if duracion > 48:
+        limite = int(limite * 0.85)
+        
+    return limite
