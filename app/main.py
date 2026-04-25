@@ -16,7 +16,7 @@ if BASE_DIR not in sys.path:
 # IMPORTS
 # ============================================
 from src.loader import load_assets
-from src.policy import get_score
+from src.policy import get_score, apply_business_policy
 from app.styles import apply_custom_styles
 
 # ============================================
@@ -38,86 +38,6 @@ def load_all():
     return load_assets()
 
 modelo, bins_woe, metricas_modelo, score_params, cutoffs = load_all()
-
-# ============================================
-# POLICY EQUILIBRADA (ÚNICA ALTERAÇÃO REAL)
-# ============================================
-def apply_business_policy(score, prob, monto_solicitado, cutoffs):
-
-    # ============================================
-    # CALIBRAÇÃO EQUILIBRADA
-    # ============================================
-    reject_score_cut = 490
-    auto_approve_score = 640
-    prob_reject_cut = 0.62
-    prob_safe_cut = 0.40
-
-    # ============================================
-    # SEGMENTAÇÃO
-    # ============================================
-    if score >= 750:
-        segmento, teto = "TOP PRIME", 18000
-    elif score >= 700:
-        segmento, teto = "SUPER PRIME", 12000
-    elif score >= 640:
-        segmento, teto = "PRIME", 8000
-    elif score >= 600:
-        segmento, teto = "STANDARD", 4500
-    elif score >= 540:
-        segmento, teto = "NEAR PRIME", 2500
-    elif score >= 490:
-        segmento, teto = "REVIEW", 1200
-    else:
-        segmento, teto = "SUBPRIME", 0
-
-    # ============================================
-    # REPROVAÇÃO DIRETA (RISCO ALTO)
-    # ============================================
-    if prob >= prob_reject_cut or score < reject_score_cut:
-        return {
-            "status": "RECHAZADO",
-            "icon": "✖",
-            "cor": "#dc2626",
-            "score": score,
-            "segmento": segmento,
-            "limite": 0,
-            "motivo": "Riesgo elevado según política de crédito."
-        }
-
-    # ============================================
-    # APROVAÇÃO AUTOMÁTICA (PERFIL MUITO BOM)
-    # ============================================
-    elif score >= auto_approve_score and prob <= prob_safe_cut:
-        risk_factor = 1 - prob
-        limite = int(teto * risk_factor)
-        limite = max(min(limite, teto), 300)
-
-        return {
-            "status": "APROBADO",
-            "icon": "✔",
-            "cor": "#16a34a",
-            "score": score,
-            "segmento": segmento,
-            "limite": limite,
-            "motivo": "Aprobación automática por perfil sólido."
-        }
-
-    # ============================================
-    # ZONA PRINCIPAL (ANÁLISE - MAIOR PARTE DOS CASOS)
-    # ============================================
-    else:
-        risk_factor = 1 - prob
-        limite = int(teto * risk_factor * 0.5)
-
-        return {
-            "status": "EN ANÁLISIS",
-            "icon": "⚠",
-            "cor": "#facc15",
-            "score": score,
-            "segmento": segmento,
-            "limite": max(limite, 250),
-            "motivo": "Perfil en zona intermedia. Requiere evaluación."
-        }
 
 # ============================================
 # HEADER
@@ -196,6 +116,9 @@ with tab1:
 
     if btn:
 
+        # ============================================
+        # DATA PREP
+        # ============================================
         entrada = pd.DataFrame({
             "Genero": [genero],
             "Trabalho": [trabalho],
@@ -219,6 +142,9 @@ with tab1:
         prob = modelo.predict_proba(entrada_woe)[0][1]
         prob = min(max(prob, 0.0001), 0.9999)
 
+        # ============================================
+        # SCORE
+        # ============================================
         score_base = get_score(prob, score_params)
 
         penalidade = 0
@@ -242,6 +168,9 @@ with tab1:
 
         score_final = max(score_base + penalidade, 300)
 
+        # ============================================
+        # POLICY (MODULAR)
+        # ============================================
         decision = apply_business_policy(
             score_final,
             prob,
@@ -259,7 +188,9 @@ with tab1:
         if flags:
             motivo += " | Riesgos: " + ", ".join(flags)
 
+        # ============================================
         # RESULTADO
+        # ============================================
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
 
@@ -296,7 +227,9 @@ with tab1:
                 unsafe_allow_html=True
             )
 
-        # GAUGE (INTOCADO)
+        # ============================================
+        # GAUGE (INALTERADO)
+        # ============================================
         with col_graf:
 
             st.markdown("<div class='titulo-secao' style='text-align:center;'>Indicador de Riesgo</div>", unsafe_allow_html=True)
@@ -327,6 +260,8 @@ with tab1:
 
             with col_centro:
                 st.plotly_chart(fig, use_container_width=False, config={"displayModeBar": False})
+
+
 
 # ============================================
 # TAB 2
