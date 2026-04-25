@@ -22,7 +22,7 @@ st.set_page_config(
 # IMPORTS (Módulos Locais)
 # ============================================
 from src.loader import load_assets
-from src.policy import get_score, apply_business_policy
+from src.policy import get_score, apply_business_policy, calculate_final_adjustments
 from app.styles import apply_custom_styles
 
 apply_custom_styles()
@@ -106,12 +106,14 @@ with tab1:
             columns=modelo.feature_names_in_, fill_value=0
         )
 
-        # Cálculo de Probabilidade e Score Base
+        # Probabilidade
         prob = modelo.predict_proba(entrada_woe)[0][1]
         prob = min(max(prob, 0.0001), 0.9999)
+
+        # Score base
         score_base = get_score(prob, score_params)
 
-        # Regras de Negócio Adicionais (Flags)
+        # Penalidades (flags)
         penalidade = 0
         flags = []
         if trabalho == 0: penalidade -= 80; flags.append("Sin empleo")
@@ -121,19 +123,21 @@ with tab1:
 
         score_final = max(score_base + penalidade, 300)
 
-        # CHAMADA DA POLÍTICA (src/policy.py)
+        # Política
         decision = apply_business_policy(score_final, prob, valor, cutoffs)
 
-        # Ajuste de limite por duração
-        limite = decision["limite"]
-        if duracion > 48:
-            limite = int(limite * 0.85)
+        # Score consistente na UI
+        decision["score"] = score_final
 
+        # Ajuste final centralizado
+        limite = calculate_final_adjustments(decision["limite"], duracion, flags)
+
+        # Motivo
         motivo = decision["motivo"]
         if flags:
             motivo += " | Riesgos: " + ", ".join(flags)
 
-        # Renderização dos Resultados
+        # RESULTADO
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
             st.markdown(f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>", unsafe_allow_html=True)
@@ -213,7 +217,6 @@ with tab3:
         else ("INESTABLE", "#dc2626")
     )
 
-    # CARD PSI
     st.markdown(
         "<div style='display:flex; justify-content:center;'>"
         "<div style='max-width:320px;'>",
@@ -233,7 +236,6 @@ with tab3:
 
     st.markdown("</div></div><br>", unsafe_allow_html=True)
 
-    # EXPANDER CENTRALIZADO
     col1, col2, col3 = st.columns([1, 3, 1])
 
     with col2:
