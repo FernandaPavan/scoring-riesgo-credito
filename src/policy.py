@@ -10,37 +10,33 @@ def get_score(prob, score_params):
     Padrão bancário usando PDO.
     """
 
-    print("DEBUG SCORE FUNCIONANDO")  # 👈 coloca aqui
-
     prob = np.clip(prob, 1e-6, 1 - 1e-6)
 
     # Odds
     odds = (1 - prob) / prob
 
-    # Parâmetros do JSON
-    pdo = score_params['pdo']
-    base_score = score_params['base_score']
-    base_odds = score_params['base_odds']
+    # Parâmetros do JSON (PADRONIZADO)
+    pdo = score_params["pdo"]
+    base_score = score_params["base_score"]
+    base_odds = score_params["base_odds"]
 
     # Conversão
     factor = pdo / np.log(2)
     offset = base_score - factor * np.log(base_odds)
 
-    # Score final
     score = offset + factor * np.log(odds)
 
     return int(score)
 
 
 # ============================================
-# AJUSTES FINAIS (centralizado)
+# AJUSTES FINAIS
 # ============================================
 def calculate_final_adjustments(limite, duracion, flags=None):
     """
     Ajustes finais no limite (prazo, flags, etc.)
     """
 
-    # Penalidade por prazo longo
     if duracion > 48:
         limite = int(limite * 0.85)
 
@@ -50,22 +46,18 @@ def calculate_final_adjustments(limite, duracion, flags=None):
 # ============================================
 # POLÍTICA DE CRÉDITO
 # ============================================
-def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
+def apply_business_policy(score, prob, valor, cutoffs=None):
     """
     Aplica regras de decisão de crédito.
     """
 
-    # ============================================
     # CUTS
-    # ============================================
     reject_score_cut = 490
     auto_approve_score = 640
     prob_reject_cut = 0.62
     prob_safe_cut = 0.40
 
-    # ============================================
     # SEGMENTAÇÃO
-    # ============================================
     if score >= 750:
         segmento, teto = "TOP PRIME", 18000
     elif score >= 700:
@@ -81,11 +73,8 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
     else:
         segmento, teto = "SUBPRIME", 0
 
-    # ============================================
     # DECISÃO
-    # ============================================
 
-    # 1. REJEIÇÃO
     if prob >= prob_reject_cut or score < reject_score_cut:
         return {
             "status": "RECHAZADO",
@@ -97,7 +86,6 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Riesgo elevado según política de crédito."
         }
 
-    # 2. APROVAÇÃO AUTOMÁTICA
     elif score >= auto_approve_score and prob <= prob_safe_cut:
         risk_factor = 1 - prob
         limite = int(teto * risk_factor)
@@ -113,7 +101,6 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Aprobación automática por perfil sólido."
         }
 
-    # 3. ANÁLISE
     else:
         risk_factor = 1 - prob
         limite = int(teto * risk_factor * 0.5)

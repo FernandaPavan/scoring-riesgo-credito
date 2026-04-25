@@ -3,6 +3,7 @@ import os
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 import scorecardpy as sc
 
 # ============================================
@@ -19,7 +20,7 @@ st.set_page_config(
 )
 
 # ============================================
-# IMPORTS (Módulos Locais)
+# IMPORTS
 # ============================================
 from src.loader import load_assets
 from src.policy import get_score, apply_business_policy, calculate_final_adjustments
@@ -55,7 +56,7 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 # ============================================
-# TAB 1: SIMULACIÓN
+# TAB 1
 # ============================================
 with tab1:
     with st.sidebar:
@@ -94,11 +95,15 @@ with tab1:
     col_res, col_graf = st.columns([1, 1])
 
     if btn:
-        # Preparação dos dados
         entrada = pd.DataFrame({
-            "Genero": [genero], "Trabalho": [trabalho], "Habitacao": [habitacion],
-            "Conta_poupanca": [cuenta_ahorro], "Conta_corrente": [cuenta_corriente],
-            "Finalidade": [finalidad], "Idade": [edad], "Duracao": [duracion],
+            "Genero": [genero],
+            "Trabalho": [trabalho],
+            "Habitacao": [habitacion],
+            "Conta_poupanca": [cuenta_ahorro],
+            "Conta_corrente": [cuenta_corriente],
+            "Finalidade": [finalidad],
+            "Idade": [edad],
+            "Duracao": [duracion],
             "Valor_credito": [valor]
         })
 
@@ -108,28 +113,40 @@ with tab1:
 
         # Probabilidade
         prob = modelo.predict_proba(entrada_woe)[0][1]
-        prob = min(max(prob, 0.0001), 0.9999)
+        prob = float(np.clip(prob, 0.0001, 0.9999))
 
-        # Score base
+        # Score
         score_base = get_score(prob, score_params)
 
-        # Penalidades (flags)
+        # Penalidades
         penalidade = 0
         flags = []
-        if trabalho == 0: penalidade -= 80; flags.append("Sin empleo")
-        if habitacion == "rent": penalidade -= 30; flags.append("Vivienda alquilada")
-        if cuenta_ahorro == "little": penalidade -= 20; flags.append("Bajo ahorro")
-        if cuenta_corriente == "little": penalidade -= 20; flags.append("Baja liquidez")
 
-        score_final = max(score_base + penalidade, 300)
+        if trabalho == 0:
+            penalidade -= 80
+            flags.append("Sin empleo")
+
+        if habitacion == "rent":
+            penalidade -= 30
+            flags.append("Vivienda alquilada")
+
+        if cuenta_ahorro == "little":
+            penalidade -= 20
+            flags.append("Bajo ahorro")
+
+        if cuenta_corriente == "little":
+            penalidade -= 20
+            flags.append("Baja liquidez")
+
+        score_final = int(np.clip(score_base + penalidade, 300, 900))
 
         # Política
         decision = apply_business_policy(score_final, prob, valor, cutoffs)
 
-        # Score consistente na UI
+        # Garantia de consistência
         decision["score"] = score_final
 
-        # Ajuste final centralizado
+        # Ajuste final
         limite = calculate_final_adjustments(decision["limite"], duracion, flags)
 
         # Motivo
