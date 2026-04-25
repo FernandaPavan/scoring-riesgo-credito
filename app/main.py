@@ -22,7 +22,12 @@ st.set_page_config(
 # IMPORTS (Módulos Locais)
 # ============================================
 from src.loader import load_assets
-from src.policy import get_score, apply_business_policy
+from src.policy import (
+    get_score,
+    apply_business_policy,
+    aplicar_penalidades,
+    calculate_final_adjustments
+)
 from app.styles import apply_custom_styles
 
 apply_custom_styles()
@@ -94,57 +99,114 @@ with tab1:
     col_res, col_graf = st.columns([1, 1])
 
     if btn:
-        # Preparação dos dados
+        # ============================================
+        # DATA PREP
+        # ============================================
         entrada = pd.DataFrame({
-            "Genero": [genero], "Trabalho": [trabalho], "Habitacao": [habitacion],
-            "Conta_poupanca": [cuenta_ahorro], "Conta_corrente": [cuenta_corriente],
-            "Finalidade": [finalidad], "Idade": [edad], "Duracao": [duracion],
+            "Genero": [genero],
+            "Trabalho": [trabalho],
+            "Habitacao": [habitacion],
+            "Conta_poupanca": [cuenta_ahorro],
+            "Conta_corrente": [cuenta_corriente],
+            "Finalidade": [finalidad],
+            "Idade": [edad],
+            "Duracao": [duracion],
             "Valor_credito": [valor]
         })
 
         entrada_woe = sc.woebin_ply(entrada, bins_woe).reindex(
-            columns=modelo.feature_names_in_, fill_value=0
+            columns=modelo.feature_names_in_,
+            fill_value=0
         )
 
-        # Cálculo de Probabilidade e Score Base
+        # ============================================
+        # SCORE
+        # ============================================
         prob = modelo.predict_proba(entrada_woe)[0][1]
         prob = min(max(prob, 0.0001), 0.9999)
+
         score_base = get_score(prob, score_params)
 
-        # Regras de Negócio Adicionais (Flags)
-        penalidade = 0
-        flags = []
-        if trabalho == 0: penalidade -= 80; flags.append("Sin empleo")
-        if habitacion == "rent": penalidade -= 30; flags.append("Vivienda alquilada")
-        if cuenta_ahorro == "little": penalidade -= 20; flags.append("Bajo ahorro")
-        if cuenta_corriente == "little": penalidade -= 20; flags.append("Baja liquidez")
+        # ============================================
+        # PENALIDADES (AGORA NO POLICY)
+        # ============================================
+        penalidade, flags = aplicar_penalidades(
+            trabalho,
+            habitacion,
+            cuenta_ahorro,
+            cuenta_corriente
+        )
 
         score_final = max(score_base + penalidade, 300)
 
-        # CHAMADA DA POLÍTICA (src/policy.py)
-        decision = apply_business_policy(score_final, prob, valor, cutoffs)
+        # ============================================
+        # DECISÃO
+        # ============================================
+        decision = apply_business_policy(
+            score_final,
+            prob,
+            valor,
+            cutoffs
+        )
 
-        # Ajuste de limite por duração
-        limite = decision["limite"]
-        if duracion > 48:
-            limite = int(limite * 0.85)
+        # ============================================
+        # AJUSTES FINAIS (AGORA NO POLICY)
+        # ============================================
+        limite = calculate_final_adjustments(
+            decision["limite"],
+            duracion,
+            flags
+        )
 
         motivo = decision["motivo"]
         if flags:
             motivo += " | Riesgos: " + ", ".join(flags)
 
-        # Renderização dos Resultados
+        # ============================================
+        # RESULTADO
+        # ============================================
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
-            st.markdown(f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{decision['segmento']}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;'>Probabilidad</p><p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;'>Límite Sugerido</p><p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:center;font-size:28px;color:{decision['cor']};font-weight:900;'>{decision['icon']} {decision['status']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align:center;font-size:12px;color:#64748b;'>{motivo}</p>", unsafe_allow_html=True)
 
+            st.markdown(
+                f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>",
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{decision['segmento']}</p>",
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                f"<p style='text-align:center;'>Probabilidad</p>"
+                f"<p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>",
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                f"<p style='text-align:center;'>Límite Sugerido</p>"
+                f"<p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>",
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                f"<div style='text-align:center;font-size:28px;color:{decision['cor']};font-weight:900;'>"
+                f"{decision['icon']} {decision['status']}</div>",
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                f"<p style='text-align:center;font-size:12px;color:#64748b;'>{motivo}</p>",
+                unsafe_allow_html=True
+            )
+
+        # ============================================
+        # GAUGE
+        # ============================================
         with col_graf:
             st.markdown("<div class='titulo-secao' style='text-align:center;'>Indicador de Riesgo</div>", unsafe_allow_html=True)
+
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=prob * 100,
@@ -159,8 +221,16 @@ with tab1:
                     ]
                 }
             ))
-            fig.update_layout(width=380, height=280, margin=dict(l=0, r=0, t=10, b=0), paper_bgcolor="rgba(0,0,0,0)")
+
+            fig.update_layout(
+                width=380,
+                height=280,
+                margin=dict(l=0, r=0, t=10, b=0),
+                paper_bgcolor="rgba(0,0,0,0)"
+            )
+
             col_esq, col_centro, col_dir = st.columns([1, 3, 1])
+
             with col_centro:
                 st.plotly_chart(fig, use_container_width=False, config={"displayModeBar": False})
 

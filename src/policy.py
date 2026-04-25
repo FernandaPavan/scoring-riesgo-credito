@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+
 
 def get_score(prob, score_params):
     """
@@ -6,15 +8,16 @@ def get_score(prob, score_params):
     Equação: Score = Offset + Factor * ln(odds)
     """
     odds = (1 - prob) / prob
-    score = score_params['offset'] + score_params['factor'] * pd.np.log(odds)
+    score = score_params['offset'] + score_params['factor'] * np.log(odds)
     return int(score)
+
 
 def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
     """
     Aplica as regras de decisão de negócio baseadas no score e probabilidade.
     Retorna um dicionário com o status, cor, ícone e limite sugerido.
     """
-    
+
     # ============================================
     # CALIBRAÇÃO DE PARÂMETROS
     # ============================================
@@ -42,10 +45,10 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
         segmento, teto = "SUBPRIME", 0
 
     # ============================================
-    # LÓGICA DE DECISÃO (STATUS)
+    # LÓGICA DE DECISÃO
     # ============================================
-    
-    # 1. REPROVAÇÃO DIRETA (RISCO ALTO)
+
+    # 1. REPROVAÇÃO DIRETA
     if prob >= prob_reject_cut or score < reject_score_cut:
         return {
             "status": "RECHAZADO",
@@ -57,7 +60,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Riesgo elevado según política de crédito."
         }
 
-    # 2. APROVAÇÃO AUTOMÁTICA (PERFIL EXCELENTE)
+    # 2. APROVAÇÃO AUTOMÁTICA
     elif score >= auto_approve_score and prob <= prob_safe_cut:
         risk_factor = 1 - prob
         limite = int(teto * risk_factor)
@@ -73,7 +76,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Aprobación automática por perfil sólido."
         }
 
-    # 3. ZONA DE ANÁLISE (CASOS INTERMEDIÁRIOS)
+    # 3. ANÁLISE
     else:
         risk_factor = 1 - prob
         limite = int(teto * risk_factor * 0.5)
@@ -88,12 +91,39 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Perfil en zona intermedia. Requiere evaluación."
         }
 
+
+def aplicar_penalidades(trabalho, habitacion, ahorro, corriente):
+    """
+    Aplica penalidades de risco comportamental.
+    """
+    penalidade = 0
+    flags = []
+
+    if trabalho == 0:
+        penalidade -= 80
+        flags.append("Sin empleo")
+
+    if habitacion == "rent":
+        penalidade -= 30
+        flags.append("Vivienda alquilada")
+
+    if ahorro == "little":
+        penalidade -= 20
+        flags.append("Bajo ahorro")
+
+    if corriente == "little":
+        penalidade -= 20
+        flags.append("Baja liquidez")
+
+    return penalidade, flags
+
+
 def calculate_final_adjustments(limite, duracion, flags):
     """
-    Aplica ajustes finais ao limite baseados em variáveis externas (prazo e flags).
+    Ajustes finais no limite (prazo + regras adicionais futuras).
     """
     # Penalidade por prazo longo
     if duracion > 48:
         limite = int(limite * 0.85)
-        
+
     return limite
