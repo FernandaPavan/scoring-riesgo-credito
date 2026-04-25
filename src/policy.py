@@ -1,97 +1,74 @@
-import numpy as np
-
-# ============================================
-# SCORE (PDO)
-# ============================================
-def get_score(prob, params):
-    factor = params["pdo"] / np.log(2)
-    offset = params["base_score"] + factor * np.log(params["base_odds"])
-
-    prob = min(max(prob, 0.0001), 0.9999)
-
-    return int(offset + factor * np.log((1 - prob) / prob))
-
-
-# ============================================
-# BUSINESS POLICY (AJUSTADA AO MODELO REAL)
-# ============================================
 def apply_business_policy(score, prob, monto_solicitado, cutoffs):
 
-    reject_cutoff = cutoffs["reject_cutoff"]          # 460
-    approve_cutoff = cutoffs["approve_cutoff"]        # 520
-    prob_cutoff = cutoffs["best_prob_cutoff"]         # 0.53
+    # ============================================
+    # PARÂMETROS EQUILIBRADOS
+    # ============================================
+    reject_score_cut = 490
+    auto_approve_score = 640
+    prob_reject_cut = 0.62
+    prob_safe_cut = 0.40
 
-    # ================================
-    # SEGMENTAÇÃO (mantida, mas mais conservadora)
-    # ================================
-    if score >= 700:
-        segmento = "SUPER PRIME"
-        teto = 12000
-    elif score >= 650:
-        segmento = "PRIME"
-        teto = 8000
+    # ============================================
+    # SEGMENTAÇÃO REALISTA
+    # ============================================
+    if score >= 750:
+        segmento, teto = "TOP PRIME", 18000
+    elif score >= 700:
+        segmento, teto = "SUPER PRIME", 12000
+    elif score >= 640:
+        segmento, teto = "PRIME", 8000
     elif score >= 600:
-        segmento = "STANDARD"
-        teto = 4000
-    elif score >= 520:
-        segmento = "NEAR PRIME"
-        teto = 2000
-    elif score >= 460:
-        segmento = "REVIEW"
-        teto = 800
+        segmento, teto = "STANDARD", 4500
+    elif score >= 540:
+        segmento, teto = "NEAR PRIME", 2500
+    elif score >= 490:
+        segmento, teto = "REVIEW", 1200
     else:
-        segmento = "SUBPRIME"
-        teto = 0
+        segmento, teto = "SUBPRIME", 0
 
-    # ================================
-    # REGRA PRINCIPAL (probabilidade manda)
-    # ================================
-    if prob >= 0.70:
+    # ============================================
+    # 1. REJEIÇÃO DIRETA (somente extremos reais)
+    # ============================================
+    if prob >= prob_reject_cut or score < reject_score_cut:
         status = "RECHAZADO"
         icon = "✖"
         cor = "#dc2626"
-        motivo = "Alta probabilidad de default."
+        motivo = "Riesgo elevado según política de crédito."
         limite = 0
 
-    elif prob >= prob_cutoff:
-        status = "EN ANÁLISIS"
-        icon = "⚠"
-        cor = "#facc15"
-        motivo = "Zona de riesgo intermedia."
-        limite = int(teto * 0.4)
-
-    elif score < reject_cutoff:
-        status = "RECHAZADO"
-        icon = "✖"
-        cor = "#dc2626"
-        motivo = "Score bajo política mínima."
-        limite = 0
-
-    else:
+    # ============================================
+    # 2. APROVAÇÃO AUTOMÁTICA (elite real)
+    # ============================================
+    elif score >= auto_approve_score and prob <= prob_safe_cut:
         status = "APROBADO"
         icon = "✔"
         cor = "#16a34a"
-        motivo = "Aprobación dentro de política."
+        motivo = "Perfil sólido para aprobación automática."
 
-        # ================================
-        # LIMITE AJUSTADO POR RISCO
-        # ================================
-        risk_factor = 1 - prob  # núcleo do equilíbrio
-
+        risk_factor = 1 - prob
         limite = int(teto * risk_factor)
-
-        # trava de segurança
         limite = max(min(limite, teto), 300)
 
-    # ================================
-    # EXCEÇÃO DE EXCESSO DE VALOR
-    # ================================
-    if monto_solicitado > limite and status == "APROBADO":
-        status = "RECHAZADO"
-        icon = "✖"
-        cor = "#dc2626"
-        motivo = "Monto excede límite de riesgo."
-        limite = 0
+    # ============================================
+    # 3. ZONA PRINCIPAL DO MODELO (ANÁLISE)
+    # ============================================
+    else:
+        status = "EN ANÁLISIS"
+        icon = "⚠"
+        cor = "#facc15"
+        motivo = "Perfil requiere evaluación adicional."
+
+        # limite conservador para análise
+        risk_factor = (1 - prob)
+        limite = int(teto * risk_factor * 0.5)
+        limite = max(limite, 250)
+
+    # ============================================
+    # AJUSTE DE MONTANTE
+    # ============================================
+    if status == "APROBADO" and monto_solicitado > limite:
+        status = "EN ANÁLISIS"
+        motivo = f"Monto superior al límite automático: R$ {limite}"
 
     return {
         "status": status,
