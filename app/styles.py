@@ -135,7 +135,7 @@ def apply_custom_styles():
         text-align: center;
     }
 
-    /* MATRIZ DE CONFUSÃO AJUSTADA */
+    /* MATRIZ DE CONFUSÃO */
     .cm-table {
         width: 320px !important;
         margin: 20px auto !important;
@@ -173,14 +173,12 @@ def apply_custom_styles():
         background-color: #dcfce7 !important;
         color: #166534 !important; 
         font-weight: 800 !important;
-        font-size: 14px;
     }
 
     .cm-table .val-neg { 
         background-color: #fee2e2 !important;
         color: #991b1b !important; 
         font-weight: 800 !important;
-        font-size: 14px;
     }
 
     .psi-card {
@@ -219,6 +217,24 @@ def apply_custom_styles():
         font-size: 13px;
         color: var(--text-light);
         line-height: 1.5;
+    }
+
+    /* ============================================
+    AJUSTE DO SELECTBOX (CAIXA CINZA NO SIDEBAR)
+    ============================================ */
+    [data-testid="stSidebar"] div[data-baseweb="select"] > div {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+    }
+
+    [data-testid="stSidebar"] div[data-baseweb="select"] span {
+        color: #111827 !important;
+    }
+
+    div[role="listbox"] {
+        background-color: #f9fafb !important;
+        border-radius: 8px !important;
     }
 
     </style>
