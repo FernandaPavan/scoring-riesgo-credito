@@ -1,3 +1,18 @@
+import numpy as np
+
+# ============================================
+# SCORE (mantém igual ao seu)
+# ============================================
+def get_score(prob, params):
+    factor = params["pdo"] / np.log(2)
+    offset = params["base_score"] + factor * np.log(params["base_odds"])
+    prob = min(max(prob, 0.0001), 0.9999)
+    return int(offset + factor * np.log((1 - prob) / prob))
+
+
+# ============================================
+# BUSINESS POLICY EQUILIBRADA
+# ============================================
 def apply_business_policy(score, prob, monto_solicitado, cutoffs):
 
     # ============================================
@@ -9,7 +24,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs):
     prob_safe_cut = 0.40
 
     # ============================================
-    # SEGMENTAÇÃO REALISTA
+    # SEGMENTAÇÃO
     # ============================================
     if score >= 750:
         segmento, teto = "TOP PRIME", 18000
@@ -27,55 +42,65 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs):
         segmento, teto = "SUBPRIME", 0
 
     # ============================================
-    # 1. REJEIÇÃO DIRETA (somente extremos reais)
+    # 1. RECHAZO DIRECTO (RIESGO ALTO)
     # ============================================
     if prob >= prob_reject_cut or score < reject_score_cut:
-        status = "RECHAZADO"
-        icon = "✖"
-        cor = "#dc2626"
-        motivo = "Riesgo elevado según política de crédito."
-        limite = 0
+
+        return {
+            "status": "RECHAZADO",
+            "icon": "✖",
+            "cor": "#dc2626",
+            "score": score,
+            "segmento": segmento,
+            "limite": 0,
+            "motivo": "Riesgo elevado según política de crédito."
+        }
 
     # ============================================
-    # 2. APROVAÇÃO AUTOMÁTICA (elite real)
+    # 2. APROBACIÓN AUTOMÁTICA (PERFIL FUERTE)
     # ============================================
     elif score >= auto_approve_score and prob <= prob_safe_cut:
-        status = "APROBADO"
-        icon = "✔"
-        cor = "#16a34a"
-        motivo = "Perfil sólido para aprobación automática."
 
         risk_factor = 1 - prob
         limite = int(teto * risk_factor)
+
+        # proteção
         limite = max(min(limite, teto), 300)
 
+        status = "APROBADO"
+        motivo = "Perfil sólido para aprobación automática."
+
+        # ============================================
+        # CONTRAPROPOSTA AUTOMÁTICA
+        # ============================================
+        if monto_solicitado > limite:
+            status = "EN ANÁLISIS"
+            motivo = f"Monto superior al límite automático: R$ {limite}"
+
+        return {
+            "status": status,
+            "icon": "✔" if status == "APROBADO" else "⚠",
+            "cor": "#16a34a" if status == "APROBADO" else "#facc15",
+            "score": score,
+            "segmento": segmento,
+            "limite": limite,
+            "motivo": motivo
+        }
+
     # ============================================
-    # 3. ZONA PRINCIPAL DO MODELO (ANÁLISE)
+    # 3. ZONA PRINCIPAL (ANÁLISIS)
     # ============================================
     else:
-        status = "EN ANÁLISIS"
-        icon = "⚠"
-        cor = "#facc15"
-        motivo = "Perfil requiere evaluación adicional."
 
-        # limite conservador para análise
-        risk_factor = (1 - prob)
+        risk_factor = 1 - prob
         limite = int(teto * risk_factor * 0.5)
-        limite = max(limite, 250)
 
-    # ============================================
-    # AJUSTE DE MONTANTE
-    # ============================================
-    if status == "APROBADO" and monto_solicitado > limite:
-        status = "EN ANÁLISIS"
-        motivo = f"Monto superior al límite automático: R$ {limite}"
-
-    return {
-        "status": status,
-        "icon": icon,
-        "cor": cor,
-        "score": score,
-        "segmento": segmento,
-        "limite": limite,
-        "motivo": motivo
-    }
+        return {
+            "status": "EN ANÁLISIS",
+            "icon": "⚠",
+            "cor": "#facc15",
+            "score": score,
+            "segmento": segmento,
+            "limite": max(limite, 250),
+            "motivo": "Perfil en zona intermedia. Requiere evaluación."
+        }

@@ -108,7 +108,10 @@ with tab1:
             "Educación": "education",
             "Reparaciones": "repairs",
             "Otros": "vacation/others"
-        }[st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])]
+        }[st.selectbox(
+            "Finalidad",
+            ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"]
+        )]
 
         btn = st.button("Calcular")
 
@@ -116,9 +119,6 @@ with tab1:
 
     if btn:
 
-        # ============================================
-        # DATA PREP
-        # ============================================
         entrada = pd.DataFrame({
             "Genero": [genero],
             "Trabalho": [trabalho],
@@ -142,9 +142,6 @@ with tab1:
         prob = modelo.predict_proba(entrada_woe)[0][1]
         prob = min(max(prob, 0.0001), 0.9999)
 
-        # ============================================
-        # SCORE
-        # ============================================
         score_base = get_score(prob, score_params)
 
         penalidade = 0
@@ -168,9 +165,6 @@ with tab1:
 
         score_final = max(score_base + penalidade, 300)
 
-        # ============================================
-        # POLICY (MODULAR)
-        # ============================================
         decision = apply_business_policy(
             score_final,
             prob,
@@ -188,9 +182,7 @@ with tab1:
         if flags:
             motivo += " | Riesgos: " + ", ".join(flags)
 
-        # ============================================
         # RESULTADO
-        # ============================================
         with col_res:
             st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
 
@@ -227,9 +219,7 @@ with tab1:
                 unsafe_allow_html=True
             )
 
-        # ============================================
-        # GAUGE (INALTERADO)
-        # ============================================
+        # GAUGE
         with col_graf:
 
             st.markdown("<div class='titulo-secao' style='text-align:center;'>Indicador de Riesgo</div>", unsafe_allow_html=True)
