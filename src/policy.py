@@ -1,11 +1,9 @@
-import pandas as pd
 import numpy as np
 
 
 def get_score(prob, score_params):
     """
     Calcula o score de crédito baseado na probabilidade de default.
-    Equação: Score = Offset + Factor * ln(odds)
     """
     odds = (1 - prob) / prob
     score = score_params['offset'] + score_params['factor'] * np.log(odds)
@@ -13,22 +11,13 @@ def get_score(prob, score_params):
 
 
 def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
-    """
-    Aplica as regras de decisão de negócio baseadas no score e probabilidade.
-    Retorna um dicionário com o status, cor, ícone e limite sugerido.
-    """
 
-    # ============================================
-    # CALIBRAÇÃO DE PARÂMETROS
-    # ============================================
     reject_score_cut = 490
     auto_approve_score = 640
     prob_reject_cut = 0.62
     prob_safe_cut = 0.40
 
-    # ============================================
-    # SEGMENTAÇÃO POR FAIXA DE SCORE
-    # ============================================
+    # Segmentação
     if score >= 750:
         segmento, teto = "TOP PRIME", 18000
     elif score >= 700:
@@ -44,11 +33,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
     else:
         segmento, teto = "SUBPRIME", 0
 
-    # ============================================
-    # LÓGICA DE DECISÃO
-    # ============================================
-
-    # 1. REPROVAÇÃO DIRETA
+    # Reprovação
     if prob >= prob_reject_cut or score < reject_score_cut:
         return {
             "status": "RECHAZADO",
@@ -60,7 +45,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Riesgo elevado según política de crédito."
         }
 
-    # 2. APROVAÇÃO AUTOMÁTICA
+    # Aprovação automática
     elif score >= auto_approve_score and prob <= prob_safe_cut:
         risk_factor = 1 - prob
         limite = int(teto * risk_factor)
@@ -76,7 +61,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Aprobación automática por perfil sólido."
         }
 
-    # 3. ANÁLISE
+    # Análise
     else:
         risk_factor = 1 - prob
         limite = int(teto * risk_factor * 0.5)
@@ -93,9 +78,6 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
 
 
 def aplicar_penalidades(trabalho, habitacion, ahorro, corriente):
-    """
-    Aplica penalidades de risco comportamental.
-    """
     penalidade = 0
     flags = []
 
@@ -119,10 +101,7 @@ def aplicar_penalidades(trabalho, habitacion, ahorro, corriente):
 
 
 def calculate_final_adjustments(limite, duracion, flags):
-    """
-    Ajustes finais no limite (prazo + regras adicionais futuras).
-    """
-    # Penalidade por prazo longo
+
     if duracion > 48:
         limite = int(limite * 0.85)
 

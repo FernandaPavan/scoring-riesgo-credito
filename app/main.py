@@ -6,12 +6,16 @@ import pandas as pd
 import scorecardpy as sc
 
 # ============================================
-# PATH & CONFIG
+# PATH CORRETO (PADRÃO PRODUÇÃO)
 # ============================================
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
+# ============================================
+# CONFIG
+# ============================================
 st.set_page_config(
     layout="wide",
     page_title="Credit Score App",
@@ -19,7 +23,7 @@ st.set_page_config(
 )
 
 # ============================================
-# IMPORTS (Módulos Locais)
+# IMPORTS
 # ============================================
 from src.loader import load_assets
 from src.policy import (
@@ -33,7 +37,7 @@ from app.styles import apply_custom_styles
 apply_custom_styles()
 
 # ============================================
-# LOAD ASSETS
+# LOAD
 # ============================================
 @st.cache_resource
 def load_all():
@@ -44,74 +48,62 @@ modelo, bins_woe, metricas_modelo, score_params, cutoffs = load_all()
 # ============================================
 # HEADER
 # ============================================
-st.markdown(
-    """
-    <h1 style='text-align:center; color:#2563eb; font-size:26px; font-weight:700; margin-bottom:20px;'>
-        Evaluación de Riesgo y Score de Crédito
-    </h1>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<h1 style='text-align:center; color:#2563eb; font-size:26px; font-weight:700;'>
+Evaluación de Riesgo y Score de Crédito
+</h1>
+""", unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs([
-    "🚀 Simulación de Crédito",
-    "📊 Desempeño del Modelo",
-    "🛡️ Estabilidad (PSI)"
+    "🚀 Simulación",
+    "📊 Modelo",
+    "🛡️ PSI"
 ])
 
 # ============================================
-# TAB 1: SIMULACIÓN
+# TAB 1
 # ============================================
 with tab1:
     with st.sidebar:
-        st.markdown("<div class='titulo-secao'>Datos del Cliente</div>", unsafe_allow_html=True)
 
         edad = st.slider("Edad", 18, 75, 30)
-        valor = st.slider("Monto del Crédito", 250, 20000, 5000, step=250)
-        duracion = st.slider("Duración (meses)", 4, 72, 24)
+        valor = st.slider("Monto", 250, 20000, 5000, step=250)
+        duracion = st.slider("Duración", 4, 72, 24)
 
-        genero = "male" if st.selectbox("Género", ["Masculino", "Femenino"]) == "Masculino" else "female"
+        genero = "male" if st.selectbox("Género", ["Masculino","Femenino"]) == "Masculino" else "female"
 
-        trabalho = {
-            "Desempleado": 0, "Básico": 1, "Calificado": 2, "Especialista": 3
-        }[st.selectbox("Ocupación", ["Desempleado", "Básico", "Calificado", "Especialista"])]
+        trabalho = {"Desempleado":0,"Básico":1,"Calificado":2,"Especialista":3}[
+            st.selectbox("Ocupación", ["Desempleado","Básico","Calificado","Especialista"])
+        ]
 
-        habitacion = {
-            "Propia": "own", "Alquilada": "rent", "Gratuita": "free"
-        }[st.selectbox("Vivienda", ["Propia", "Alquilada", "Gratuita"])]
+        habitacion = {"Propia":"own","Alquilada":"rent","Gratuita":"free"}[
+            st.selectbox("Vivienda", ["Propia","Alquilada","Gratuita"])
+        ]
 
-        cuenta_ahorro = {
-            "Bajo": "little", "Medio": "moderate", "Alto": "rich"
-        }[st.selectbox("Cuenta de Ahorro", ["Bajo", "Medio", "Alto"])]
+        ahorro = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[
+            st.selectbox("Ahorro", ["Bajo","Medio","Alto"])
+        ]
 
-        cuenta_corriente = {
-            "Bajo": "little", "Medio": "moderate", "Alto": "rich"
-        }[st.selectbox("Cuenta Corriente", ["Bajo", "Medio", "Alto"])]
+        corriente = {"Bajo":"little","Medio":"moderate","Alto":"rich"}[
+            st.selectbox("Cuenta", ["Bajo","Medio","Alto"])
+        ]
 
-        finalidad = {
-            "Auto": "car", "Muebles": "furniture/equipment", "Electrónicos": "radio/TV",
-            "Negocios": "business", "Educación": "education", "Reparaciones": "repairs",
-            "Otros": "vacation/others"
-        }[st.selectbox("Finalidad", ["Auto","Muebles","Electrónicos","Negocios","Educación","Reparaciones","Otros"])]
+        finalidad = "car"
 
         btn = st.button("Calcular")
 
-    col_res, col_graf = st.columns([1, 1])
-
     if btn:
-        # ============================================
-        # DATA PREP
-        # ============================================
+
         entrada = pd.DataFrame({
-            "Genero": [genero],
-            "Trabalho": [trabalho],
-            "Habitacao": [habitacion],
-            "Conta_poupanca": [cuenta_ahorro],
-            "Conta_corrente": [cuenta_corriente],
-            "Finalidade": [finalidad],
-            "Idade": [edad],
-            "Duracao": [duracion],
-            "Valor_credito": [valor]
+            "Genero":[genero],
+            "Trabalho":[trabalho],
+            "Habitacao":[habitacion],
+            "Conta_poupanca":[ahorro],
+            "Conta_corrente":[corriente],
+            "Finalidade":[finalidad],
+            "Idade":[edad],
+            "Duracao":[duracion],
+            "Valor_credito":[valor]
         })
 
         entrada_woe = sc.woebin_ply(entrada, bins_woe).reindex(
@@ -119,120 +111,37 @@ with tab1:
             fill_value=0
         )
 
-        # ============================================
-        # SCORE
-        # ============================================
         prob = modelo.predict_proba(entrada_woe)[0][1]
         prob = min(max(prob, 0.0001), 0.9999)
 
         score_base = get_score(prob, score_params)
 
-        # ============================================
-        # PENALIDADES (AGORA NO POLICY)
-        # ============================================
         penalidade, flags = aplicar_penalidades(
-            trabalho,
-            habitacion,
-            cuenta_ahorro,
-            cuenta_corriente
+            trabalho, habitacion, ahorro, corriente
         )
 
         score_final = max(score_base + penalidade, 300)
 
-        # ============================================
-        # DECISÃO
-        # ============================================
-        decision = apply_business_policy(
-            score_final,
-            prob,
-            valor,
-            cutoffs
-        )
+        decision = apply_business_policy(score_final, prob, valor)
 
-        # ============================================
-        # AJUSTES FINAIS (AGORA NO POLICY)
-        # ============================================
         limite = calculate_final_adjustments(
-            decision["limite"],
-            duracion,
-            flags
+            decision["limite"], duracion, flags
         )
 
-        motivo = decision["motivo"]
-        if flags:
-            motivo += " | Riesgos: " + ", ".join(flags)
+        st.metric("Score", score_final)
+        st.metric("Probabilidad", f"{prob:.2%}")
+        st.metric("Límite", f"${limite}")
 
-        # ============================================
-        # RESULTADO
-        # ============================================
-        with col_res:
-            st.markdown("<div class='titulo-secao'>Resultado</div><br>", unsafe_allow_html=True)
+        st.markdown(f"### {decision['icon']} {decision['status']}")
+        st.caption(decision["motivo"])
 
-            st.markdown(
-                f"<div class='score' style='color:{decision['cor']};'>{decision['score']}</div>",
-                unsafe_allow_html=True
-            )
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=prob*100,
+            gauge={"axis":{"range":[0,100]}}
+        ))
 
-            st.markdown(
-                f"<p style='text-align:center;font-size:18px;font-weight:700;color:#2563eb;'>{decision['segmento']}</p>",
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f"<p style='text-align:center;'>Probabilidad</p>"
-                f"<p style='text-align:center;font-size:22px;font-weight:700;'>{prob:.2%}</p>",
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f"<p style='text-align:center;'>Límite Sugerido</p>"
-                f"<p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>",
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f"<div style='text-align:center;font-size:28px;color:{decision['cor']};font-weight:900;'>"
-                f"{decision['icon']} {decision['status']}</div>",
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                f"<p style='text-align:center;font-size:12px;color:#64748b;'>{motivo}</p>",
-                unsafe_allow_html=True
-            )
-
-        # ============================================
-        # GAUGE
-        # ============================================
-        with col_graf:
-            st.markdown("<div class='titulo-secao' style='text-align:center;'>Indicador de Riesgo</div>", unsafe_allow_html=True)
-
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=prob * 100,
-                number={"font": {"size": 26}, "suffix": "%"},
-                gauge={
-                    "axis": {"range": [0, 100]},
-                    "bar": {"thickness": 0.25},
-                    "steps": [
-                        {"range": [0, 40], "color": "#16a34a"},
-                        {"range": [40, 70], "color": "#facc15"},
-                        {"range": [70, 100], "color": "#dc2626"},
-                    ]
-                }
-            ))
-
-            fig.update_layout(
-                width=380,
-                height=280,
-                margin=dict(l=0, r=0, t=10, b=0),
-                paper_bgcolor="rgba(0,0,0,0)"
-            )
-
-            col_esq, col_centro, col_dir = st.columns([1, 3, 1])
-
-            with col_centro:
-                st.plotly_chart(fig, use_container_width=False, config={"displayModeBar": False})
+        st.plotly_chart(fig, use_container_width=True)
 
 
 # ============================================
