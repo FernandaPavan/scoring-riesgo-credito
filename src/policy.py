@@ -10,7 +10,8 @@ def get_score(prob, score_params):
     Padrão bancário usando PDO.
     """
 
-    # Proteção contra log(0)
+    print("DEBUG SCORE FUNCIONANDO")  # 👈 coloca aqui
+
     prob = np.clip(prob, 1e-6, 1 - 1e-6)
 
     # Odds
