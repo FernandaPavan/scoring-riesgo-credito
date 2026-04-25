@@ -1,22 +1,61 @@
-import pandas as pd
+import numpy as np
 
+
+# ============================================
+# SCORE (PDO - padrão bancário)
+# ============================================
 def get_score(prob, score_params):
     """
     Calcula o score de crédito baseado na probabilidade de default.
-    Equação: Score = Offset + Factor * ln(odds)
+    Padrão bancário usando PDO.
     """
+
+    # Proteção contra log(0)
+    prob = np.clip(prob, 1e-6, 1 - 1e-6)
+
+    # Odds
     odds = (1 - prob) / prob
-    score = score_params['offset'] + score_params['factor'] * pd.np.log(odds)
+
+    # Parâmetros do JSON
+    pdo = score_params['pdo']
+    base_score = score_params['base_score']
+    base_odds = score_params['base_odds']
+
+    # Conversão
+    factor = pdo / np.log(2)
+    offset = base_score - factor * np.log(base_odds)
+
+    # Score final
+    score = offset + factor * np.log(odds)
+
     return int(score)
 
+
+# ============================================
+# AJUSTES FINAIS (centralizado)
+# ============================================
+def calculate_final_adjustments(limite, duracion, flags=None):
+    """
+    Ajustes finais no limite (prazo, flags, etc.)
+    """
+
+    # Penalidade por prazo longo
+    if duracion > 48:
+        limite = int(limite * 0.85)
+
+    return limite
+
+
+# ============================================
+# POLÍTICA DE CRÉDITO
+# ============================================
 def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
     """
-    Aplica as regras de decisão de negócio baseadas no score e probabilidade.
-    Retorna um dicionário com o status, cor, ícone e limite sugerido.
+    Aplica regras de decisão de crédito.
     """
-    
+
     # ============================================
-    # CALIBRAÇÃO DE PARÂMETROS
+    # CUTS
     # ============================================
     reject_score_cut = 490
     auto_approve_score = 640
@@ -24,7 +63,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
     prob_safe_cut = 0.40
 
     # ============================================
-    # SEGMENTAÇÃO POR FAIXA DE SCORE
+    # SEGMENTAÇÃO
     # ============================================
     if score >= 750:
         segmento, teto = "TOP PRIME", 18000
@@ -42,10 +81,10 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
         segmento, teto = "SUBPRIME", 0
 
     # ============================================
-    # LÓGICA DE DECISÃO (STATUS)
+    # DECISÃO
     # ============================================
-    
-    # 1. REPROVAÇÃO DIRETA (RISCO ALTO)
+
+    # 1. REJEIÇÃO
     if prob >= prob_reject_cut or score < reject_score_cut:
         return {
             "status": "RECHAZADO",
@@ -57,7 +96,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Riesgo elevado según política de crédito."
         }
 
-    # 2. APROVAÇÃO AUTOMÁTICA (PERFIL EXCELENTE)
+    # 2. APROVAÇÃO AUTOMÁTICA
     elif score >= auto_approve_score and prob <= prob_safe_cut:
         risk_factor = 1 - prob
         limite = int(teto * risk_factor)
@@ -73,7 +112,7 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "motivo": "Aprobación automática por perfil sólido."
         }
 
-    # 3. ZONA DE ANÁLISE (CASOS INTERMEDIÁRIOS)
+    # 3. ANÁLISE
     else:
         risk_factor = 1 - prob
         limite = int(teto * risk_factor * 0.5)
@@ -87,13 +126,3 @@ def apply_business_policy(score, prob, monto_solicitado, cutoffs=None):
             "limite": max(limite, 250),
             "motivo": "Perfil en zona intermedia. Requiere evaluación."
         }
-
-def calculate_final_adjustments(limite, duracion, flags):
-    """
-    Aplica ajustes finais ao limite baseados em variáveis externas (prazo e flags).
-    """
-    # Penalidade por prazo longo
-    if duracion > 48:
-        limite = int(limite * 0.85)
-        
-    return limite
