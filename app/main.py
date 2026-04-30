@@ -281,7 +281,7 @@ with tab1:
 
             st.markdown(
                 f"<p style='text-align:center;'>Límite Sugerido</p>"
-                f"<p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}</p>",
+                f"<p style='text-align:center;font-size:22px;font-weight:700;'>${limite:,.0f}".replace(",", ".") + "</p>",
                 unsafe_allow_html=True
             )
 
