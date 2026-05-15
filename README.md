@@ -51,32 +51,50 @@ El sistema propuesto automatiza este proceso mediante un modelo de Machine Learn
 
 ---
 
-# 🏗️ Arquitectura del Proyecto
+# 🏗️ Estructura del Proyecto
 
 ```text
-.
+PROJETO_RISCO_CREDITO/
+│
 ├── app/
+│   ├── sistema_riesgo_credito.py
 │   └── styles.py
 │
+├── assets/
+│   └── roc_curve_logistic_auc_0.650.png
+│
 ├── data/
-│   └── datasets
+│   └── german_credit_data.csv
 │
 ├── models/
-│   └── modelo_entrenado.pkl
+│   ├── comparacao_modelos.csv
+│   ├── feature_names.pkl
+│   ├── ks_cutoffs.json
+│   ├── metricas.json
+│   ├── modelo.pkl
+│   ├── score_params.json
+│   └── woe_bins.pkl
+│
+├── Notebooks/
+│   ├── script_manual/
+│   └── script_pipeline/
 │
 ├── src/
+│   ├── __init__.py
+│   ├── features.py
 │   ├── loader.py
-│   ├── policy.py
-│   ├── preprocessing.py
-│   ├── training.py
-│   └── metrics.py
+│   └── policy.py
 │
-├── sistema_riesgo_credito.py
+├── .gitignore
+├── LICENSE
+├── README.md
 ├── requirements.txt
-└── README.md
+└── runtime.txt
 ```
 
 ---
+
+
 
 # ⚙️ Tecnologías Utilizadas
 
@@ -308,6 +326,18 @@ La solución permite:
 
 ---
 
+
+## 📌 Posibles Mejoras Futuras
+
+- Incorporación de nuevas variables financieras como: Ingresos, Historial bancario, Nivel de endeudamiento, Relación ingreso/deuda.
+- Monitoreo continuo del modelo
+- Optimización de políticas de crédito
+- Reentrenamiento automático
+- Modelos avanzados de scoring
+
+ --- 
+ 
+
 # ▶️ Cómo Ejecutar el Proyecto
 
 ## 1. Clonar el repositorio
@@ -364,15 +394,6 @@ pip install -r requirements.txt
 streamlit run sistema_riesgo_credito.py
 ```
 
----
-
-## 📌 Posibles Mejoras Futuras
-
-- Incorporación de nuevas variables financieras como: Ingresos, Historial bancario, Nivel de endeudamiento, Relación ingreso/deuda.
-- Monitoreo continuo del modelo
-- Optimización de políticas de crédito
-- Reentrenamiento automático
-- Modelos avanzados de scoring
 
 ---
 
