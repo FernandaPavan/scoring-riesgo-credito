@@ -24,7 +24,7 @@ from app.styles import apply_custom_styles
 # ============================================
 st.set_page_config(
     layout="wide",
-    page_title="Credit Score App",
+    page_title="Evaluación de Riesgo y Score de Crédito",
     page_icon="💳"
 )
 
